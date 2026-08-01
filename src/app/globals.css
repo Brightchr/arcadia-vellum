@@ -36,6 +36,17 @@
   --font-pirata: var(--font-pirata);
 }
 
+/* Larger type on desktop — every rem-based size (Tailwind included) scales. */
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 18px;
+  }
+}
+
 body {
   background-color: var(--void);
   color: var(--ink);

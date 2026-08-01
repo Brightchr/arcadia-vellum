@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,7 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
         }
       }
     } catch {
-      // Corrupt state — start fresh.
+      // Corrupt state - start fresh.
     }
     setRestored(true);
   }, []);
@@ -106,8 +106,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
   const steps = ["The Cover", "The Source", "The Binding"];
 
   return (
-    <div className="panel-arcane w-full max-w-3xl p-8">
-      <ol className="flex gap-2 mb-8 text-xs font-heading">
+    <div className="panel-arcane w-full max-w-4xl p-8 md:p-10">
+      <ol className="flex gap-2 mb-8 text-sm font-heading">
         {steps.map((label, i) => (
           <li
             key={label}
@@ -170,8 +170,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
                   : "border-void-border hover:border-arcane/50"
               }`}
             >
-              <p className="font-heading text-sm mb-1">Google Doc</p>
-              <p className="text-xs text-ink-dim">
+              <p className="font-heading text-base mb-1">Google Doc</p>
+              <p className="text-sm text-ink-dim">
                 Link a Doc and resync as you write new entries.
               </p>
             </button>
@@ -184,8 +184,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
                   : "border-void-border hover:border-arcane/50"
               }`}
             >
-              <p className="font-heading text-sm mb-1">Upload a file</p>
-              <p className="text-xs text-ink-dim">.docx, .md, or .txt</p>
+              <p className="font-heading text-base mb-1">Upload a file</p>
+              <p className="text-sm text-ink-dim">.docx, .md, or .txt</p>
             </button>
           </div>
 
@@ -229,8 +229,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
               }`}
             >
               <ThemePreview themeId={t.id} characterName={characterName} />
-              <p className="font-heading text-sm mt-3">{t.name}</p>
-              <p className="text-xs text-ink-dim">{t.description}</p>
+              <p className="font-heading text-base mt-3">{t.name}</p>
+              <p className="text-sm text-ink-dim">{t.description}</p>
             </button>
           ))}
         </div>
