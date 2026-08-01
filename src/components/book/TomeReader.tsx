@@ -245,6 +245,19 @@ export default function TomeReader({
           >
             {leaves}
             </HTMLFlipBook>
+            <div className="tome-clasp" />
+            <div className="tome-magic" aria-hidden="true">
+              <div className="tome-magic-glow" />
+              <div className="tome-magic-smoke" />
+              <div className="tome-magic-smoke tome-magic-smoke--2" />
+              <div className="tome-magic-smoke tome-magic-smoke--3" />
+              <span className="tome-magic-spark" />
+              <span className="tome-magic-spark" />
+              <span className="tome-magic-spark" />
+              <span className="tome-magic-spark" />
+              <span className="tome-magic-spark" />
+              <span className="tome-magic-spark" />
+            </div>
           </div>
 
           {/* Flip controls */}

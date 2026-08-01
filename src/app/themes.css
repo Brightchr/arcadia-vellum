@@ -13,16 +13,20 @@
    Theme: Witch's Grimoire — black midnight pages, bone-pale ink, runes
 --------------------------------------------------------------------------- */
 .theme-witch-grimoire {
-  --tome-page-bg-color: #17111e;
+  --tome-page-bg-color: #c4ad80;
   --tome-page-bg:
     var(--tome-noise),
-    radial-gradient(ellipse at 22% 12%, rgba(143, 174, 110, 0.07), transparent 50%),
-    radial-gradient(ellipse at 82% 88%, rgba(157, 123, 216, 0.1), transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.02), transparent 70%),
-    linear-gradient(160deg, #1d1626 0%, #171020 55%, #110c19 100%);
-  --tome-ink: #d9d1e4;
-  --tome-accent: #b28fe8;
-  --tome-accent-2: #8fae6e;
+    var(--tome-fibers),
+    radial-gradient(ellipse at 12% 6%, rgba(80, 52, 22, 0.3), transparent 38%),
+    radial-gradient(ellipse at 92% 12%, rgba(76, 48, 22, 0.24), transparent 34%),
+    radial-gradient(circle at 84% 94%, rgba(70, 44, 18, 0.32), transparent 30%),
+    radial-gradient(circle at 6% 88%, rgba(70, 44, 18, 0.26), transparent 32%),
+    radial-gradient(circle at 38% 97%, rgba(66, 40, 16, 0.2), transparent 22%),
+    radial-gradient(ellipse at 55% 45%, rgba(255, 244, 214, 0.2), transparent 62%),
+    linear-gradient(160deg, #ccb68c 0%, #c0a97b 50%, #a4895b 100%);
+  --tome-ink: #3d2d1a;
+  --tome-accent: #5d3f85;
+  --tome-accent-2: #6f5238;
   --tome-heading-font: var(--font-fell), serif;
   --tome-body-font: var(--font-caveat), cursive;
   --tome-body-size: 1.35rem;
@@ -35,8 +39,8 @@
   --tome-cover-ink: #cbb7ec;
   --tome-cover-border: rgba(178, 143, 232, 0.5);
   --tome-cover-font: var(--font-fell), serif;
-  --tome-img-filter: saturate(0.75) brightness(0.9) contrast(1.05);
-  --tome-vignette: rgba(0, 0, 0, 0.55);
+  --tome-img-filter: sepia(0.45) saturate(0.7) contrast(0.95);
+  --tome-vignette: rgba(48, 30, 10, 0.5);
   --tome-ornament: "ᛉ";
   --tome-cover-ornament: "ᚹ ᛉ ᚹ";
 }
@@ -223,22 +227,41 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 58%,
-    var(--tome-vignette) 135%
-  );
+  background:
+    linear-gradient(to bottom, rgba(30, 18, 6, 0.14), transparent 3%),
+    linear-gradient(to top, rgba(30, 18, 6, 0.18), transparent 4%),
+    radial-gradient(ellipse at center, transparent 58%, var(--tome-vignette) 135%);
 }
 
+/* Bowed-page shading: deep gutter shadow, a curl highlight beside it,
+   and a soft fore-edge roll — reads as curved paper, costs one gradient stack. */
 .tome-page--left::after {
   background:
-    linear-gradient(to left, rgba(40, 25, 10, 0.32), transparent 9%),
+    linear-gradient(
+      to left,
+      rgba(30, 18, 6, 0.45),
+      rgba(30, 18, 6, 0.12) 5%,
+      transparent 10%
+    ),
+    linear-gradient(to left, transparent 10%, rgba(255, 248, 224, 0.07) 14%, transparent 20%),
+    linear-gradient(to right, rgba(30, 18, 6, 0.16), transparent 5%),
+    linear-gradient(to bottom, rgba(30, 18, 6, 0.14), transparent 3%),
+    linear-gradient(to top, rgba(30, 18, 6, 0.18), transparent 4%),
     radial-gradient(ellipse at center, transparent 58%, var(--tome-vignette) 135%);
 }
 
 .tome-page--right::after {
   background:
-    linear-gradient(to right, rgba(40, 25, 10, 0.32), transparent 9%),
+    linear-gradient(
+      to right,
+      rgba(30, 18, 6, 0.45),
+      rgba(30, 18, 6, 0.12) 5%,
+      transparent 10%
+    ),
+    linear-gradient(to right, transparent 10%, rgba(255, 248, 224, 0.07) 14%, transparent 20%),
+    linear-gradient(to left, rgba(30, 18, 6, 0.16), transparent 5%),
+    linear-gradient(to bottom, rgba(30, 18, 6, 0.14), transparent 3%),
+    linear-gradient(to top, rgba(30, 18, 6, 0.18), transparent 4%),
     radial-gradient(ellipse at center, transparent 58%, var(--tome-vignette) 135%);
 }
 
@@ -477,7 +500,7 @@
 }
 
 .theme-witch-grimoire .tome-page img {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(50, 32, 12, 0.3);
 }
 
 .tome-cover-title {
@@ -526,6 +549,168 @@
   font-size: 2.6rem;
   color: var(--tome-cover-ink);
   opacity: 0.22;
+}
+
+/* --------------------------------------------------------------------------
+   Witchfire — purple smoke and sparks rising from the grimoire's spine.
+   Animations touch only transform/opacity (compositor-friendly).
+-------------------------------------------------------------------------- */
+
+.tome-magic,
+.tome-clasp {
+  display: none;
+}
+
+.theme-witch-grimoire .tome-shell--open .tome-magic {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.tome-magic-glow {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 40%;
+  height: 80%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    rgba(150, 105, 220, 0.22),
+    rgba(120, 80, 190, 0.08) 45%,
+    transparent 70%
+  );
+  animation: tome-glow-pulse 6s ease-in-out infinite;
+}
+
+.tome-magic-smoke {
+  position: absolute;
+  left: 50%;
+  bottom: 40%;
+  width: 130px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 75%,
+    rgba(168, 120, 235, 0.3),
+    rgba(130, 85, 200, 0.14) 45%,
+    transparent 72%
+  );
+  filter: blur(10px);
+  opacity: 0;
+  animation: tome-smoke-rise 9s ease-out infinite;
+}
+
+.tome-magic-smoke--2 {
+  width: 90px;
+  height: 260px;
+  animation-duration: 7s;
+  animation-delay: 2.4s;
+  margin-left: -46px;
+}
+
+.tome-magic-smoke--3 {
+  width: 110px;
+  height: 300px;
+  animation-duration: 11s;
+  animation-delay: 4.8s;
+  margin-left: 34px;
+}
+
+.tome-magic-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: #cfa9ff;
+  box-shadow: 0 0 6px 2px rgba(170, 120, 240, 0.55);
+  opacity: 0;
+  animation: tome-spark 5s ease-in-out infinite;
+}
+
+.tome-magic-spark:nth-child(5)  { left: 46%; top: 26%; animation-delay: 0.4s; }
+.tome-magic-spark:nth-child(6)  { left: 53%; top: 14%; animation-delay: 1.6s; }
+.tome-magic-spark:nth-child(7)  { left: 49%; top: 36%; animation-delay: 2.7s; }
+.tome-magic-spark:nth-child(8)  { left: 57%; top: 30%; animation-delay: 3.5s; }
+.tome-magic-spark:nth-child(9)  { left: 43%; top: 18%; animation-delay: 4.3s; }
+.tome-magic-spark:nth-child(10) { left: 51%; top: 8%;  animation-delay: 5.1s; }
+
+@keyframes tome-smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 12%) scale(0.75) rotate(-2deg);
+  }
+  22% {
+    opacity: 0.65;
+  }
+  60% {
+    opacity: 0.35;
+    transform: translate(-46%, -55%) scale(1) rotate(2deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-53%, -115%) scale(1.2) rotate(-3deg);
+  }
+}
+
+@keyframes tome-glow-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes tome-spark {
+  0%, 100% { opacity: 0; transform: translateY(6px) scale(0.7); }
+  35% { opacity: 0.9; transform: translateY(-6px) scale(1); }
+  70% { opacity: 0.2; transform: translateY(-16px) scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tome-magic-smoke,
+  .tome-magic-spark {
+    display: none;
+  }
+
+  .tome-magic-glow {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Leather clasp strap reaching over the fore-edge */
+.theme-witch-grimoire .tome-shell--open .tome-clasp {
+  display: block;
+  position: absolute;
+  right: -30px;
+  top: 45%;
+  width: 46px;
+  height: 86px;
+  z-index: 5;
+  border-radius: 8px 10px 10px 8px;
+  background:
+    var(--tome-noise),
+    linear-gradient(105deg, #241a2e 0%, #150f1d 55%, #0b0812 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(178, 143, 232, 0.25),
+    inset 0 0 12px rgba(0, 0, 0, 0.6),
+    0 6px 14px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.theme-witch-grimoire .tome-shell--open .tome-clasp::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 26px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, #b9b2c8 0%, #6f6880 45%, #3d3750 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* --------------------------------------------------------------------------
