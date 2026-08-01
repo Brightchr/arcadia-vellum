@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "dashboard_theme" text DEFAULT 'witch-grimoire' NOT NULL;
