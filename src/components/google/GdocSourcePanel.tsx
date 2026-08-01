@@ -30,18 +30,23 @@ export function GdocSourcePanel({
 
   useEffect(() => {
     if (!googleEnabled) return;
+    // Surface OAuth errors Better Auth appends to the callback URL.
+    const oauthError = new URLSearchParams(window.location.search).get("error");
+    if (oauthError) {
+      setError(`Google linking failed: ${oauthError.replaceAll("_", " ")}`);
+    }
     let cancelled = false;
     (async () => {
       try {
         const accounts = await authClient.listAccounts();
         if (cancelled) return;
         const google = (accounts.data ?? []).find(
-          (a: { provider?: string; scopes?: string[] }) =>
-            a.provider === "google"
+          (a: { provider?: string; providerId?: string }) =>
+            (a.providerId ?? a.provider) === "google"
         );
-        const hasDrive = google?.scopes?.some((s) =>
-          s.includes("drive.file")
-        );
+        const hasDrive = (
+          google as { scopes?: string[] } | undefined
+        )?.scopes?.some((s) => s.includes("drive.file"));
         setLinkState(google && hasDrive ? "linked" : "unlinked");
       } catch {
         if (!cancelled) setLinkState("unlinked");
