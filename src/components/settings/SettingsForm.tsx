@@ -6,6 +6,7 @@ import type { Journal } from "@/lib/journals";
 import { THEMES, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "@/components/wizard/ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
+import { FormattingGuide } from "@/components/help/FormattingGuide";
 
 export function SettingsForm({
   journal,
@@ -243,7 +244,10 @@ export function SettingsForm({
 
       {/* Source */}
       <section className="panel-arcane p-6 space-y-4">
-        <h2 className="font-heading text-lg">Source</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-lg">Source</h2>
+          <FormattingGuide />
+        </div>
         {journal.sourceType === "gdoc" ? (
           <>
             <p className="text-sm text-ink-dim">

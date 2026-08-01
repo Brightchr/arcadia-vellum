@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { THEMES, DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "./ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
+import { FormattingGuide } from "@/components/help/FormattingGuide";
 
 type SourceType = "upload" | "gdoc";
 
@@ -160,6 +161,9 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
 
       {step === 1 && (
         <div className="space-y-4">
+          <div className="flex justify-end">
+            <FormattingGuide />
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
