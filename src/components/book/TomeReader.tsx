@@ -131,7 +131,7 @@ export default function TomeReader({
     const items: React.ReactElement[] = [
       // data-density="hard" makes covers flip as stiff boards, not paper.
       <div key="cover" className="tome-cover" data-density="hard">
-        <div className="tome-cover-ornament">✦ ✧ ✦</div>
+        <div className="tome-cover-ornament tome-cover-ornament--front" />
         <h1 className="tome-cover-title">{title}</h1>
         <hr className="tome-cover-rule" />
         {characterName ? (
@@ -139,6 +139,7 @@ export default function TomeReader({
         ) : (
           <p className="tome-cover-subtitle">A chronicle</p>
         )}
+        <div className="tome-cover-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ</div>
       </div>,
       // Endpaper glued inside the front cover, like a real binding.
       <div key="endpaper-front" className="tome-endpaper" data-density="hard">
@@ -170,11 +171,12 @@ export default function TomeReader({
     );
     items.push(
       <div key="back" className="tome-cover" data-density="hard">
-        <div className="tome-cover-ornament">✦</div>
+        <div className="tome-cover-ornament tome-cover-ornament--back" />
         <p className="tome-cover-subtitle">Here ends the chronicle</p>
         <p className="tome-cover-subtitle" style={{ opacity: 0.6 }}>
           — for now —
         </p>
+        <div className="tome-cover-runes">ᚺ ᚾ ᛁ ᛃ ᛈ ᛇ</div>
       </div>
     );
     return items;

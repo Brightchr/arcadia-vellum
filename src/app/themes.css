@@ -10,33 +10,64 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Theme: Witch's Grimoire — pale mossy parchment, violet ink, poison accents
+   Theme: Witch's Grimoire — black midnight pages, bone-pale ink, runes
 --------------------------------------------------------------------------- */
 .theme-witch-grimoire {
-  --tome-page-bg-color: #e6e0cd;
+  --tome-page-bg-color: #17111e;
   --tome-page-bg:
     var(--tome-noise),
-    var(--tome-fibers),
-    radial-gradient(ellipse at 30% 20%, rgba(120, 140, 90, 0.10), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgba(90, 70, 120, 0.12), transparent 55%),
-    linear-gradient(160deg, #eae4d2 0%, #e2dbc5 50%, #d8cfb4 100%);
-  --tome-ink: #2c2135;
-  --tome-accent: #5a3d78;
-  --tome-accent-2: #4e6b3a;
+    radial-gradient(ellipse at 22% 12%, rgba(143, 174, 110, 0.07), transparent 50%),
+    radial-gradient(ellipse at 82% 88%, rgba(157, 123, 216, 0.1), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.02), transparent 70%),
+    linear-gradient(160deg, #1d1626 0%, #171020 55%, #110c19 100%);
+  --tome-ink: #d9d1e4;
+  --tome-accent: #b28fe8;
+  --tome-accent-2: #8fae6e;
   --tome-heading-font: var(--font-fell), serif;
   --tome-body-font: var(--font-caveat), cursive;
   --tome-body-size: 1.35rem;
   --tome-body-line: 1.45;
   --tome-cover-bg:
     var(--tome-noise),
-    radial-gradient(ellipse at 50% 30%, rgba(157, 123, 216, 0.22), transparent 60%),
-    linear-gradient(150deg, #241a2e 0%, #17101f 55%, #0e0a14 100%);
-  --tome-cover-ink: #c9b2e8;
-  --tome-cover-border: rgba(157, 123, 216, 0.55);
+    radial-gradient(ellipse at 50% 32%, rgba(143, 174, 110, 0.1), transparent 55%),
+    radial-gradient(ellipse at 50% 30%, rgba(157, 123, 216, 0.16), transparent 62%),
+    linear-gradient(150deg, #17111d 0%, #100b16 55%, #08060d 100%);
+  --tome-cover-ink: #cbb7ec;
+  --tome-cover-border: rgba(178, 143, 232, 0.5);
   --tome-cover-font: var(--font-fell), serif;
-  --tome-img-filter: sepia(0.25) saturate(0.85);
-  --tome-vignette: rgba(60, 40, 30, 0.28);
-  --tome-ornament: "✦";
+  --tome-img-filter: saturate(0.75) brightness(0.9) contrast(1.05);
+  --tome-vignette: rgba(0, 0, 0, 0.55);
+  --tome-ornament: "ᛉ";
+  --tome-cover-ornament: "ᚹ ᛉ ᚹ";
+}
+
+/* Rune inscriptions along the grimoire's cover and page corners */
+.tome-cover-runes {
+  display: none;
+}
+
+.theme-witch-grimoire .tome-cover .tome-cover-runes {
+  display: block;
+  position: absolute;
+  bottom: 2.2rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 0.65em;
+  color: var(--tome-cover-ink);
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.theme-witch-grimoire .tome-page .tome-page-number::before {
+  content: "ᛝ ";
+  opacity: 0.7;
+}
+
+.theme-witch-grimoire .tome-page .tome-page-number::after {
+  content: " ᛝ";
+  opacity: 0.7;
 }
 
 /* ---------------------------------------------------------------------------
@@ -434,6 +465,19 @@
   font-size: 1.6rem;
   opacity: 0.8;
   margin-bottom: 1.2rem;
+}
+
+/* Theme-controlled cover glyphs */
+.tome-cover-ornament--front::before {
+  content: var(--tome-cover-ornament, "✦ ✧ ✦");
+}
+
+.tome-cover-ornament--back::before {
+  content: var(--tome-ornament, "✦");
+}
+
+.theme-witch-grimoire .tome-page img {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .tome-cover-title {
