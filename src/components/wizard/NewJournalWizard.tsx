@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { THEMES, DEFAULT_THEME, type ThemeId } from "@/lib/themes";
+import { THEMES, DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "./ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 
 type SourceType = "upload" | "gdoc";
+
+// Wizard progress survives the round-trip to Google's consent screen
+// (Connect Google Drive navigates away and back).
+const STORAGE_KEY = "av-new-journal";
 
 export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
@@ -19,6 +23,40 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
   const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "null");
+      if (saved) {
+        if (typeof saved.step === "number") setStep(Math.min(saved.step, 2));
+        if (typeof saved.title === "string") setTitle(saved.title);
+        if (typeof saved.characterName === "string") {
+          setCharacterName(saved.characterName);
+        }
+        if (saved.source === "upload" || saved.source === "gdoc") {
+          setSource(saved.source);
+        }
+        if (typeof saved.theme === "string" && isThemeId(saved.theme)) {
+          setTheme(saved.theme);
+        }
+        if (saved.pickedDoc?.id && saved.pickedDoc?.name) {
+          setPickedDoc(saved.pickedDoc);
+        }
+      }
+    } catch {
+      // Corrupt state — start fresh.
+    }
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ step, title, characterName, source, theme, pickedDoc })
+    );
+  }, [restored, step, title, characterName, source, theme, pickedDoc]);
 
   const sourceReady = source === "upload" ? file !== null : pickedDoc !== null;
 
@@ -42,6 +80,7 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
       }
 
       const journal = body.journal;
+      sessionStorage.removeItem(STORAGE_KEY);
       if (source === "gdoc") {
         const syncRes = await fetch(`/api/journals/${journal.id}/sync`, {
           method: "POST",
@@ -121,7 +160,7 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
 
       {step === 1 && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => setSource("gdoc")}
@@ -208,9 +247,14 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
           type="button"
           className="btn-ghost"
           disabled={busy}
-          onClick={() =>
-            step === 0 ? router.push("/dashboard") : setStep(step - 1)
-          }
+          onClick={() => {
+            if (step === 0) {
+              sessionStorage.removeItem(STORAGE_KEY);
+              router.push("/dashboard");
+            } else {
+              setStep(step - 1);
+            }
+          }}
         >
           {step === 0 ? "Cancel" : "Back"}
         </button>
