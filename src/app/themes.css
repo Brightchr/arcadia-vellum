@@ -678,6 +678,137 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Reading scene — near-black backdrop with glowing runes and firelight
+   (witch grimoire theme; other themes keep the plain arcane backdrop)
+-------------------------------------------------------------------------- */
+
+.tome-ambience {
+  display: none;
+}
+
+.theme-witch-grimoire.tome-scene {
+  background:
+    radial-gradient(ellipse at 50% 118%, rgba(224, 140, 60, 0.14), transparent 45%),
+    radial-gradient(ellipse at 50% 38%, rgba(96, 64, 150, 0.13), transparent 62%),
+    radial-gradient(ellipse at center, #110c19 0%, #0a0711 55%, #040207 100%);
+}
+
+.theme-witch-grimoire .tome-ambience {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Firelight breathing at the foot of the scene */
+.tome-ambience-fire {
+  position: absolute;
+  left: 50%;
+  bottom: -12%;
+  width: 90%;
+  height: 38%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(232, 150, 66, 0.2),
+    rgba(200, 110, 45, 0.08) 45%,
+    transparent 70%
+  );
+  animation: ambience-fire 7s ease-in-out infinite;
+}
+
+/* Faint runes adrift in the dark */
+.tome-ambience-rune {
+  position: absolute;
+  font-size: 1.5rem;
+  color: #b28fe8;
+  opacity: 0.12;
+  text-shadow:
+    0 0 8px rgba(178, 143, 232, 0.8),
+    0 0 22px rgba(140, 100, 210, 0.5);
+  animation: ambience-rune 7s ease-in-out infinite;
+}
+
+.tome-ambience-rune:nth-of-type(1)  { left: 4%;  top: 18%; font-size: 1.6rem; transform: rotate(-12deg); animation-delay: 0s; }
+.tome-ambience-rune:nth-of-type(2)  { left: 9%;  top: 44%; font-size: 2.4rem; transform: rotate(8deg);   animation-delay: 1.2s; }
+.tome-ambience-rune:nth-of-type(3)  { left: 5%;  top: 70%; font-size: 1.3rem; transform: rotate(-6deg);  animation-delay: 2.4s; }
+.tome-ambience-rune:nth-of-type(4)  { left: 12%; top: 86%; font-size: 1.8rem; transform: rotate(14deg);  animation-delay: 3.6s; }
+.tome-ambience-rune:nth-of-type(5)  { left: 90%; top: 14%; font-size: 2rem;   transform: rotate(10deg);  animation-delay: 0.8s; }
+.tome-ambience-rune:nth-of-type(6)  { left: 94%; top: 38%; font-size: 1.4rem; transform: rotate(-9deg);  animation-delay: 2s; }
+.tome-ambience-rune:nth-of-type(7)  { left: 88%; top: 62%; font-size: 2.6rem; transform: rotate(5deg);   animation-delay: 3.2s; }
+.tome-ambience-rune:nth-of-type(8)  { left: 93%; top: 82%; font-size: 1.6rem; transform: rotate(-15deg); animation-delay: 4.4s; }
+.tome-ambience-rune:nth-of-type(9)  { left: 22%; top: 7%;  font-size: 1.3rem; transform: rotate(7deg);   animation-delay: 1.6s; }
+.tome-ambience-rune:nth-of-type(10) { left: 74%; top: 5%;  font-size: 1.5rem; transform: rotate(-8deg);  animation-delay: 2.8s; }
+.tome-ambience-rune:nth-of-type(11) { left: 45%; top: 3%;  font-size: 1.2rem; transform: rotate(12deg);  animation-delay: 4s; }
+.tome-ambience-rune:nth-of-type(12) { left: 60%; top: 93%; font-size: 1.4rem; transform: rotate(-5deg);  animation-delay: 5.2s; }
+
+/* Embers rising as if from a fire beneath the book */
+.tome-ambience-ember {
+  position: absolute;
+  bottom: 4%;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #e8964a;
+  box-shadow: 0 0 6px 2px rgba(232, 150, 66, 0.55);
+  opacity: 0;
+  animation: ambience-ember 9s linear infinite;
+}
+
+.tome-ambience-ember:nth-of-type(13) { left: 32%; animation-duration: 8s;    animation-delay: 0s;   --ember-drift: 26px; }
+.tome-ambience-ember:nth-of-type(14) { left: 38%; animation-duration: 10.5s; animation-delay: 2s;   --ember-drift: -20px; }
+.tome-ambience-ember:nth-of-type(15) { left: 44%; animation-duration: 7.5s;  animation-delay: 4s;   --ember-drift: 34px; }
+.tome-ambience-ember:nth-of-type(16) { left: 50%; animation-duration: 11s;   animation-delay: 1s;   --ember-drift: -30px; }
+.tome-ambience-ember:nth-of-type(17) { left: 56%; animation-duration: 8.5s;  animation-delay: 3.5s; --ember-drift: 18px; }
+.tome-ambience-ember:nth-of-type(18) { left: 62%; animation-duration: 9.5s;  animation-delay: 5.5s; --ember-drift: -24px; }
+.tome-ambience-ember:nth-of-type(19) { left: 68%; animation-duration: 7s;    animation-delay: 2.6s; --ember-drift: 30px; }
+.tome-ambience-ember:nth-of-type(20) { left: 35%; animation-duration: 12s;   animation-delay: 6.4s; --ember-drift: -16px; }
+.tome-ambience-ember:nth-of-type(21) { left: 59%; animation-duration: 9s;    animation-delay: 7.2s; --ember-drift: 22px; }
+.tome-ambience-ember:nth-of-type(22) { left: 47%; animation-duration: 10s;   animation-delay: 8.1s; --ember-drift: -28px; }
+
+@keyframes ambience-fire {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes ambience-rune {
+  0%, 100% { opacity: 0.09; }
+  50% { opacity: 0.34; }
+}
+
+@keyframes ambience-ember {
+  0% { opacity: 0; translate: 0 0; }
+  12% { opacity: 0.85; }
+  70% { opacity: 0.3; }
+  100% { opacity: 0; translate: var(--ember-drift, 20px) -72vh; }
+}
+
+@media (max-width: 700px) {
+  .tome-ambience-rune:nth-of-type(9),
+  .tome-ambience-rune:nth-of-type(10),
+  .tome-ambience-rune:nth-of-type(11),
+  .tome-ambience-ember:nth-of-type(18),
+  .tome-ambience-ember:nth-of-type(20),
+  .tome-ambience-ember:nth-of-type(22) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tome-ambience-ember {
+    display: none;
+  }
+
+  .tome-ambience-rune,
+  .tome-ambience-fire {
+    animation: none;
+    opacity: 0.2;
+  }
+}
+
 /* Leather clasp strap reaching over the fore-edge */
 .theme-witch-grimoire .tome-shell--open .tome-clasp {
   display: block;

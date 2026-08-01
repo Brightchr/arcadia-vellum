@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
 import TomeReader from "@/components/book/TomeReaderClient";
+import { TomeAmbience } from "@/components/book/TomeAmbience";
 
 export async function generateMetadata({
   params,
@@ -37,7 +38,10 @@ export default async function ReaderPage({
   const content = await getJournalContent(journal.id);
 
   return (
-    <main className="arcane-bg h-dvh w-full overflow-hidden relative">
+    <main
+      className={`theme-${journal.theme} tome-scene arcane-bg h-dvh w-full overflow-hidden relative`}
+    >
+      <TomeAmbience />
       <header className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
           href={isOwner ? "/dashboard" : "/"}
@@ -55,7 +59,7 @@ export default async function ReaderPage({
         )}
       </header>
 
-      <div className="h-full w-full pt-10 pb-2">
+      <div className="h-full w-full pt-10 pb-2 relative z-10">
         <TomeReader
           html={content?.html ?? ""}
           theme={journal.theme}
