@@ -1,0 +1,494 @@
+/* ===========================================================================
+   Book themes. Each .theme-<id> scope defines the variables the shared
+   .tome-page / .tome-cover styles consume. Textures are pure CSS/SVG.
+   =========================================================================== */
+
+/* --- shared paper noise (subtle fractal grain) --- */
+:root {
+  --tome-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  --tome-fibers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012 0.05' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)' opacity='0.045'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Theme: Witch's Grimoire — pale mossy parchment, violet ink, poison accents
+--------------------------------------------------------------------------- */
+.theme-witch-grimoire {
+  --tome-page-bg-color: #e6e0cd;
+  --tome-page-bg:
+    var(--tome-noise),
+    var(--tome-fibers),
+    radial-gradient(ellipse at 30% 20%, rgba(120, 140, 90, 0.10), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(90, 70, 120, 0.12), transparent 55%),
+    linear-gradient(160deg, #eae4d2 0%, #e2dbc5 50%, #d8cfb4 100%);
+  --tome-ink: #2c2135;
+  --tome-accent: #5a3d78;
+  --tome-accent-2: #4e6b3a;
+  --tome-heading-font: var(--font-fell), serif;
+  --tome-body-font: var(--font-caveat), cursive;
+  --tome-body-size: 1.35rem;
+  --tome-body-line: 1.45;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(ellipse at 50% 30%, rgba(157, 123, 216, 0.22), transparent 60%),
+    linear-gradient(150deg, #241a2e 0%, #17101f 55%, #0e0a14 100%);
+  --tome-cover-ink: #c9b2e8;
+  --tome-cover-border: rgba(157, 123, 216, 0.55);
+  --tome-cover-font: var(--font-fell), serif;
+  --tome-img-filter: sepia(0.25) saturate(0.85);
+  --tome-vignette: rgba(60, 40, 30, 0.28);
+}
+
+/* ---------------------------------------------------------------------------
+   Theme: Ancient Tome — deep aged parchment, sepia ink, blackletter heads
+--------------------------------------------------------------------------- */
+.theme-ancient-tome {
+  --tome-page-bg-color: #e0d3ae;
+  --tome-page-bg:
+    var(--tome-noise),
+    var(--tome-fibers),
+    radial-gradient(ellipse at 20% 15%, rgba(140, 100, 40, 0.14), transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba(120, 80, 30, 0.16), transparent 50%),
+    linear-gradient(155deg, #e8dcba 0%, #ddcfa4 45%, #cbb987 100%);
+  --tome-ink: #3d2b1a;
+  --tome-accent: #7a3b1e;
+  --tome-accent-2: #5c452a;
+  --tome-heading-font: var(--font-unifraktur), serif;
+  --tome-body-font: var(--font-fell), serif;
+  --tome-body-size: 1.02rem;
+  --tome-body-line: 1.55;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(ellipse at 50% 25%, rgba(216, 160, 60, 0.16), transparent 60%),
+    linear-gradient(150deg, #4a3220 0%, #33210f 55%, #241608 100%);
+  --tome-cover-ink: #d8b26a;
+  --tome-cover-border: rgba(216, 178, 106, 0.6);
+  --tome-cover-font: var(--font-unifraktur), serif;
+  --tome-img-filter: sepia(0.5) saturate(0.7) contrast(0.95);
+  --tome-vignette: rgba(80, 50, 15, 0.35);
+}
+
+/* ---------------------------------------------------------------------------
+   Theme: Elven Chronicle — pale silver-green leaf, graceful script
+--------------------------------------------------------------------------- */
+.theme-elven-chronicle {
+  --tome-page-bg-color: #e9ecdd;
+  --tome-page-bg:
+    var(--tome-noise),
+    radial-gradient(ellipse at 25% 20%, rgba(140, 170, 130, 0.12), transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(160, 180, 150, 0.10), transparent 50%),
+    linear-gradient(160deg, #eef0e2 0%, #e4e8d4 55%, #d6dcc2 100%);
+  --tome-ink: #2f3a2e;
+  --tome-accent: #4a6b52;
+  --tome-accent-2: #8a9a6a;
+  --tome-heading-font: var(--font-cinzel), serif;
+  --tome-body-font: var(--font-cormorant), serif;
+  --tome-body-size: 1.08rem;
+  --tome-body-line: 1.6;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(ellipse at 50% 30%, rgba(180, 210, 170, 0.14), transparent 60%),
+    linear-gradient(155deg, #2c3b2e 0%, #1e2b21 55%, #131d16 100%);
+  --tome-cover-ink: #c4d6b4;
+  --tome-cover-border: rgba(196, 214, 180, 0.55);
+  --tome-cover-font: var(--font-cinzel), serif;
+  --tome-img-filter: saturate(0.9) brightness(1.02);
+  --tome-vignette: rgba(60, 80, 55, 0.22);
+}
+
+/* ---------------------------------------------------------------------------
+   Theme: Captain's Log — salt-stained paper, bold weathered hand
+--------------------------------------------------------------------------- */
+.theme-captains-log {
+  --tome-page-bg-color: #ddd2b5;
+  --tome-page-bg:
+    var(--tome-noise),
+    var(--tome-fibers),
+    radial-gradient(ellipse at 75% 10%, rgba(60, 90, 110, 0.13), transparent 45%),
+    radial-gradient(circle at 15% 85%, rgba(70, 50, 20, 0.18), transparent 35%),
+    radial-gradient(circle at 88% 70%, rgba(50, 40, 20, 0.12), transparent 25%),
+    linear-gradient(150deg, #e4dabd 0%, #d8cca8 50%, #c4b58c 100%);
+  --tome-ink: #2e2a22;
+  --tome-accent: #1f4a5e;
+  --tome-accent-2: #6e3b22;
+  --tome-heading-font: var(--font-pirata), serif;
+  --tome-body-font: var(--font-fell), serif;
+  --tome-body-size: 1.02rem;
+  --tome-body-line: 1.5;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(ellipse at 50% 25%, rgba(90, 140, 160, 0.15), transparent 55%),
+    linear-gradient(150deg, #23384a 0%, #16283a 55%, #0d1a28 100%);
+  --tome-cover-ink: #a8c4d4;
+  --tome-cover-border: rgba(168, 196, 212, 0.5);
+  --tome-cover-font: var(--font-pirata), serif;
+  --tome-img-filter: sepia(0.35) saturate(0.75);
+  --tome-vignette: rgba(50, 55, 35, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+   Theme: Arcane Codex — midnight page, gold ink, celestial
+--------------------------------------------------------------------------- */
+.theme-arcane-codex {
+  --tome-page-bg-color: #1b2138;
+  --tome-page-bg:
+    var(--tome-noise),
+    radial-gradient(circle at 18% 22%, rgba(230, 200, 120, 0.06) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 72% 12%, rgba(230, 200, 120, 0.08) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 85% 60%, rgba(230, 200, 120, 0.06) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 35% 78%, rgba(230, 200, 120, 0.07) 0 1px, transparent 1.6px),
+    radial-gradient(ellipse at 60% 30%, rgba(90, 110, 190, 0.16), transparent 60%),
+    linear-gradient(160deg, #222a48 0%, #1a2038 55%, #131829 100%);
+  --tome-ink: #d7ddef;
+  --tome-accent: #e0be6a;
+  --tome-accent-2: #8ea0d8;
+  --tome-heading-font: var(--font-cinzel-deco), serif;
+  --tome-body-font: var(--font-garamond), serif;
+  --tome-body-size: 1.05rem;
+  --tome-body-line: 1.6;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(circle at 30% 25%, rgba(224, 190, 106, 0.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 65%, rgba(224, 190, 106, 0.1) 0 1.5px, transparent 2.5px),
+    radial-gradient(ellipse at 50% 30%, rgba(110, 130, 220, 0.2), transparent 60%),
+    linear-gradient(150deg, #1c2340 0%, #12182e 55%, #0a0e1d 100%);
+  --tome-cover-ink: #e0be6a;
+  --tome-cover-border: rgba(224, 190, 106, 0.55);
+  --tome-cover-font: var(--font-cinzel-deco), serif;
+  --tome-img-filter: saturate(0.85) brightness(0.95);
+  --tome-vignette: rgba(5, 8, 20, 0.5);
+}
+
+/* ===========================================================================
+   Shared page & cover construction
+   =========================================================================== */
+
+.tome-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--tome-page-bg-color);
+  background-image: var(--tome-page-bg);
+  color: var(--tome-ink);
+  font-family: var(--tome-body-font);
+  font-size: var(--tome-body-size, 1.05rem);
+  line-height: var(--tome-body-line, 1.55);
+  padding: 2.2rem 2.4rem 2.6rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 60px var(--tome-vignette);
+}
+
+/* Aged edge darkening near the spine */
+.tome-page--left {
+  box-shadow:
+    inset -28px 0 40px -28px rgba(40, 25, 10, 0.5),
+    inset 0 0 60px var(--tome-vignette);
+}
+
+.tome-page--right {
+  box-shadow:
+    inset 28px 0 40px -28px rgba(40, 25, 10, 0.5),
+    inset 0 0 60px var(--tome-vignette);
+}
+
+.tome-page h1,
+.tome-page h2,
+.tome-page h3,
+.tome-page h4,
+.tome-page .tome-chapter {
+  font-family: var(--tome-heading-font);
+  color: var(--tome-accent);
+  line-height: 1.25;
+  margin: 1.1em 0 0.45em;
+  font-weight: 600;
+}
+
+.tome-page h1,
+.tome-page .tome-chapter {
+  font-size: 1.7em;
+  text-align: center;
+  margin-top: 0.3em;
+}
+
+.tome-page h1::after,
+.tome-page .tome-chapter::after {
+  content: "";
+  display: block;
+  width: 40%;
+  margin: 0.35em auto 0;
+  border-bottom: 1px solid var(--tome-accent-2);
+  opacity: 0.7;
+}
+
+.tome-page h2 {
+  font-size: 1.35em;
+}
+
+.tome-page h3,
+.tome-page h4 {
+  font-size: 1.15em;
+}
+
+.tome-page p {
+  margin: 0 0 0.65em;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.tome-page em {
+  color: var(--tome-accent-2);
+}
+
+.tome-page strong {
+  color: var(--tome-accent);
+}
+
+.tome-page a {
+  color: var(--tome-accent);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.tome-page blockquote {
+  margin: 0.8em 1.2em;
+  padding-left: 0.9em;
+  border-left: 2px solid var(--tome-accent-2);
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.tome-page ul,
+.tome-page ol {
+  margin: 0 0 0.65em 1.4em;
+  padding: 0;
+}
+
+.tome-page ul {
+  list-style: disc outside;
+}
+
+.tome-page ol {
+  list-style: decimal outside;
+}
+
+.tome-page li {
+  margin-bottom: 0.25em;
+}
+
+.tome-page hr {
+  border: none;
+  text-align: center;
+  margin: 1em 0;
+}
+
+.tome-page hr::after {
+  content: "❦";
+  color: var(--tome-accent-2);
+  font-size: 1.1em;
+}
+
+.tome-page img {
+  display: block;
+  max-width: 90%;
+  max-height: 45vh;
+  margin: 0.8em auto;
+  border: 4px solid rgba(0, 0, 0, 0.15);
+  filter: var(--tome-img-filter);
+  object-fit: contain;
+}
+
+.tome-page table {
+  border-collapse: collapse;
+  margin: 0.8em auto;
+  font-size: 0.9em;
+  max-width: 100%;
+}
+
+.tome-page th,
+.tome-page td {
+  border: 1px solid var(--tome-accent-2);
+  padding: 0.3em 0.6em;
+}
+
+/* Drop cap on the first paragraph of a page that starts a chapter */
+.tome-page h1 + p::first-letter,
+.tome-page .tome-chapter + p::first-letter,
+.tome-page .tome-dropcap::first-letter {
+  font-family: var(--tome-heading-font);
+  color: var(--tome-accent);
+  font-size: 3.1em;
+  float: left;
+  line-height: 0.85;
+  padding-right: 0.08em;
+  padding-top: 0.04em;
+}
+
+.tome-page-number {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--tome-heading-font);
+  font-size: 0.8rem;
+  color: var(--tome-accent-2);
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------------------
+   Covers
+-------------------------------------------------------------------------- */
+
+.tome-cover {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #171017;
+  background-image: var(--tome-cover-bg);
+  color: var(--tome-cover-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2.5rem;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+.tome-cover::before {
+  content: "";
+  position: absolute;
+  inset: 1.1rem;
+  border: 2px solid var(--tome-cover-border);
+  outline: 1px solid rgba(0, 0, 0, 0.4);
+  outline-offset: 4px;
+  pointer-events: none;
+}
+
+.tome-cover-ornament {
+  font-size: 1.6rem;
+  opacity: 0.8;
+  margin-bottom: 1.2rem;
+}
+
+.tome-cover-title {
+  font-family: var(--tome-cover-font);
+  font-size: clamp(1.4rem, 4vw, 2.3rem);
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.8rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.tome-cover-subtitle {
+  font-family: var(--tome-cover-font);
+  font-size: 1rem;
+  opacity: 0.85;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tome-cover-rule {
+  width: 30%;
+  border: none;
+  border-bottom: 1px solid var(--tome-cover-border);
+  margin: 1rem auto;
+  opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   Wizard mini-preview
+-------------------------------------------------------------------------- */
+
+.tome-preview-page {
+  height: 190px;
+  border-radius: 4px;
+  padding: 0.9rem 1rem;
+  font-size: 0.72em;
+  box-shadow:
+    inset 0 0 30px var(--tome-vignette),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.tome-preview-page .tome-chapter {
+  font-size: 1.25em;
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Reader shell
+-------------------------------------------------------------------------- */
+
+.tome-reader-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tome-measurer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  left: -10000px;
+  top: 0;
+  z-index: -1;
+  /* .tome-page sets height:100%; the measurer must grow with content so
+     pagination can compare rendered height against the page height. */
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.tome-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 8, 16, 0.55);
+  color: #e8e0d0;
+  font-size: 1.6rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+  backdrop-filter: blur(4px);
+}
+
+.tome-nav:hover {
+  background: rgba(157, 123, 216, 0.35);
+  border-color: rgba(157, 123, 216, 0.6);
+}
+
+.tome-nav--prev {
+  left: 0.75rem;
+}
+
+.tome-nav--next {
+  right: 0.75rem;
+}
+
+.tome-progress {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  font-family: var(--font-cinzel), serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(232, 224, 208, 0.65);
+  background: rgba(10, 8, 16, 0.45);
+  border-radius: 9999px;
+  padding: 0.25rem 0.9rem;
+  backdrop-filter: blur(4px);
+}
