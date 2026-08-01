@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip-enhanced";
 import { paginateHtml, preloadImages } from "./paginate";
+import { ThemedArrow, JumpIcon } from "./NavIcons";
 
 interface Dims {
   pageW: number;
@@ -52,6 +53,8 @@ export default function TomeReader({
     return Number.isFinite(p) && p > 0 ? p : 0;
   });
   const [pageNo, setPageNo] = useState(startPage);
+  // Non-null while the reader is typing a page number to jump to.
+  const [pageInput, setPageInput] = useState<string | null>(null);
 
   // Track stage size; debounce updates and ignore no-op changes.
   useEffect(() => {
@@ -118,6 +121,16 @@ export default function TomeReader({
   // (2 covers + 2 endpapers + content + optional filler).
   const needsFiller = contentPages.length % 2 === 1;
   const totalLeaves = contentPages.length + (needsFiller ? 1 : 0) + 4;
+
+  const goTo = (leaf: number) => {
+    const flip = bookRef.current?.pageFlip?.();
+    if (!flip) return;
+    const target = Math.max(0, Math.min(totalLeaves - 1, leaf));
+    // Animate short hops; snap long jumps so pages don't flicker past.
+    if (Math.abs(target - pageNo) <= 2) flip.flip(target);
+    else flip.turnToPage(target);
+    setPageNo(target);
+  };
   const bookKey = dims
     ? `${dims.pageW}x${dims.pageH}-${theme}-${contentPages.length}`
     : "pending";
@@ -245,7 +258,6 @@ export default function TomeReader({
           >
             {leaves}
             </HTMLFlipBook>
-            <div className="tome-clasp" />
             <div className="tome-magic" aria-hidden="true">
               <div className="tome-magic-glow" />
               <div className="tome-magic-smoke" />
@@ -267,7 +279,7 @@ export default function TomeReader({
             className="tome-nav tome-nav--prev"
             onClick={() => bookRef.current?.pageFlip?.()?.flipPrev()}
           >
-            ‹
+            <ThemedArrow theme={theme} direction="prev" />
           </button>
           <button
             type="button"
@@ -275,10 +287,64 @@ export default function TomeReader({
             className="tome-nav tome-nav--next"
             onClick={() => bookRef.current?.pageFlip?.()?.flipNext()}
           >
-            ›
+            <ThemedArrow theme={theme} direction="next" />
           </button>
-          <div className="tome-progress">
-            {Math.min(pageNo + 1, totalLeaves)} / {totalLeaves}
+
+          <div className="tome-navbar">
+            <button
+              type="button"
+              aria-label="First page"
+              className="tome-navbar-jump"
+              onClick={() => goTo(0)}
+            >
+              <JumpIcon direction="first" />
+            </button>
+
+            {pageInput === null ? (
+              <button
+                type="button"
+                className="tome-navbar-page"
+                aria-label="Jump to a page number"
+                onClick={() =>
+                  setPageInput(String(Math.min(pageNo + 1, totalLeaves)))
+                }
+              >
+                {Math.min(pageNo + 1, totalLeaves)} / {totalLeaves}
+              </button>
+            ) : (
+              <form
+                className="tome-navbar-page"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const n = parseInt(pageInput, 10);
+                  if (Number.isFinite(n)) goTo(n - 1);
+                  setPageInput(null);
+                }}
+              >
+                <input
+                  autoFocus
+                  className="tome-navbar-input"
+                  inputMode="numeric"
+                  value={pageInput}
+                  onChange={(e) =>
+                    setPageInput(e.target.value.replace(/\D/g, ""))
+                  }
+                  onBlur={() => setPageInput(null)}
+                  onFocus={(e) => e.target.select()}
+                  aria-label="Page number"
+                />
+                <span> / {totalLeaves}</span>
+              </form>
+            )}
+
+            <button
+              type="button"
+              aria-label="Last page"
+              className="tome-navbar-jump"
+              onClick={() => goTo(totalLeaves - 1)}
+            >
+              <JumpIcon direction="last" />
+            </button>
           </div>
         </>
       )}
