@@ -199,6 +199,7 @@ export default function TomeReader({
           >
             <div className="tome-edge tome-edge--left" />
             <div className="tome-edge tome-edge--right" />
+            <div className="tome-edge tome-edge--bottom" />
             <HTMLFlipBook
             key={bookKey}
             ref={bookRef}
@@ -214,7 +215,7 @@ export default function TomeReader({
             showCover
             drawShadow
             maxShadowOpacity={0.4}
-            flippingTime={800}
+            flippingTime={650}
             mobileScrollSupport
             clickEventForward
             useMouseEvents

@@ -178,20 +178,38 @@
     calc(2.2rem * var(--tome-page-scale, 1))
     calc(2.5rem * var(--tome-page-scale, 1));
   overflow: hidden;
-  box-shadow: inset 0 0 60px var(--tome-vignette);
 }
 
-/* Aged edge darkening near the spine */
-.tome-page--left {
-  box-shadow:
-    inset -28px 0 40px -28px rgba(40, 25, 10, 0.5),
-    inset 0 0 60px var(--tome-vignette);
+/* Vignette + spine shading as gradient overlays instead of huge blurred
+   box-shadows — dramatically cheaper to repaint during flip animation. */
+.tome-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 58%,
+    var(--tome-vignette) 135%
+  );
 }
 
-.tome-page--right {
-  box-shadow:
-    inset 28px 0 40px -28px rgba(40, 25, 10, 0.5),
-    inset 0 0 60px var(--tome-vignette);
+.tome-page--left::after {
+  background:
+    linear-gradient(to left, rgba(40, 25, 10, 0.32), transparent 9%),
+    radial-gradient(ellipse at center, transparent 58%, var(--tome-vignette) 135%);
+}
+
+.tome-page--right::after {
+  background:
+    linear-gradient(to right, rgba(40, 25, 10, 0.32), transparent 9%),
+    radial-gradient(ellipse at center, transparent 58%, var(--tome-vignette) 135%);
+}
+
+/* Give the animated leaves their own compositor layers */
+.stf__item {
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .tome-page h1,
@@ -449,45 +467,51 @@
 .tome-shell::after {
   content: "";
   position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -20px;
-  height: 34px;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6), transparent 70%);
-  filter: blur(7px);
-  z-index: -2;
+  left: 2%;
+  right: 2%;
+  bottom: -30px;
+  height: 40px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.65), transparent 70%);
+  filter: blur(8px);
+  z-index: -3;
   pointer-events: none;
 }
 
-/* Leather back cover peeking out around the open book */
+/* Thick leather binding wrapped around the open book */
 .tome-shell--open::before {
   content: "";
   position: absolute;
-  inset: -7px -14px -12px;
-  z-index: -1;
-  border-radius: 6px;
+  inset: -12px -34px -22px;
+  z-index: -2;
+  border-radius: 14px 18px 18px 14px;
   background-color: #191014;
-  background-image: var(--tome-cover-bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.05), transparent 55%),
+    linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.35),
+      transparent 12%,
+      transparent 44%,
+      rgba(0, 0, 0, 0.5) 50%,
+      transparent 56%,
+      transparent 88%,
+      rgba(0, 0, 0, 0.35)
+    ),
+    var(--tome-cover-bg);
   box-shadow:
-    inset 0 0 0 2px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.6),
+    inset 0 0 26px rgba(0, 0, 0, 0.5),
     0 0 0 1px var(--tome-cover-border),
-    0 12px 34px rgba(0, 0, 0, 0.55);
+    0 2px 0 1px rgba(0, 0, 0, 0.6),
+    0 20px 44px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
 
-/* Stacked page edges along the fore-edges of the open book */
+/* Thick block of stacked pages along the fore-edges and tail */
 .tome-edge {
   display: none;
   position: absolute;
-  top: 5px;
-  bottom: 8px;
-  width: 11px;
   z-index: -1;
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.22) 0 1px,
-    transparent 1px 3px
-  );
   background-color: var(--tome-page-bg-color);
   pointer-events: none;
 }
@@ -496,16 +520,38 @@
   display: block;
 }
 
+.tome-edge--left,
+.tome-edge--right {
+  top: 4px;
+  bottom: -10px;
+  width: 24px;
+}
+
 .tome-edge--left {
-  left: -10px;
-  border-radius: 3px 0 0 3px;
-  transform: skewY(0.4deg);
+  left: -22px;
+  border-radius: 8px 0 0 10px;
+  background-image:
+    linear-gradient(to left, transparent 55%, rgba(60, 40, 15, 0.28) 92%, rgba(0, 0, 0, 0.32)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0 1px, transparent 1px 3px);
 }
 
 .tome-edge--right {
-  right: -10px;
-  border-radius: 0 3px 3px 0;
-  transform: skewY(-0.4deg);
+  right: -22px;
+  border-radius: 0 8px 10px 0;
+  background-image:
+    linear-gradient(to right, transparent 55%, rgba(60, 40, 15, 0.28) 92%, rgba(0, 0, 0, 0.32)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0 1px, transparent 1px 3px);
+}
+
+.tome-edge--bottom {
+  left: -14px;
+  right: -14px;
+  bottom: -14px;
+  height: 15px;
+  border-radius: 0 0 10px 10px;
+  background-image:
+    linear-gradient(to bottom, transparent 40%, rgba(60, 40, 15, 0.3) 90%, rgba(0, 0, 0, 0.35)),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0 1px, transparent 1px 3px);
 }
 
 .tome-measurer {
@@ -593,19 +639,28 @@
     padding: 0.2rem 0.7rem;
   }
 
-  .tome-edge {
-    width: 7px;
+  .tome-edge--left,
+  .tome-edge--right {
+    width: 12px;
   }
 
   .tome-edge--left {
-    left: -6px;
+    left: -11px;
   }
 
   .tome-edge--right {
-    right: -6px;
+    right: -11px;
+  }
+
+  .tome-edge--bottom {
+    left: -7px;
+    right: -7px;
+    bottom: -8px;
+    height: 9px;
   }
 
   .tome-shell--open::before {
-    inset: -5px -9px -8px;
+    inset: -6px -17px -12px;
+    border-radius: 8px;
   }
 }
