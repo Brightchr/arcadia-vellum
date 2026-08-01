@@ -36,6 +36,7 @@
   --tome-cover-font: var(--font-fell), serif;
   --tome-img-filter: sepia(0.25) saturate(0.85);
   --tome-vignette: rgba(60, 40, 30, 0.28);
+  --tome-ornament: "✦";
 }
 
 /* ---------------------------------------------------------------------------
@@ -65,6 +66,7 @@
   --tome-cover-font: var(--font-unifraktur), serif;
   --tome-img-filter: sepia(0.5) saturate(0.7) contrast(0.95);
   --tome-vignette: rgba(80, 50, 15, 0.35);
+  --tome-ornament: "❦";
 }
 
 /* ---------------------------------------------------------------------------
@@ -93,6 +95,7 @@
   --tome-cover-font: var(--font-cinzel), serif;
   --tome-img-filter: saturate(0.9) brightness(1.02);
   --tome-vignette: rgba(60, 80, 55, 0.22);
+  --tome-ornament: "❧";
 }
 
 /* ---------------------------------------------------------------------------
@@ -123,6 +126,7 @@
   --tome-cover-font: var(--font-pirata), serif;
   --tome-img-filter: sepia(0.35) saturate(0.75);
   --tome-vignette: rgba(50, 55, 35, 0.3);
+  --tome-ornament: "⚜";
 }
 
 /* ---------------------------------------------------------------------------
@@ -156,6 +160,7 @@
   --tome-cover-font: var(--font-cinzel-deco), serif;
   --tome-img-filter: saturate(0.85) brightness(0.95);
   --tome-vignette: rgba(5, 8, 20, 0.5);
+  --tome-ornament: "✷";
 }
 
 /* ===========================================================================
@@ -229,20 +234,53 @@
   font-size: 1.7em;
   text-align: center;
   margin-top: 0.3em;
+  letter-spacing: 0.015em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
 }
 
+/* Small ornament crowning the chapter title */
+.tome-page h1::before,
+.tome-page .tome-chapter::before {
+  content: var(--tome-ornament, "✦");
+  display: block;
+  font-size: 0.5em;
+  line-height: 1;
+  margin-bottom: 0.5em;
+  color: var(--tome-accent-2);
+  opacity: 0.75;
+  text-shadow: none;
+}
+
+/* Rule under the title: two hairlines meeting a centered ornament */
 .tome-page h1::after,
 .tome-page .tome-chapter::after {
-  content: "";
+  content: var(--tome-ornament, "✦");
   display: block;
-  width: 40%;
-  margin: 0.35em auto 0;
-  border-bottom: 1px solid var(--tome-accent-2);
-  opacity: 0.7;
+  font-size: 0.45em;
+  line-height: 1;
+  margin: 0.9em auto 0;
+  color: var(--tome-accent-2);
+  opacity: 0.85;
+  text-shadow: none;
+  background:
+    linear-gradient(var(--tome-accent-2), var(--tome-accent-2)) 8% 50% / 33%
+      1px no-repeat,
+    linear-gradient(var(--tome-accent-2), var(--tome-accent-2)) 92% 50% / 33%
+      1px no-repeat;
 }
 
 .tome-page h2 {
   font-size: 1.35em;
+  letter-spacing: 0.02em;
+}
+
+/* Leading flourish on section headings */
+.tome-page h2::before {
+  content: var(--tome-ornament, "✦") "  ";
+  font-size: 0.7em;
+  vertical-align: 0.15em;
+  color: var(--tome-accent-2);
+  opacity: 0.7;
 }
 
 .tome-page h3,
@@ -303,9 +341,12 @@
 }
 
 .tome-page hr::after {
-  content: "❦";
+  content: var(--tome-ornament, "❦") "  " var(--tome-ornament, "❦") "  "
+    var(--tome-ornament, "❦");
   color: var(--tome-accent-2);
-  font-size: 1.1em;
+  font-size: 0.9em;
+  letter-spacing: 0.2em;
+  opacity: 0.8;
 }
 
 .tome-page img {
