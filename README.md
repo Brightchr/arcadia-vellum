@@ -4,7 +4,7 @@ Turn a TTRPG campaign journal — a Google Doc or an uploaded `.docx`/`.md`/`.tx
 
 ## Stack
 
-- **Next.js 16** (App Router, Turbopack, `output: "standalone"`) + Tailwind CSS 4
+- **Next.js 16** (App Router, Turbopack) + Tailwind CSS 4
 - **Postgres** + **Drizzle ORM**
 - **Better Auth** — email/password + Google sign-in
 - **Google Picker + Drive API** (`drive.file` scope — non-sensitive, per-file access; private docs work without Google's sensitive-scope verification)
