@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip-enhanced";
 import { paginateHtml, preloadImages } from "./paginate";
 
@@ -123,46 +123,53 @@ export default function TomeReader({
     : "pending";
 
   // The flipbook clones every child, so the children list must contain only
-  // real elements — no `false`/null from conditional rendering.
-  const leaves: React.ReactElement[] = [
-    <div key="cover" className="tome-cover">
-      <div className="tome-cover-ornament">✦ ✧ ✦</div>
-      <h1 className="tome-cover-title">{title}</h1>
-      <hr className="tome-cover-rule" />
-      {characterName ? (
-        <p className="tome-cover-subtitle">The chronicle of {characterName}</p>
-      ) : (
-        <p className="tome-cover-subtitle">A chronicle</p>
-      )}
-    </div>,
-    ...contentPages.map((page, i) => (
-      <div
-        key={`p${i}`}
-        className={`tome-page ${
-          i % 2 === 0 ? "tome-page--left" : "tome-page--right"
-        }`}
-      >
-        <div dangerouslySetInnerHTML={{ __html: page }} />
-        <div className="tome-page-number">{i + 1}</div>
-      </div>
-    )),
-  ];
-  if (needsFiller) {
-    leaves.push(
-      <div key="filler" className="tome-page tome-page--right">
-        <div className="tome-page-number">{contentPages.length + 1}</div>
+  // real elements — no `false`/null from conditional rendering. It also
+  // re-initializes (and resets to the start page) whenever the children prop
+  // changes identity, so the list must be memoized: page-number state updates
+  // from onFlip must NOT produce a new array.
+  const leaves: React.ReactElement[] = useMemo(() => {
+    const items: React.ReactElement[] = [
+      <div key="cover" className="tome-cover">
+        <div className="tome-cover-ornament">✦ ✧ ✦</div>
+        <h1 className="tome-cover-title">{title}</h1>
+        <hr className="tome-cover-rule" />
+        {characterName ? (
+          <p className="tome-cover-subtitle">The chronicle of {characterName}</p>
+        ) : (
+          <p className="tome-cover-subtitle">A chronicle</p>
+        )}
+      </div>,
+      ...contentPages.map((page, i) => (
+        <div
+          key={`p${i}`}
+          className={`tome-page ${
+            i % 2 === 0 ? "tome-page--left" : "tome-page--right"
+          }`}
+        >
+          <div dangerouslySetInnerHTML={{ __html: page }} />
+          <div className="tome-page-number">{i + 1}</div>
+        </div>
+      )),
+    ];
+    if (needsFiller) {
+      items.push(
+        <div key="filler" className="tome-page tome-page--right">
+          <div className="tome-page-number">{contentPages.length + 1}</div>
+        </div>
+      );
+    }
+    items.push(
+      <div key="back" className="tome-cover">
+        <div className="tome-cover-ornament">✦</div>
+        <p className="tome-cover-subtitle">Here ends the chronicle</p>
+        <p className="tome-cover-subtitle" style={{ opacity: 0.6 }}>
+          — for now —
+        </p>
       </div>
     );
-  }
-  leaves.push(
-    <div key="back" className="tome-cover">
-      <div className="tome-cover-ornament">✦</div>
-      <p className="tome-cover-subtitle">Here ends the chronicle</p>
-      <p className="tome-cover-subtitle" style={{ opacity: 0.6 }}>
-        — for now —
-      </p>
-    </div>
-  );
+    return items;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentPages, needsFiller, title, characterName]);
 
   return (
     <div className={`theme-${theme} tome-reader-stage`} ref={stageRef}>
@@ -199,6 +206,7 @@ export default function TomeReader({
             swipeDistance={30}
             showPageCorners
             disableFlipByClick={false}
+            renderOnlyPageLengthChange
             startPage={Math.min(startPage, contentPages.length + 1)}
             startZIndex={0}
             autoSize={false}
