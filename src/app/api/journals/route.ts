@@ -1,0 +1,74 @@
+import { sessionFromRequest, jsonError } from "@/lib/api";
+import { createJournal, deleteJournal } from "@/lib/journals";
+import { ingestUpload } from "@/lib/content/ingest";
+import { isThemeId } from "@/lib/themes";
+
+export const runtime = "nodejs";
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
+/**
+ * Create a journal. Multipart form:
+ *  - title (required), characterName?, theme?
+ *  - sourceType: "upload" | "gdoc"
+ *  - file: the uploaded document (sourceType=upload)
+ *  - gdocFileId: Google Doc file id (sourceType=gdoc; content synced separately)
+ */
+export async function POST(request: Request) {
+  const session = await sessionFromRequest(request);
+  if (!session) return jsonError("Not signed in", 401);
+
+  const form = await request.formData();
+  const title = String(form.get("title") ?? "").trim();
+  const characterName = String(form.get("characterName") ?? "").trim() || null;
+  const themeRaw = String(form.get("theme") ?? "");
+  const sourceType = String(form.get("sourceType") ?? "");
+
+  if (!title) return jsonError("Title is required", 400);
+  if (title.length > 120) return jsonError("Title is too long", 400);
+  if (sourceType !== "upload" && sourceType !== "gdoc") {
+    return jsonError("Invalid source type", 400);
+  }
+  const theme = isThemeId(themeRaw) ? themeRaw : undefined;
+
+  if (sourceType === "upload") {
+    const file = form.get("file");
+    if (!(file instanceof File)) return jsonError("A file is required", 400);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return jsonError("File too large (max 15 MB)", 400);
+    }
+
+    const journal = await createJournal({
+      ownerId: session.user.id,
+      title,
+      characterName,
+      theme,
+      sourceType: "upload",
+    });
+    const result = await ingestUpload(
+      journal.id,
+      file.name,
+      Buffer.from(await file.arrayBuffer())
+    );
+    if (!result.ok) {
+      await deleteJournal(journal.id);
+      return jsonError(result.error, 400);
+    }
+    return Response.json({ journal });
+  }
+
+  // sourceType === "gdoc": create the shell; the client then calls
+  // POST /api/journals/[id]/sync to pull content from Drive.
+  const gdocFileId = String(form.get("gdocFileId") ?? "").trim();
+  if (!gdocFileId) return jsonError("Missing Google Doc id", 400);
+
+  const journal = await createJournal({
+    ownerId: session.user.id,
+    title,
+    characterName,
+    theme,
+    sourceType: "gdoc",
+    gdocFileId,
+  });
+  return Response.json({ journal });
+}
