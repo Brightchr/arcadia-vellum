@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession, googleConfigured } from "@/lib/auth";
 import { getOwnedJournal } from "@/lib/journals";
+import { appThemeClass } from "@/lib/themes";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 
 export default async function JournalSettingsPage({
@@ -16,8 +17,10 @@ export default async function JournalSettingsPage({
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) notFound();
 
+  const theme = (session.user as { dashboardTheme?: string }).dashboardTheme;
+
   return (
-    <main className="arcane-bg min-h-screen">
+    <main className={`${appThemeClass(theme)} arcane-bg min-h-screen`}>
       <div className="max-w-3xl mx-auto p-6 md:p-10">
         <header className="mb-8 flex items-center justify-between">
           <div>

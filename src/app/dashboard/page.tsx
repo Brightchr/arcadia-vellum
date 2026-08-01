@@ -2,17 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listJournalsForOwner } from "@/lib/journals";
+import { appThemeClass } from "@/lib/themes";
 import { JournalCard } from "@/components/dashboard/JournalCard";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const journals = await listJournalsForOwner(session.user.id);
+  const dashboardTheme =
+    (session.user as { dashboardTheme?: string }).dashboardTheme ?? "";
 
   return (
-    <main className="arcane-bg min-h-screen">
+    <main className={`${appThemeClass(dashboardTheme)} arcane-bg min-h-screen`}>
       <div className="max-w-5xl mx-auto p-6 md:p-10">
         <header className="flex items-center justify-between mb-8">
           <div>
@@ -23,7 +27,10 @@ export default async function DashboardPage() {
               {session.user.name}&apos;s library
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-4">
+            <DashboardThemePicker
+              current={dashboardTheme || "witch-grimoire"}
+            />
             <Link href="/journal/new" className="btn-arcane">
               + New Journal
             </Link>

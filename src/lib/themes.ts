@@ -49,3 +49,10 @@ export const DEFAULT_THEME: ThemeId = "witch-grimoire";
 export function isThemeId(value: string): value is ThemeId {
   return THEMES.some((t) => t.id === value);
 }
+
+/** Sanitizes a stored dashboard-theme value into an app chrome class. */
+export function appThemeClass(value: unknown): string {
+  const id =
+    typeof value === "string" && isThemeId(value) ? value : DEFAULT_THEME;
+  return `app-theme-${id}`;
+}
