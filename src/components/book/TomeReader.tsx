@@ -114,9 +114,10 @@ export default function TomeReader({
   }, []);
 
   const contentPages = pages ?? [];
-  // Keep total children even so the back cover sits on its own side.
+  // Keep total children even so the back cover sits on its own side
+  // (2 covers + 2 endpapers + content + optional filler).
   const needsFiller = contentPages.length % 2 === 1;
-  const totalLeaves = contentPages.length + (needsFiller ? 1 : 0) + 2;
+  const totalLeaves = contentPages.length + (needsFiller ? 1 : 0) + 4;
   const bookKey = dims
     ? `${dims.pageW}x${dims.pageH}-${theme}-${contentPages.length}`
     : "pending";
@@ -128,7 +129,8 @@ export default function TomeReader({
   // from onFlip must NOT produce a new array.
   const leaves: React.ReactElement[] = useMemo(() => {
     const items: React.ReactElement[] = [
-      <div key="cover" className="tome-cover">
+      // data-density="hard" makes covers flip as stiff boards, not paper.
+      <div key="cover" className="tome-cover" data-density="hard">
         <div className="tome-cover-ornament">✦ ✧ ✦</div>
         <h1 className="tome-cover-title">{title}</h1>
         <hr className="tome-cover-rule" />
@@ -137,6 +139,10 @@ export default function TomeReader({
         ) : (
           <p className="tome-cover-subtitle">A chronicle</p>
         )}
+      </div>,
+      // Endpaper glued inside the front cover, like a real binding.
+      <div key="endpaper-front" className="tome-endpaper" data-density="hard">
+        <span>✦</span>
       </div>,
       ...contentPages.map((page, i) => (
         <div
@@ -158,7 +164,12 @@ export default function TomeReader({
       );
     }
     items.push(
-      <div key="back" className="tome-cover">
+      <div key="endpaper-back" className="tome-endpaper" data-density="hard">
+        <span>✦</span>
+      </div>
+    );
+    items.push(
+      <div key="back" className="tome-cover" data-density="hard">
         <div className="tome-cover-ornament">✦</div>
         <p className="tome-cover-subtitle">Here ends the chronicle</p>
         <p className="tome-cover-subtitle" style={{ opacity: 0.6 }}>
