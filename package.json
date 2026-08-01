@@ -1,0 +1,42 @@
+{
+  "name": "arcadia-vellum",
+  "version": "1.0.0",
+  "description": "Turn your TTRPG journal into a page-flipping ancient tome",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "railway:start": "node scripts/migrate.mjs && next start"
+  },
+  "dependencies": {
+    "better-auth": "^1.6.25",
+    "drizzle-orm": "^0.45.1",
+    "mammoth": "^1.12.0",
+    "marked": "^16.0.0",
+    "next": "^16.2.12",
+    "pg": "^8.13.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-pageflip-enhanced": "^2.2.3",
+    "sanitize-html": "^2.14.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/sanitize-html": "^2.13.0",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.31.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.5.3"
+  }
+}
