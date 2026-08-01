@@ -13,16 +13,15 @@ interface Dims {
 }
 
 function computeDims(containerW: number, containerH: number): Dims {
-  const margin = 56;
-  const availH = Math.max(320, containerH - margin);
-  const portrait = containerW < 760;
+  const portrait = containerW < 700;
+  const availH = Math.max(320, containerH - 28);
   let pageW = portrait
-    ? Math.min(containerW - 24, 480)
-    : Math.min((containerW - margin) / 2, 540);
-  let pageH = Math.round(pageW / 0.68);
+    ? Math.min(containerW - 16, 520)
+    : Math.min((containerW - 96) / 2, 640);
+  let pageH = Math.round(pageW / 0.7);
   if (pageH > availH) {
     pageH = availH;
-    pageW = Math.round(pageH * 0.68);
+    pageW = Math.round(pageH * 0.7);
   }
   return { pageW: Math.round(pageW), pageH, portrait };
 }
@@ -43,7 +42,6 @@ export default function TomeReader({
   const bookRef = useRef<any>(null);
   const [dims, setDims] = useState<Dims | null>(null);
   const [pages, setPages] = useState<string[] | null>(null);
-  const [pageNo, setPageNo] = useState(0);
   // Deep link: /j/<slug>?page=N opens the tome at that leaf.
   const [startPage] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -53,6 +51,7 @@ export default function TomeReader({
     );
     return Number.isFinite(p) && p > 0 ? p : 0;
   });
+  const [pageNo, setPageNo] = useState(startPage);
 
   // Track stage size; debounce updates and ignore no-op changes.
   useEffect(() => {
@@ -171,8 +170,18 @@ export default function TomeReader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentPages, needsFiller, title, characterName]);
 
+  // Text and padding scale with page size so bigger screens get bigger type.
+  const pageScale = dims
+    ? Math.min(1.3, Math.max(0.85, dims.pageW / 500))
+    : 1;
+  const bookOpen = pageNo > 0 && pageNo < totalLeaves - 1;
+
   return (
-    <div className={`theme-${theme} tome-reader-stage`} ref={stageRef}>
+    <div
+      className={`theme-${theme} tome-reader-stage`}
+      ref={stageRef}
+      style={{ "--tome-page-scale": pageScale } as React.CSSProperties}
+    >
       {/* Hidden measurer — must carry real page styles for accurate breaks */}
       <div className="tome-page tome-measurer" ref={measurerRef} />
 
@@ -184,7 +193,13 @@ export default function TomeReader({
 
       {pages && dims && (
         <>
-          <HTMLFlipBook
+          <div
+            className={`tome-shell ${bookOpen ? "tome-shell--open" : ""}`}
+            style={{ width: dims.portrait ? dims.pageW : dims.pageW * 2 }}
+          >
+            <div className="tome-edge tome-edge--left" />
+            <div className="tome-edge tome-edge--right" />
+            <HTMLFlipBook
             key={bookKey}
             ref={bookRef}
             width={dims.pageW}
@@ -215,7 +230,8 @@ export default function TomeReader({
             onFlip={(e: any) => setPageNo(e.data ?? 0)}
           >
             {leaves}
-          </HTMLFlipBook>
+            </HTMLFlipBook>
+          </div>
 
           {/* Flip controls */}
           <button
