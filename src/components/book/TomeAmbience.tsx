@@ -1,18 +1,15 @@
-const RUNES = ["ᚠ", "ᛗ", "ᚦ", "ᛟ", "ᚱ", "ᛊ", "ᚷ", "ᛞ", "ᚺ", "ᛒ", "ᛁ", "ᛜ"];
-
 /**
- * Atmospheric backdrop behind the tome: glowing runes, rising embers, and
- * firelight from below. Pure markup — themes.css decides which theme shows
- * it and animates everything on opacity/transform only.
+ * Atmospheric backdrop behind the tome. Pure markup — themes.css supplies
+ * each theme's colors, glyph characters, and motion, all on opacity/transform.
+ * Structure: 1 glow, 1 drifting mist, 12 glyphs, 10 rising motes.
  */
 export function TomeAmbience() {
   return (
     <div className="tome-ambience" aria-hidden="true">
       <div className="tome-ambience-fire" />
-      {RUNES.map((rune, i) => (
-        <span key={i} className="tome-ambience-rune">
-          {rune}
-        </span>
+      <div className="tome-ambience-drift" />
+      {Array.from({ length: 12 }, (_, i) => (
+        <span key={`g${i}`} className="tome-ambience-rune" />
       ))}
       {Array.from({ length: 10 }, (_, i) => (
         <span key={`e${i}`} className="tome-ambience-ember" />

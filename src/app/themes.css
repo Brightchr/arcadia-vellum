@@ -682,18 +682,13 @@
    (witch grimoire theme; other themes keep the plain arcane backdrop)
 -------------------------------------------------------------------------- */
 
-.tome-ambience {
-  display: none;
+/* Reader chrome (back link, settings) tinted to the binding */
+.tome-scene {
+  --ink-dim: color-mix(in srgb, var(--tome-cover-ink, #a89f8c) 62%, transparent);
+  --arcane-bright: var(--tome-cover-ink, #c4a9f0);
 }
 
-.theme-witch-grimoire.tome-scene {
-  background:
-    radial-gradient(ellipse at 50% 118%, rgba(224, 140, 60, 0.14), transparent 45%),
-    radial-gradient(ellipse at 50% 38%, rgba(96, 64, 150, 0.13), transparent 62%),
-    radial-gradient(ellipse at center, #110c19 0%, #0a0711 55%, #040207 100%);
-}
-
-.theme-witch-grimoire .tome-ambience {
+.tome-scene .tome-ambience {
   display: block;
   position: absolute;
   inset: 0;
@@ -702,7 +697,135 @@
   overflow: hidden;
 }
 
-/* Firelight breathing at the foot of the scene */
+/* --- Witch's Grimoire: firelit dark, runes, embers --- */
+.theme-witch-grimoire.tome-scene {
+  --sc-glyph: #b28fe8;
+  --sc-glyph-glow: rgba(178, 143, 232, 0.8);
+  --sc-mote: #e8964a;
+  --sc-mote-glow: rgba(232, 150, 66, 0.55);
+  --sc-glow-a: rgba(232, 150, 66, 0.2);
+  --sc-glow-b: rgba(200, 110, 45, 0.08);
+  background:
+    radial-gradient(ellipse at 50% 118%, rgba(224, 140, 60, 0.14), transparent 45%),
+    radial-gradient(ellipse at 50% 38%, rgba(96, 64, 150, 0.13), transparent 62%),
+    radial-gradient(ellipse at center, #110c19 0%, #0a0711 55%, #040207 100%);
+}
+
+.theme-witch-grimoire .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "ᛉ"; }
+.theme-witch-grimoire .tome-ambience-rune:nth-of-type(4n + 2)::after { content: "ᚱ"; }
+.theme-witch-grimoire .tome-ambience-rune:nth-of-type(4n + 3)::after { content: "ᛗ"; }
+.theme-witch-grimoire .tome-ambience-rune:nth-of-type(4n)::after { content: "ᛟ"; }
+
+/* --- Ancient Tome: candlelit scriptorium, golden dust --- */
+.theme-ancient-tome.tome-scene {
+  --sc-glyph: #d8a86a;
+  --sc-glyph-glow: rgba(216, 168, 106, 0.7);
+  --sc-mote: #e8c06a;
+  --sc-mote-glow: rgba(232, 192, 106, 0.5);
+  --sc-glow-a: rgba(232, 170, 70, 0.24);
+  --sc-glow-b: rgba(190, 120, 40, 0.1);
+  background:
+    radial-gradient(ellipse at 50% 118%, rgba(232, 170, 70, 0.18), transparent 48%),
+    radial-gradient(ellipse at 50% 30%, rgba(120, 80, 30, 0.14), transparent 60%),
+    radial-gradient(ellipse at center, #180f06 0%, #0f0903 55%, #060301 100%);
+}
+
+.theme-ancient-tome .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "❦"; }
+.theme-ancient-tome .tome-ambience-rune:nth-of-type(4n + 2)::after { content: "❧"; }
+.theme-ancient-tome .tome-ambience-rune:nth-of-type(4n + 3)::after { content: "✦"; }
+.theme-ancient-tome .tome-ambience-rune:nth-of-type(4n)::after { content: "❉"; }
+
+/* --- Elven Chronicle: moonlit forest, fireflies, drifting mist --- */
+.theme-elven-chronicle.tome-scene {
+  --sc-glyph: #a8d8b0;
+  --sc-glyph-glow: rgba(168, 216, 176, 0.7);
+  --sc-mote: #cde86a;
+  --sc-mote-glow: rgba(205, 232, 106, 0.55);
+  --sc-glow-a: rgba(190, 230, 200, 0.14);
+  --sc-glow-b: rgba(140, 190, 150, 0.06);
+  --sc-mist: rgba(168, 216, 186, 0.09);
+  background:
+    radial-gradient(ellipse at 50% -12%, rgba(200, 240, 214, 0.13), transparent 48%),
+    radial-gradient(ellipse at 50% 80%, rgba(40, 80, 55, 0.18), transparent 60%),
+    radial-gradient(ellipse at center, #0b1610 0%, #071009 55%, #030604 100%);
+}
+
+.theme-elven-chronicle .tome-ambience-fire {
+  bottom: auto;
+  top: -14%;
+}
+
+.theme-elven-chronicle .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "❧"; }
+.theme-elven-chronicle .tome-ambience-rune:nth-of-type(4n + 2)::after { content: "✧"; }
+.theme-elven-chronicle .tome-ambience-rune:nth-of-type(4n + 3)::after { content: "❃"; }
+.theme-elven-chronicle .tome-ambience-rune:nth-of-type(4n)::after { content: "✦"; }
+
+/* --- Captain's Log: night sea, lantern light, rolling fog --- */
+.theme-captains-log.tome-scene {
+  --sc-glyph: #8fc4d8;
+  --sc-glyph-glow: rgba(143, 196, 216, 0.7);
+  --sc-mote: #b9dde8;
+  --sc-mote-glow: rgba(185, 221, 232, 0.45);
+  --sc-glow-a: rgba(232, 178, 92, 0.2);
+  --sc-glow-b: rgba(190, 140, 60, 0.08);
+  --sc-mist: rgba(170, 200, 220, 0.1);
+  background:
+    radial-gradient(ellipse at 22% 112%, rgba(232, 178, 92, 0.16), transparent 42%),
+    radial-gradient(ellipse at 78% -8%, rgba(150, 200, 230, 0.1), transparent 45%),
+    radial-gradient(ellipse at center, #09131e 0%, #060d16 55%, #02050a 100%);
+}
+
+.theme-captains-log .tome-ambience-fire {
+  left: 24%;
+}
+
+.theme-captains-log .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "✧"; }
+.theme-captains-log .tome-ambience-rune:nth-of-type(4n + 2)::after { content: "⚜"; }
+.theme-captains-log .tome-ambience-rune:nth-of-type(4n + 3)::after { content: "✦"; }
+.theme-captains-log .tome-ambience-rune:nth-of-type(4n)::after { content: "✵"; }
+
+/* --- Arcane Codex: deep space, nebula, rising stardust --- */
+.theme-arcane-codex.tome-scene {
+  --sc-glyph: #cfd8ff;
+  --sc-glyph-glow: rgba(207, 216, 255, 0.8);
+  --sc-mote: #e6ddb8;
+  --sc-mote-glow: rgba(230, 221, 184, 0.5);
+  --sc-glow-a: rgba(130, 150, 230, 0.16);
+  --sc-glow-b: rgba(90, 110, 200, 0.07);
+  --sc-mist: rgba(140, 150, 230, 0.08);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(120, 130, 220, 0.12), transparent 45%),
+    radial-gradient(ellipse at 75% 70%, rgba(224, 190, 106, 0.07), transparent 40%),
+    radial-gradient(ellipse at center, #0a0d1e 0%, #060814 55%, #020308 100%);
+}
+
+.theme-arcane-codex .tome-ambience-fire {
+  bottom: auto;
+  top: -16%;
+}
+
+.theme-arcane-codex .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "✦"; }
+.theme-arcane-codex .tome-ambience-rune:nth-of-type(4n + 2)::after { content: "✷"; }
+.theme-arcane-codex .tome-ambience-rune:nth-of-type(4n + 3)::after { content: "☾"; }
+.theme-arcane-codex .tome-ambience-rune:nth-of-type(4n)::after { content: "✧"; }
+
+/* Drifting mist / fog / nebula band (only themes that set --sc-mist show it) */
+.tome-ambience-drift {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 52%;
+  height: 36%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--sc-mist, transparent),
+    transparent 70%
+  );
+  filter: blur(14px);
+  animation: ambience-drift 26s ease-in-out infinite alternate;
+}
+
+/* Light source breathing at the edge of the scene */
 .tome-ambience-fire {
   position: absolute;
   left: 50%;
@@ -712,23 +835,27 @@
   transform: translateX(-50%);
   background: radial-gradient(
     ellipse at 50% 100%,
-    rgba(232, 150, 66, 0.2),
-    rgba(200, 110, 45, 0.08) 45%,
+    var(--sc-glow-a, rgba(232, 150, 66, 0.2)),
+    var(--sc-glow-b, rgba(200, 110, 45, 0.08)) 45%,
     transparent 70%
   );
   animation: ambience-fire 7s ease-in-out infinite;
 }
 
-/* Faint runes adrift in the dark */
+/* Faint theme glyphs adrift in the dark (::after supplies each character) */
 .tome-ambience-rune {
   position: absolute;
   font-size: 1.5rem;
-  color: #b28fe8;
+  color: var(--sc-glyph, #b28fe8);
   opacity: 0.12;
   text-shadow:
-    0 0 8px rgba(178, 143, 232, 0.8),
-    0 0 22px rgba(140, 100, 210, 0.5);
+    0 0 8px var(--sc-glyph-glow, rgba(178, 143, 232, 0.8)),
+    0 0 22px var(--sc-glyph-glow, rgba(140, 100, 210, 0.5));
   animation: ambience-rune 7s ease-in-out infinite;
+}
+
+.tome-ambience-rune::after {
+  content: "✦";
 }
 
 .tome-ambience-rune:nth-of-type(1)  { left: 4%;  top: 18%; font-size: 1.6rem; transform: rotate(-12deg); animation-delay: 0s; }
@@ -744,15 +871,15 @@
 .tome-ambience-rune:nth-of-type(11) { left: 45%; top: 3%;  font-size: 1.2rem; transform: rotate(12deg);  animation-delay: 4s; }
 .tome-ambience-rune:nth-of-type(12) { left: 60%; top: 93%; font-size: 1.4rem; transform: rotate(-5deg);  animation-delay: 5.2s; }
 
-/* Embers rising as if from a fire beneath the book */
+/* Motes rising through the scene (embers, dust, fireflies, stardust) */
 .tome-ambience-ember {
   position: absolute;
   bottom: 4%;
   width: 3px;
   height: 3px;
   border-radius: 9999px;
-  background: #e8964a;
-  box-shadow: 0 0 6px 2px rgba(232, 150, 66, 0.55);
+  background: var(--sc-mote, #e8964a);
+  box-shadow: 0 0 6px 2px var(--sc-mote-glow, rgba(232, 150, 66, 0.55));
   opacity: 0;
   animation: ambience-ember 9s linear infinite;
 }
@@ -785,6 +912,11 @@
   100% { opacity: 0; translate: var(--ember-drift, 20px) -72vh; }
 }
 
+@keyframes ambience-drift {
+  from { transform: translateX(-5%); }
+  to { transform: translateX(5%); }
+}
+
 @media (max-width: 700px) {
   .tome-ambience-rune:nth-of-type(9),
   .tome-ambience-rune:nth-of-type(10),
@@ -802,7 +934,8 @@
   }
 
   .tome-ambience-rune,
-  .tome-ambience-fire {
+  .tome-ambience-fire,
+  .tome-ambience-drift {
     animation: none;
     opacity: 0.2;
   }
