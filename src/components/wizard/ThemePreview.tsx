@@ -8,17 +8,17 @@ import type { ThemeId } from "@/lib/themes";
  */
 export function ThemePreview({
   themeId,
-  characterName,
+  sampleName,
 }: {
   themeId: ThemeId;
-  characterName?: string | null;
+  sampleName?: string | null;
 }) {
   return (
     <div className={`theme-${themeId} pointer-events-none select-none`}>
       <div className="tome-page tome-preview-page">
         <h2 className="tome-chapter">Session the First</h2>
         <p>
-          The rain had teeth that night. {characterName || "Eveline"} pressed a
+          The rain had teeth that night. {sampleName || "Eveline"} pressed a
           palm to the standing stone and felt it <em>hum</em> — old magic,
           older than the town, older than the road that led us here.
         </p>

@@ -61,8 +61,8 @@ export function JournalCard({ journal }: { journal: Journal }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-heading text-lg leading-tight">{journal.title}</h2>
-          {journal.characterName && (
-            <p className="text-sm text-ink-dim">by {journal.characterName}</p>
+          {journal.author && (
+            <p className="text-sm text-ink-dim">by {journal.author}</p>
           )}
         </div>
         <span

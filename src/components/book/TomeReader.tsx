@@ -31,12 +31,14 @@ export default function TomeReader({
   html,
   theme,
   title,
-  characterName,
+  subtitle,
+  author,
 }: {
   html: string;
   theme: string;
   title: string;
-  characterName?: string | null;
+  subtitle?: string | null;
+  author?: string | null;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const measurerRef = useRef<HTMLDivElement>(null);
@@ -146,12 +148,15 @@ export default function TomeReader({
       <div key="cover" className="tome-cover" data-density="hard">
         <div className="tome-cover-ornament tome-cover-ornament--front" />
         <h1 className="tome-cover-title">{title}</h1>
-        <hr className="tome-cover-rule" />
-        {characterName ? (
-          <p className="tome-cover-subtitle">The chronicle of {characterName}</p>
+        {subtitle ? (
+          <>
+            <hr className="tome-cover-rule" />
+            <p className="tome-cover-subtitle">{subtitle}</p>
+          </>
         ) : (
-          <p className="tome-cover-subtitle">A chronicle</p>
+          <hr className="tome-cover-rule" />
         )}
+        {author && <p className="tome-cover-author">{author}</p>}
         <div className="tome-cover-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ</div>
       </div>,
       // Endpaper glued inside the front cover, like a real binding.
@@ -194,7 +199,7 @@ export default function TomeReader({
     );
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentPages, needsFiller, title, characterName]);
+  }, [contentPages, needsFiller, title, subtitle, author]);
 
   // Text and padding scale with page size so bigger screens get bigger type.
   const pageScale = dims

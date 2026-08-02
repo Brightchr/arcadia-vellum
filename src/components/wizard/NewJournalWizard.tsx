@@ -17,7 +17,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("");
-  const [characterName, setCharacterName] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [author, setAuthor] = useState("");
   const [source, setSource] = useState<SourceType>("gdoc");
   const [file, setFile] = useState<File | null>(null);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
@@ -32,9 +33,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
       if (saved) {
         if (typeof saved.step === "number") setStep(Math.min(saved.step, 2));
         if (typeof saved.title === "string") setTitle(saved.title);
-        if (typeof saved.characterName === "string") {
-          setCharacterName(saved.characterName);
-        }
+        if (typeof saved.subtitle === "string") setSubtitle(saved.subtitle);
+        if (typeof saved.author === "string") setAuthor(saved.author);
         if (saved.source === "upload" || saved.source === "gdoc") {
           setSource(saved.source);
         }
@@ -55,9 +55,9 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
     if (!restored) return;
     sessionStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ step, title, characterName, source, theme, pickedDoc })
+      JSON.stringify({ step, title, subtitle, author, source, theme, pickedDoc })
     );
-  }, [restored, step, title, characterName, source, theme, pickedDoc]);
+  }, [restored, step, title, subtitle, author, source, theme, pickedDoc]);
 
   const sourceReady = source === "upload" ? file !== null : pickedDoc !== null;
 
@@ -67,7 +67,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
     try {
       const form = new FormData();
       form.set("title", title);
-      form.set("characterName", characterName);
+      form.set("subtitle", subtitle);
+      form.set("author", author);
       form.set("theme", theme);
       form.set("sourceType", source);
       if (source === "upload" && file) form.set("file", file);
@@ -141,19 +142,29 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
             />
           </div>
           <div>
-            <label
-              htmlFor="characterName"
-              className="block text-sm mb-1 text-ink-dim"
-            >
-              Character name <span className="opacity-60">(optional)</span>
+            <label htmlFor="subtitle" className="block text-sm mb-1 text-ink-dim">
+              Subtitle <span className="opacity-60">(optional)</span>
             </label>
             <input
-              id="characterName"
+              id="subtitle"
+              className="input-arcane"
+              placeholder="Being a true account of the Hollowmere affair"
+              value={subtitle}
+              maxLength={160}
+              onChange={(e) => setSubtitle(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="author" className="block text-sm mb-1 text-ink-dim">
+              Author <span className="opacity-60">(optional)</span>
+            </label>
+            <input
+              id="author"
               className="input-arcane"
               placeholder="Eveline Veyr"
-              value={characterName}
+              value={author}
               maxLength={80}
-              onChange={(e) => setCharacterName(e.target.value)}
+              onChange={(e) => setAuthor(e.target.value)}
             />
           </div>
         </div>
@@ -232,7 +243,7 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
                   : "border-void-border hover:border-arcane/50"
               }`}
             >
-              <ThemePreview themeId={t.id} characterName={characterName} />
+              <ThemePreview themeId={t.id} sampleName={author} />
               <p className="font-heading text-base mt-3">{t.name}</p>
               <p className="text-sm text-ink-dim">{t.description}</p>
             </button>

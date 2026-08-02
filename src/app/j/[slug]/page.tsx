@@ -64,7 +64,8 @@ export default async function ReaderPage({
           html={content?.html ?? ""}
           theme={journal.theme}
           title={journal.title}
-          characterName={journal.characterName}
+          subtitle={journal.subtitle}
+          author={journal.author}
         />
       </div>
     </main>

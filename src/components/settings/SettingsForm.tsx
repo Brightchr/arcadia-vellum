@@ -17,7 +17,8 @@ export function SettingsForm({
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(journal.title);
-  const [characterName, setCharacterName] = useState(journal.characterName ?? "");
+  const [subtitle, setSubtitle] = useState(journal.subtitle ?? "");
+  const [author, setAuthor] = useState(journal.author ?? "");
   const [theme, setTheme] = useState(journal.theme as ThemeId);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -57,7 +58,7 @@ export function SettingsForm({
   }
 
   async function saveDetails() {
-    await patch({ title, characterName }, "details");
+    await patch({ title, subtitle, author }, "details");
   }
 
   async function saveTheme(next: ThemeId) {
@@ -162,18 +163,27 @@ export function SettingsForm({
           />
         </div>
         <div>
-          <label
-            htmlFor="characterName"
-            className="block text-sm mb-1 text-ink-dim"
-          >
-            Character name
+          <label htmlFor="subtitle" className="block text-sm mb-1 text-ink-dim">
+            Subtitle <span className="opacity-60">(optional)</span>
           </label>
           <input
-            id="characterName"
+            id="subtitle"
             className="input-arcane"
-            value={characterName}
+            value={subtitle}
+            maxLength={160}
+            onChange={(e) => setSubtitle(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="author" className="block text-sm mb-1 text-ink-dim">
+            Author <span className="opacity-60">(optional)</span>
+          </label>
+          <input
+            id="author"
+            className="input-arcane"
+            value={author}
             maxLength={80}
-            onChange={(e) => setCharacterName(e.target.value)}
+            onChange={(e) => setAuthor(e.target.value)}
           />
         </div>
         <button
@@ -202,7 +212,7 @@ export function SettingsForm({
                   : "border-void-border hover:border-arcane/50"
               }`}
             >
-              <ThemePreview themeId={t.id} characterName={characterName} />
+              <ThemePreview themeId={t.id} sampleName={author} />
               <p className="font-heading text-sm mt-3">{t.name}</p>
             </button>
           ))}
