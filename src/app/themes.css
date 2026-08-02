@@ -10,37 +10,37 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Theme: Witch's Grimoire — black midnight pages, bone-pale ink, runes
+   Theme: Witch's Grimoire — ashen parchment, venom-green ink, black binding
 --------------------------------------------------------------------------- */
 .theme-witch-grimoire {
-  --tome-page-bg-color: #c4ad80;
+  --tome-page-bg-color: #c9c6ab;
   --tome-page-bg:
     var(--tome-noise),
     var(--tome-fibers),
-    radial-gradient(ellipse at 12% 6%, rgba(80, 52, 22, 0.3), transparent 38%),
-    radial-gradient(ellipse at 92% 12%, rgba(76, 48, 22, 0.24), transparent 34%),
-    radial-gradient(circle at 84% 94%, rgba(70, 44, 18, 0.32), transparent 30%),
-    radial-gradient(circle at 6% 88%, rgba(70, 44, 18, 0.26), transparent 32%),
-    radial-gradient(circle at 38% 97%, rgba(66, 40, 16, 0.2), transparent 22%),
-    radial-gradient(ellipse at 55% 45%, rgba(255, 244, 214, 0.2), transparent 62%),
-    linear-gradient(160deg, #ccb68c 0%, #c0a97b 50%, #a4895b 100%);
-  --tome-ink: #3d2d1a;
-  --tome-accent: #5d3f85;
-  --tome-accent-2: #6f5238;
+    radial-gradient(ellipse at 12% 6%, rgba(58, 66, 38, 0.28), transparent 38%),
+    radial-gradient(ellipse at 92% 12%, rgba(54, 62, 36, 0.22), transparent 34%),
+    radial-gradient(circle at 84% 94%, rgba(48, 58, 34, 0.3), transparent 30%),
+    radial-gradient(circle at 6% 88%, rgba(48, 58, 34, 0.24), transparent 32%),
+    radial-gradient(circle at 38% 97%, rgba(44, 52, 30, 0.18), transparent 22%),
+    radial-gradient(ellipse at 55% 45%, rgba(250, 250, 228, 0.22), transparent 62%),
+    linear-gradient(160deg, #d2cfb4 0%, #c5c2a4 50%, #a7a487 100%);
+  --tome-ink: #272c20;
+  --tome-accent: #3f6b34;
+  --tome-accent-2: #6b5289;
   --tome-heading-font: var(--font-fell), serif;
   --tome-body-font: var(--font-caveat), cursive;
   --tome-body-size: 1.35rem;
   --tome-body-line: 1.45;
   --tome-cover-bg:
     var(--tome-noise),
-    radial-gradient(ellipse at 50% 32%, rgba(143, 174, 110, 0.1), transparent 55%),
-    radial-gradient(ellipse at 50% 30%, rgba(157, 123, 216, 0.16), transparent 62%),
-    linear-gradient(150deg, #17111d 0%, #100b16 55%, #08060d 100%);
-  --tome-cover-ink: #cbb7ec;
-  --tome-cover-border: rgba(178, 143, 232, 0.5);
+    radial-gradient(ellipse at 50% 30%, rgba(120, 200, 110, 0.15), transparent 58%),
+    radial-gradient(ellipse at 50% 75%, rgba(107, 82, 137, 0.1), transparent 55%),
+    linear-gradient(150deg, #101710 0%, #0a100a 55%, #040704 100%);
+  --tome-cover-ink: #aede9a;
+  --tome-cover-border: rgba(150, 214, 126, 0.5);
   --tome-cover-font: var(--font-fell), serif;
-  --tome-img-filter: sepia(0.45) saturate(0.7) contrast(0.95);
-  --tome-vignette: rgba(48, 30, 10, 0.5);
+  --tome-img-filter: sepia(0.2) saturate(0.7) contrast(0.98);
+  --tome-vignette: rgba(28, 36, 18, 0.5);
   --tome-ornament: "ᛉ";
   --tome-cover-ornament: "ᚹ ᛉ ᚹ";
 }
@@ -577,8 +577,8 @@
   transform: translateX(-50%);
   background: radial-gradient(
     ellipse at 50% 70%,
-    rgba(150, 105, 220, 0.22),
-    rgba(120, 80, 190, 0.08) 45%,
+    rgba(110, 210, 110, 0.2),
+    rgba(80, 170, 90, 0.08) 45%,
     transparent 70%
   );
   animation: tome-glow-pulse 6s ease-in-out infinite;
@@ -593,8 +593,8 @@
   border-radius: 50%;
   background: radial-gradient(
     ellipse at 50% 75%,
-    rgba(168, 120, 235, 0.3),
-    rgba(130, 85, 200, 0.14) 45%,
+    rgba(140, 225, 130, 0.28),
+    rgba(95, 185, 105, 0.13) 45%,
     transparent 72%
   );
   filter: blur(10px);
@@ -623,8 +623,8 @@
   width: 4px;
   height: 4px;
   border-radius: 9999px;
-  background: #cfa9ff;
-  box-shadow: 0 0 6px 2px rgba(170, 120, 240, 0.55);
+  background: #c2f2a8;
+  box-shadow: 0 0 6px 2px rgba(150, 230, 120, 0.55);
   opacity: 0;
   animation: tome-spark 5s ease-in-out infinite;
 }
@@ -697,18 +697,19 @@
   overflow: hidden;
 }
 
-/* --- Witch's Grimoire: firelit dark, runes, embers --- */
+/* --- Witch's Grimoire: cauldron-lit dark, venom runes, green sparks --- */
 .theme-witch-grimoire.tome-scene {
-  --sc-glyph: #b28fe8;
-  --sc-glyph-glow: rgba(178, 143, 232, 0.8);
-  --sc-mote: #e8964a;
-  --sc-mote-glow: rgba(232, 150, 66, 0.55);
-  --sc-glow-a: rgba(232, 150, 66, 0.2);
-  --sc-glow-b: rgba(200, 110, 45, 0.08);
+  --sc-glyph: #9fd88a;
+  --sc-glyph-glow: rgba(150, 220, 120, 0.75);
+  --sc-mote: #a8e87a;
+  --sc-mote-glow: rgba(150, 230, 100, 0.5);
+  --sc-glow-a: rgba(110, 220, 110, 0.17);
+  --sc-glow-b: rgba(70, 170, 80, 0.07);
+  --sc-mist: rgba(140, 220, 140, 0.06);
   background:
-    radial-gradient(ellipse at 50% 118%, rgba(224, 140, 60, 0.14), transparent 45%),
-    radial-gradient(ellipse at 50% 38%, rgba(96, 64, 150, 0.13), transparent 62%),
-    radial-gradient(ellipse at center, #110c19 0%, #0a0711 55%, #040207 100%);
+    radial-gradient(ellipse at 50% 118%, rgba(100, 210, 100, 0.13), transparent 45%),
+    radial-gradient(ellipse at 50% 38%, rgba(96, 64, 150, 0.09), transparent 62%),
+    radial-gradient(ellipse at center, #0c120b 0%, #070c07 55%, #020402 100%);
 }
 
 .theme-witch-grimoire .tome-ambience-rune:nth-of-type(4n + 1)::after { content: "ᛉ"; }

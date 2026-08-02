@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { THEMES, type ThemeId } from "@/lib/themes";
 
 const SWATCHES: Record<ThemeId, [string, string]> = {
-  "witch-grimoire": ["#c4a9f0", "#8fae6e"],
+  "witch-grimoire": ["#a8dc8c", "#8a6bb8"],
   "ancient-tome": ["#eec678", "#b0512f"],
   "elven-chronicle": ["#aedec0", "#d8c66a"],
   "captains-log": ["#85cfe0", "#d8aa5c"],
