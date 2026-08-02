@@ -45,6 +45,9 @@ export default function TomeReader({
   const bookRef = useRef<any>(null);
   const [dims, setDims] = useState<Dims | null>(null);
   const [pages, setPages] = useState<string[] | null>(null);
+  // Bumped when a web font finishes loading late so pagination re-runs with
+  // the real glyph metrics.
+  const [fontsVersion, setFontsVersion] = useState(0);
   // Deep link: /j/<slug>?page=N opens the tome at that leaf.
   const [startPage] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -92,10 +95,19 @@ export default function TomeReader({
     if (!dims) return;
     let cancelled = false;
     (async () => {
+      const measurer = measurerRef.current;
+      if (!measurer) return;
+      measurer.style.width = `${dims.pageW}px`;
+      // Warm up the theme's fonts with real usage BEFORE measuring: web fonts
+      // only start loading on first use, and document.fonts.ready resolves
+      // early if nothing has requested them yet. Measuring with fallback
+      // fonts (taller metrics) under-fills every page.
+      measurer.innerHTML =
+        "<h1>Ag</h1><h2>Ag</h2><p>Ag <strong>Ag</strong> <em>Ag</em></p>";
+      await new Promise((r) => requestAnimationFrame(r));
       await document.fonts.ready;
       await preloadImages(html);
       if (cancelled || !measurerRef.current) return;
-      measurerRef.current.style.width = `${dims.pageW}px`;
       const result = paginateHtml(html, measurerRef.current, dims.pageH);
       if (!cancelled) {
         setPages(result.length > 0 ? result : [emptyPageHtml()]);
@@ -104,7 +116,14 @@ export default function TomeReader({
     return () => {
       cancelled = true;
     };
-  }, [dims, html]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dims, html, fontsVersion]);
+
+  useEffect(() => {
+    const onLoaded = () => setFontsVersion((v) => v + 1);
+    document.fonts.addEventListener("loadingdone", onLoaded);
+    return () => document.fonts.removeEventListener("loadingdone", onLoaded);
+  }, []);
 
   // Keyboard navigation.
   useEffect(() => {

@@ -8,7 +8,7 @@
  */
 
 const SPLITTABLE = new Set(["P", "BLOCKQUOTE", "UL", "OL", "DIV", "LI"]);
-const BREAK_BEFORE = new Set(["H1"]);
+const BREAK_BEFORE = new Set(["H1", "H2"]);
 // Minimum text (chars) on each side of a mid-block split — prevents a lone
 // line stranded at a page bottom or a few words carried to the next page.
 const MIN_SPLIT_CHARS = 80;
