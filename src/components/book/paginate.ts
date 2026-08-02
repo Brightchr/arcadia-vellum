@@ -9,9 +9,6 @@
 
 const SPLITTABLE = new Set(["P", "BLOCKQUOTE", "UL", "OL", "DIV", "LI"]);
 const BREAK_BEFORE = new Set(["H1", "H2"]);
-// Minimum text (chars) on each side of a mid-block split — prevents a lone
-// line stranded at a page bottom or a few words carried to the next page.
-const MIN_SPLIT_CHARS = 80;
 
 export function paginateHtml(
   html: string,
@@ -70,9 +67,10 @@ export function paginateHtml(
         measurer.appendChild(shell);
         if (fits()) {
           const remainder = fillFrom(block, shell, fits);
-          const took = shell.textContent?.trim().length ?? 0;
-          const left = remainder?.textContent?.trim().length ?? 0;
-          if (took >= MIN_SPLIT_CHARS && (!remainder || left >= MIN_SPLIT_CHARS)) {
+          const tookText = (shell.textContent ?? "").trim().length > 0;
+          const tookElements = shell.children.length > 0;
+          if (tookText || tookElements) {
+            // Word-level carry-over: keep what fits, continue on the next page.
             flush();
             if (remainder) {
               queue[i] = remainder;
@@ -81,7 +79,8 @@ export function paginateHtml(
             }
             continue;
           }
-          // The fragment would be a widow/orphan — reassemble and move whole.
+          // Not even one word fit in the remaining space — reassemble and
+          // move the block whole.
           const restored = block.cloneNode(false) as Element;
           while (shell.firstChild) restored.appendChild(shell.firstChild);
           if (remainder) {

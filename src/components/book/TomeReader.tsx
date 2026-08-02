@@ -45,6 +45,11 @@ export default function TomeReader({
   const bookRef = useRef<any>(null);
   const [dims, setDims] = useState<Dims | null>(null);
   const [pages, setPages] = useState<string[] | null>(null);
+  // Bumped every time pagination produces a fresh page set — keyed into the
+  // flipbook so it fully remounts. Without this, a repagination that lands on
+  // the SAME page count (e.g. after a late font load) is silently ignored by
+  // the flip library and the stale layout stays on screen.
+  const [paginationId, setPaginationId] = useState(0);
   // Bumped when a web font finishes loading late so pagination re-runs with
   // the real glyph metrics.
   const [fontsVersion, setFontsVersion] = useState(0);
@@ -111,6 +116,7 @@ export default function TomeReader({
       const result = paginateHtml(html, measurerRef.current, dims.pageH);
       if (!cancelled) {
         setPages(result.length > 0 ? result : [emptyPageHtml()]);
+        setPaginationId((v) => v + 1);
       }
     })();
     return () => {
@@ -153,7 +159,7 @@ export default function TomeReader({
     setPageNo(target);
   };
   const bookKey = dims
-    ? `${dims.pageW}x${dims.pageH}-${theme}-${contentPages.length}`
+    ? `${dims.pageW}x${dims.pageH}-${theme}-${paginationId}`
     : "pending";
 
   // The flipbook clones every child, so the children list must contain only
@@ -272,8 +278,7 @@ export default function TomeReader({
             swipeDistance={30}
             showPageCorners
             disableFlipByClick={false}
-            renderOnlyPageLengthChange
-            startPage={Math.min(startPage, contentPages.length + 1)}
+            startPage={Math.min(pageNo, totalLeaves - 1)}
             startZIndex={0}
             autoSize={false}
             style={{}}
