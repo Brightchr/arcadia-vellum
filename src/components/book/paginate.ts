@@ -9,6 +9,9 @@
 
 const SPLITTABLE = new Set(["P", "BLOCKQUOTE", "UL", "OL", "DIV", "LI"]);
 const BREAK_BEFORE = new Set(["H1"]);
+// Minimum text (chars) on each side of a mid-block split — prevents a lone
+// line stranded at a page bottom or a few words carried to the next page.
+const MIN_SPLIT_CHARS = 80;
 
 export function paginateHtml(
   html: string,
@@ -59,7 +62,39 @@ export function paginateHtml(
 
     measurer.removeChild(block);
     if (measurer.childNodes.length > 0) {
-      // Page has content; retry this block on a fresh page.
+      // The page has content and this block overflows what's left. Fill the
+      // remaining space by splitting the block (like a real book) instead of
+      // pushing it whole and leaving a half-empty page.
+      if (SPLITTABLE.has(block.tagName)) {
+        const shell = block.cloneNode(false) as Element;
+        measurer.appendChild(shell);
+        if (fits()) {
+          const remainder = fillFrom(block, shell, fits);
+          const took = shell.textContent?.trim().length ?? 0;
+          const left = remainder?.textContent?.trim().length ?? 0;
+          if (took >= MIN_SPLIT_CHARS && (!remainder || left >= MIN_SPLIT_CHARS)) {
+            flush();
+            if (remainder) {
+              queue[i] = remainder;
+            } else {
+              i++;
+            }
+            continue;
+          }
+          // The fragment would be a widow/orphan — reassemble and move whole.
+          const restored = block.cloneNode(false) as Element;
+          while (shell.firstChild) restored.appendChild(shell.firstChild);
+          if (remainder) {
+            while (remainder.firstChild) restored.appendChild(remainder.firstChild);
+          }
+          queue[i] = restored;
+          measurer.removeChild(shell);
+          flush();
+          continue;
+        }
+        measurer.removeChild(shell);
+      }
+      // Unsplittable (heading, image, table) — retry on a fresh page.
       flush();
       continue;
     }
