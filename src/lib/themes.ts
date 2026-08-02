@@ -16,7 +16,7 @@ export const THEMES: ThemeDef[] = [
     id: "witch-grimoire",
     name: "Witch's Grimoire",
     description:
-      "Black-green leather and venom witchfire — ashen pages in a spidery hand.",
+      "Serpent-scale black binding — royal purple and deep teal inks on ashen pages.",
   },
   {
     id: "ancient-tome",

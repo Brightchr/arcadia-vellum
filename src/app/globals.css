@@ -73,23 +73,23 @@ body {
 --------------------------------------------------------------------------- */
 
 .app-theme-witch-grimoire {
-  --void: #0d130d;
-  --void-raised: #151f15;
-  --void-border: #2c402b;
-  --ink: #e2e8da;
-  --ink-dim: #97a890;
-  --arcane: #7fba64;
-  --arcane-bright: #a8dc8c;
-  --ember: #9d7bd8;
+  --void: #0b0d12;
+  --void-raised: #161d22;
+  --void-border: #2e4547;
+  --ink: #dfe7e7;
+  --ink-dim: #8fa5a6;
+  --arcane: #6e9fa0;
+  --arcane-bright: #9ccbcc;
+  --ember: #8d5aa3;
   --app-display-font: var(--font-fell);
 }
 
 .app-theme-witch-grimoire.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(circle at 12% 15%, rgba(127, 186, 100, 0.13), transparent 40%),
-    radial-gradient(circle at 88% 80%, rgba(157, 123, 216, 0.1), transparent 45%),
-    radial-gradient(ellipse at 50% 110%, rgba(110, 210, 110, 0.08), transparent 50%);
+    radial-gradient(circle at 12% 15%, rgba(73, 33, 83, 0.28), transparent 42%),
+    radial-gradient(circle at 88% 80%, rgba(53, 86, 84, 0.22), transparent 45%),
+    radial-gradient(ellipse at 50% 110%, rgba(110, 159, 160, 0.1), transparent 50%);
 }
 
 .app-theme-ancient-tome {
