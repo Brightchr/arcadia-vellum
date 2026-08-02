@@ -1,4 +1,37 @@
 import sanitizeHtml from "sanitize-html";
+import * as cheerio from "cheerio";
+
+/**
+ * Google Docs export carries emphasis as inline styles on <span>s
+ * (font-weight:700, font-style:italic, ...) rather than semantic tags.
+ * Translate those into <strong>/<em>/<u>/<s>/<sup>/<sub> before the
+ * sanitizer strips spans and styles.
+ */
+export function normalizeInlineStyles(html: string): string {
+  if (!/style\s*=/i.test(html)) return html;
+  const $ = cheerio.load(html);
+  $("span[style]").each((_, el) => {
+    const node = $(el);
+    const style = node.attr("style") ?? "";
+    const bold = /font-weight\s*:\s*(bold|[6-9]00)/i.test(style);
+    const italic = /font-style\s*:\s*italic/i.test(style);
+    const underline = /text-decoration[^;]*underline/i.test(style);
+    const strike = /text-decoration[^;]*line-through/i.test(style);
+    const sup = /vertical-align\s*:\s*super/i.test(style);
+    const sub = /vertical-align\s*:\s*sub/i.test(style);
+    if (!(bold || italic || underline || strike || sup || sub)) return;
+
+    let inner = node.html() ?? "";
+    if (sub) inner = `<sub>${inner}</sub>`;
+    if (sup) inner = `<sup>${inner}</sup>`;
+    if (strike) inner = `<s>${inner}</s>`;
+    if (underline) inner = `<u>${inner}</u>`;
+    if (italic) inner = `<em>${inner}</em>`;
+    if (bold) inner = `<strong>${inner}</strong>`;
+    node.html(inner);
+  });
+  return $("body").html() ?? html;
+}
 
 /**
  * Sanitizes journal HTML from any source (Google Docs export, mammoth,
@@ -6,7 +39,7 @@ import sanitizeHtml from "sanitize-html";
  * All classes/styles/ids are stripped — theming is entirely ours.
  */
 export function sanitizeJournalHtml(html: string): string {
-  return sanitizeHtml(html, {
+  return sanitizeHtml(normalizeInlineStyles(html), {
     allowedTags: [
       "h1",
       "h2",
