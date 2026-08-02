@@ -379,7 +379,10 @@
 .tome-page p {
   margin: 0 0 0.65em;
   text-align: justify;
-  hyphens: auto;
+  /* Never split words — hyphenated fragments render poorly in the
+     handwriting fonts and read as cut-off text. */
+  hyphens: none;
+  overflow-wrap: break-word;
 }
 
 .tome-page em {
