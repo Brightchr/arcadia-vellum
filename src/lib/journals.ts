@@ -43,7 +43,8 @@ export async function getJournalContent(journalId: string) {
 export async function createJournal(input: {
   ownerId: string;
   title: string;
-  characterName?: string | null;
+  subtitle?: string | null;
+  author?: string | null;
   theme?: ThemeId;
   sourceType: "gdoc" | "upload";
   gdocFileId?: string | null;
@@ -56,7 +57,8 @@ export async function createJournal(input: {
       id,
       ownerId: input.ownerId,
       title: input.title,
-      characterName: input.characterName ?? null,
+      subtitle: input.subtitle ?? null,
+      author: input.author ?? null,
       slug,
       theme: input.theme ?? DEFAULT_THEME,
       sourceType: input.sourceType,
@@ -69,7 +71,10 @@ export async function createJournal(input: {
 export async function updateJournal(
   id: string,
   patch: Partial<
-    Pick<Journal, "title" | "characterName" | "theme" | "visibility" | "gdocFileId">
+    Pick<
+      Journal,
+      "title" | "subtitle" | "author" | "theme" | "visibility" | "gdocFileId"
+    >
   >
 ) {
   const [row] = await db

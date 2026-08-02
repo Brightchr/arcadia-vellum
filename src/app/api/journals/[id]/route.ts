@@ -25,15 +25,21 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   if (!body) return jsonError("Invalid JSON body", 400);
 
   const patch: Partial<
-    Pick<Journal, "title" | "characterName" | "theme" | "visibility" | "gdocFileId">
+    Pick<
+      Journal,
+      "title" | "subtitle" | "author" | "theme" | "visibility" | "gdocFileId"
+    >
   > = {};
 
   if (typeof body.title === "string" && body.title.trim()) {
     if (body.title.trim().length > 120) return jsonError("Title too long", 400);
     patch.title = body.title.trim();
   }
-  if (typeof body.characterName === "string") {
-    patch.characterName = body.characterName.trim() || null;
+  if (typeof body.subtitle === "string") {
+    patch.subtitle = body.subtitle.trim().slice(0, 160) || null;
+  }
+  if (typeof body.author === "string") {
+    patch.author = body.author.trim().slice(0, 80) || null;
   }
   if (typeof body.theme === "string") {
     if (!isThemeId(body.theme)) return jsonError("Unknown theme", 400);

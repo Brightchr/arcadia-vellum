@@ -20,7 +20,8 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const title = String(form.get("title") ?? "").trim();
-  const characterName = String(form.get("characterName") ?? "").trim() || null;
+  const subtitle = String(form.get("subtitle") ?? "").trim() || null;
+  const author = String(form.get("author") ?? "").trim() || null;
   const themeRaw = String(form.get("theme") ?? "");
   const sourceType = String(form.get("sourceType") ?? "");
 
@@ -41,7 +42,8 @@ export async function POST(request: Request) {
     const journal = await createJournal({
       ownerId: session.user.id,
       title,
-      characterName,
+      subtitle,
+      author,
       theme,
       sourceType: "upload",
     });
@@ -65,7 +67,8 @@ export async function POST(request: Request) {
   const journal = await createJournal({
     ownerId: session.user.id,
     title,
-    characterName,
+    subtitle,
+    author,
     theme,
     sourceType: "gdoc",
     gdocFileId,

@@ -1,0 +1,1 @@
+ALTER TABLE "journals" DROP COLUMN "character_name";

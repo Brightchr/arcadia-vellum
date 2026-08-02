@@ -15,6 +15,20 @@
       "when": 1785622119186,
       "tag": "0001_dashboard-theme",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785637431418,
+      "tag": "0002_cover-fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785637466556,
+      "tag": "0003_drop-character-name",
+      "breakpoints": true
     }
   ]
 }

@@ -78,7 +78,8 @@ export const journals = pgTable("journals", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  characterName: text("character_name"),
+  subtitle: text("subtitle"),
+  author: text("author"),
   slug: text("slug").notNull().unique(),
   theme: text("theme").notNull().default("witch-grimoire"),
   sourceType: text("source_type", { enum: ["gdoc", "upload"] }).notNull(),
