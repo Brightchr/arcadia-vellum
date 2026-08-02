@@ -214,24 +214,32 @@ export function SettingsForm({
         <h2 className="font-heading text-lg">Sharing</h2>
         <p className="text-sm text-ink-dim">
           {journal.visibility === "public"
-            ? "Anyone with the link can read this tome."
-            : "Only you can read this tome."}
+            ? "This link is live — anyone who has it can read the tome in its binding, no account needed."
+            : "This will be the share link. It stays locked (404 for everyone but you) until you make the tome public."}
         </p>
-        {journal.visibility === "public" && (
-          <div className="flex gap-2">
-            <input className="input-arcane flex-1" readOnly value={shareUrl} />
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => {
-                navigator.clipboard.writeText(shareUrl);
-                setNotice("Link copied.");
-              }}
-            >
-              Copy
-            </button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <input
+            className={`input-arcane flex-1 ${
+              journal.visibility === "public" ? "" : "opacity-60"
+            }`}
+            readOnly
+            value={shareUrl}
+          />
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              navigator.clipboard.writeText(shareUrl);
+              setNotice(
+                journal.visibility === "public"
+                  ? "Link copied."
+                  : "Link copied — remember to make the tome public before sending it."
+              );
+            }}
+          >
+            Copy
+          </button>
+        </div>
         <button
           type="button"
           className="btn-ghost"
