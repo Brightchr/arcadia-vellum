@@ -46,6 +46,14 @@ export function AuthForm({
 
   return (
     <div className="panel-arcane w-full max-w-md p-8">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo.png"
+        alt="Arcadia Vellum"
+        width={112}
+        height={112}
+        className="mx-auto mb-4 h-28 w-28 rounded-2xl shadow-lg shadow-black/40"
+      />
       <h1 className="font-display text-2xl text-center mb-1">
         {mode === "signup" ? "Begin Your Chronicle" : "Return to Your Tome"}
       </h1>

@@ -19,13 +19,23 @@ export default async function DashboardPage() {
     <main className={`${appThemeClass(dashboardTheme)} arcane-bg min-h-screen`}>
       <div className="max-w-5xl mx-auto p-6 md:p-10">
         <header className="flex items-center justify-between mb-8">
-          <div>
-            <Link href="/" className="font-display text-xl text-arcane-bright">
-              Arcadia Vellum
-            </Link>
-            <p className="text-sm text-ink-dim">
-              {session.user.name}&apos;s library
-            </p>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mark.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 rounded-lg shadow shadow-black/40"
+            />
+            <div>
+              <Link href="/" className="font-display text-xl text-arcane-bright">
+                Arcadia Vellum
+              </Link>
+              <p className="text-sm text-ink-dim">
+                {session.user.name}&apos;s library
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <DashboardThemePicker
