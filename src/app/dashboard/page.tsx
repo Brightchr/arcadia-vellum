@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   return (
     <main className={`${appThemeClass(dashboardTheme)} arcane-bg min-h-screen`}>
       <div className="max-w-5xl mx-auto p-6 md:p-10">
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 mb-8">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <DashboardThemePicker
               current={dashboardTheme || "witch-grimoire"}
             />

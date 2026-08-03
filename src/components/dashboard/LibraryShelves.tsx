@@ -79,6 +79,44 @@ export function LibraryShelves({
     };
   }
 
+  /** Touch-friendly alternative to drag & drop: a shelf picker per card. */
+  function ShelfPicker({ journal }: { journal: Journal }) {
+    const currentName =
+      seriesList.find((s) => s.id === journal.seriesId)?.name ?? "";
+    return (
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-ink-dim shrink-0 font-heading">
+          Shelf
+        </span>
+        <select
+          className="input-arcane flex-1 !py-1 !px-2 text-xs"
+          value={currentName}
+          aria-label={`Collection for ${journal.title}`}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "__new__") {
+              const name = window.prompt(
+                "Name the new collection (e.g. The Veyr Chronicles):"
+              );
+              if (name?.trim()) void assign(journal.id, name.trim());
+              else e.target.value = currentName;
+            } else {
+              void assign(journal.id, v);
+            }
+          }}
+        >
+          <option value="">— no collection —</option>
+          {seriesList.map((s) => (
+            <option key={s.id} value={s.name}>
+              {s.name}
+            </option>
+          ))}
+          <option value="__new__">➕ New collection…</option>
+        </select>
+      </div>
+    );
+  }
+
   const grouped = seriesList
     .map((s) => ({
       series: s,
@@ -95,7 +133,7 @@ export function LibraryShelves({
   const loose = journals.filter((j) => !j.seriesId);
 
   const shelfClass = (key: string) =>
-    `rounded-xl border transition-colors p-5 ${
+    `rounded-xl border transition-colors p-3.5 sm:p-5 ${
       overShelf === key
         ? "border-arcane bg-arcane/10"
         : "border-void-border bg-void-raised/40"
@@ -122,10 +160,11 @@ export function LibraryShelves({
               Read the Series
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {volumes.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
                 <JournalCard journal={j} />
+                <ShelfPicker journal={j} />
               </div>
             ))}
           </div>
@@ -136,17 +175,18 @@ export function LibraryShelves({
         <div className="mb-4">
           <h2 className="font-heading text-lg">Unbound Journals</h2>
           <p className="text-sm text-ink-dim">
-            Drag a journal onto a collection to shelve it — or drop it here to
-            unshelve.
+            Drag a journal onto a collection to shelve it, or use each card&apos;s
+            Shelf picker. Drop here to unshelve.
           </p>
         </div>
         {loose.length === 0 ? (
           <p className="text-sm text-ink-dim italic">Every tome is shelved.</p>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {loose.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
                 <JournalCard journal={j} />
+                <ShelfPicker journal={j} />
               </div>
             ))}
           </div>
