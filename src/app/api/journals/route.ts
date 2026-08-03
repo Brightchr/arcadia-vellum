@@ -2,6 +2,7 @@ import { sessionFromRequest, jsonError } from "@/lib/api";
 import { createJournal, deleteJournal } from "@/lib/journals";
 import { ingestUpload } from "@/lib/content/ingest";
 import { isThemeId } from "@/lib/themes";
+import { findOrCreateSeries, nextVolumeNumber } from "@/lib/series";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,21 @@ export async function POST(request: Request) {
   }
   const theme = isThemeId(themeRaw) ? themeRaw : undefined;
 
+  // Optional series membership: find-or-create by name, auto-number if the
+  // volume number wasn't given.
+  const seriesName = String(form.get("seriesName") ?? "").trim();
+  const volumeRaw = parseInt(String(form.get("volumeNumber") ?? ""), 10);
+  let seriesId: string | null = null;
+  let volumeNumber: number | null = null;
+  if (seriesName) {
+    const s = await findOrCreateSeries(session.user.id, seriesName);
+    seriesId = s.id;
+    volumeNumber =
+      Number.isFinite(volumeRaw) && volumeRaw > 0
+        ? volumeRaw
+        : await nextVolumeNumber(s.id);
+  }
+
   if (sourceType === "upload") {
     const file = form.get("file");
     if (!(file instanceof File)) return jsonError("A file is required", 400);
@@ -44,6 +60,8 @@ export async function POST(request: Request) {
       title,
       subtitle,
       author,
+      seriesId,
+      volumeNumber,
       theme,
       sourceType: "upload",
     });
@@ -69,6 +87,8 @@ export async function POST(request: Request) {
     title,
     subtitle,
     author,
+    seriesId,
+    volumeNumber,
     theme,
     sourceType: "gdoc",
     gdocFileId,

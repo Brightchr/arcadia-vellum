@@ -72,11 +72,25 @@ const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
   },
 });
 
+export const series = pgTable("series", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const journals = pgTable("journals", {
   id: text("id").primaryKey(),
   ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  seriesId: text("series_id").references(() => series.id, {
+    onDelete: "set null",
+  }),
+  volumeNumber: integer("volume_number"),
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   author: text("author"),

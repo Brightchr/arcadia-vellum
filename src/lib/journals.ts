@@ -45,6 +45,8 @@ export async function createJournal(input: {
   title: string;
   subtitle?: string | null;
   author?: string | null;
+  seriesId?: string | null;
+  volumeNumber?: number | null;
   theme?: ThemeId;
   sourceType: "gdoc" | "upload";
   gdocFileId?: string | null;
@@ -59,6 +61,8 @@ export async function createJournal(input: {
       title: input.title,
       subtitle: input.subtitle ?? null,
       author: input.author ?? null,
+      seriesId: input.seriesId ?? null,
+      volumeNumber: input.volumeNumber ?? null,
       slug,
       theme: input.theme ?? DEFAULT_THEME,
       sourceType: input.sourceType,
@@ -73,7 +77,14 @@ export async function updateJournal(
   patch: Partial<
     Pick<
       Journal,
-      "title" | "subtitle" | "author" | "theme" | "visibility" | "gdocFileId"
+      | "title"
+      | "subtitle"
+      | "author"
+      | "seriesId"
+      | "volumeNumber"
+      | "theme"
+      | "visibility"
+      | "gdocFileId"
     >
   >
 ) {

@@ -6,6 +6,11 @@ import {
   type Journal,
 } from "@/lib/journals";
 import { isThemeId } from "@/lib/themes";
+import {
+  findOrCreateSeries,
+  deleteSeriesIfEmpty,
+  nextVolumeNumber,
+} from "@/lib/series";
 
 export const runtime = "nodejs";
 
@@ -27,7 +32,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const patch: Partial<
     Pick<
       Journal,
-      "title" | "subtitle" | "author" | "theme" | "visibility" | "gdocFileId"
+      | "title"
+      | "subtitle"
+      | "author"
+      | "seriesId"
+      | "volumeNumber"
+      | "theme"
+      | "visibility"
+      | "gdocFileId"
     >
   > = {};
 
@@ -56,11 +68,40 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     patch.gdocFileId = body.gdocFileId.trim();
   }
 
+  // Series membership: a name assigns (find-or-create), empty string removes.
+  if (typeof body.seriesName === "string") {
+    const name = body.seriesName.trim();
+    if (name) {
+      const s = await findOrCreateSeries(session.user.id, name);
+      patch.seriesId = s.id;
+      if (patch.volumeNumber === undefined && journal.volumeNumber === null) {
+        patch.volumeNumber = await nextVolumeNumber(s.id);
+      }
+    } else {
+      patch.seriesId = null;
+      patch.volumeNumber = null;
+    }
+  }
+  if (typeof body.volumeNumber === "number" || body.volumeNumber === null) {
+    patch.volumeNumber =
+      typeof body.volumeNumber === "number" &&
+      Number.isFinite(body.volumeNumber) &&
+      body.volumeNumber > 0
+        ? Math.floor(body.volumeNumber)
+        : null;
+  }
+
   if (Object.keys(patch).length === 0) {
     return jsonError("Nothing to update", 400);
   }
 
   const updated = await updateJournal(id, patch);
+
+  // Tidy up a series the journal just left.
+  if (journal.seriesId && patch.seriesId !== undefined && patch.seriesId !== journal.seriesId) {
+    await deleteSeriesIfEmpty(journal.seriesId);
+  }
+
   return Response.json({ journal: updated });
 }
 
@@ -72,5 +113,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   if (!journal) return jsonError("Journal not found", 404);
 
   await deleteJournal(id);
+  if (journal.seriesId) await deleteSeriesIfEmpty(journal.seriesId);
   return Response.json({ ok: true });
 }
