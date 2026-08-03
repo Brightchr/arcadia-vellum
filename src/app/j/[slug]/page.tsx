@@ -4,8 +4,10 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
+import { listTracks } from "@/lib/audio";
 import TomeReader from "@/components/book/TomeReaderClient";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
+import { NarrationPlayer } from "@/components/book/NarrationPlayer";
 
 export async function generateMetadata({
   params,
@@ -36,6 +38,7 @@ export default async function ReaderPage({
   if (isOwner) await autoSyncIfStale(journal);
 
   const content = await getJournalContent(journal.id);
+  const tracks = await listTracks(journal.id);
 
   return (
     <main
@@ -68,6 +71,10 @@ export default async function ReaderPage({
           author={journal.author}
         />
       </div>
+
+      <NarrationPlayer
+        tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
+      />
     </main>
   );
 }

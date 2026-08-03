@@ -8,16 +8,23 @@ import { ThemePreview } from "@/components/wizard/ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
 
+export interface TrackInfo {
+  id: string;
+  title: string;
+}
+
 export function SettingsForm({
   journal,
   googleEnabled,
   seriesName: initialSeriesName = "",
   seriesNames = [],
+  tracks = [],
 }: {
   journal: Journal;
   googleEnabled: boolean;
   seriesName?: string;
   seriesNames?: string[];
+  tracks?: TrackInfo[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(journal.title);
@@ -115,6 +122,45 @@ export function SettingsForm({
     if (!doc) return;
     const ok = await patch({ gdocFileId: doc.id }, "relink");
     if (ok) await resync();
+  }
+
+  async function uploadNarration(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setBusy("narration");
+    setError(null);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      for (const f of Array.from(files)) form.append("files", f);
+      const res = await fetch(`/api/journals/${journal.id}/audio`, {
+        method: "POST",
+        body: form,
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) setError(body?.error ?? "Upload failed.");
+      else {
+        setNotice(
+          `Added ${body.tracks.length} track${body.tracks.length === 1 ? "" : "s"}.`
+        );
+        router.refresh();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deleteNarration(trackId: string) {
+    setBusy("narration");
+    setError(null);
+    try {
+      const res = await fetch(`/api/journals/${journal.id}/audio/${trackId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) router.refresh();
+      else setError("Could not remove the track.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function reupload() {
@@ -319,6 +365,70 @@ export function SettingsForm({
         >
           {journal.visibility === "public" ? "Make Private" : "Make Public"}
         </button>
+      </section>
+
+      {/* Narration */}
+      <section className="panel-arcane p-6 space-y-4">
+        <h2 className="font-heading text-lg">Narration</h2>
+        <p className="text-sm text-ink-dim">
+          Upload audio readings of your journal (.mp3, .m4a, .ogg, or .wav —
+          e.g. rendered with ElevenLabs). Anyone who can read the tome gets a
+          player; multiple files play in order, so one file per session works
+          beautifully.
+        </p>
+
+        {tracks.length > 0 && (
+          <ul className="space-y-2">
+            {tracks.map((t, i) => (
+              <li
+                key={t.id}
+                className="flex items-center justify-between gap-3 border border-void-border rounded-lg px-3 py-2"
+              >
+                <span className="text-sm truncate">
+                  <span className="text-ink-dim font-heading text-xs mr-2">
+                    {i + 1}.
+                  </span>
+                  {t.title}
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <audio
+                    src={`/api/audio/${t.id}`}
+                    controls
+                    preload="none"
+                    className="h-8 w-40 hidden sm:block"
+                  />
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs px-2 py-1 !text-red-400 hover:!border-red-400"
+                    disabled={busy !== null}
+                    onClick={() => deleteNarration(t.id)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <label className="block border border-dashed border-void-border rounded-lg p-5 text-center cursor-pointer hover:border-arcane/60 transition">
+          <input
+            type="file"
+            accept=".mp3,.m4a,.ogg,.wav,audio/*"
+            multiple
+            className="hidden"
+            disabled={busy !== null}
+            onChange={(e) => {
+              void uploadNarration(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <span className="text-sm text-ink-dim">
+            {busy === "narration"
+              ? "Uploading..."
+              : "Click to add narration audio (max 40 MB per file)"}
+          </span>
+        </label>
       </section>
 
       {/* Source */}

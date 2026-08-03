@@ -5,8 +5,10 @@ import { getSession } from "@/lib/auth";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
+import { listTracks } from "@/lib/audio";
 import TomeReader from "@/components/book/TomeReaderClient";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
+import { NarrationPlayer } from "@/components/book/NarrationPlayer";
 
 export async function generateMetadata({
   params,
@@ -64,6 +66,21 @@ export default async function SeriesReaderPage({
   const theme = volumes[0].theme;
   const author = volumes.find((v) => v.author)?.author ?? null;
 
+  // Combined playlist: every volume's narration tracks, in volume order.
+  const trackLists = [];
+  for (const v of volumes) {
+    const tracks = await listTracks(v.id);
+    trackLists.push(
+      ...tracks.map((t) => ({
+        id: t.id,
+        title:
+          volumes.length > 1 && v.volumeNumber !== null
+            ? `Vol. ${v.volumeNumber} — ${t.title}`
+            : t.title,
+      }))
+    );
+  }
+
   return (
     <main
       className={`theme-${theme} tome-scene arcane-bg h-dvh w-full overflow-hidden relative`}
@@ -90,6 +107,8 @@ export default async function SeriesReaderPage({
           author={author}
         />
       </div>
+
+      <NarrationPlayer tracks={trackLists} />
     </main>
   );
 }

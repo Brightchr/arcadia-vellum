@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession, googleConfigured } from "@/lib/auth";
 import { getOwnedJournal } from "@/lib/journals";
 import { listSeriesForOwner } from "@/lib/series";
+import { listTracks } from "@/lib/audio";
 import { appThemeClass } from "@/lib/themes";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 
@@ -22,6 +23,7 @@ export default async function JournalSettingsPage({
   const allSeries = await listSeriesForOwner(session.user.id);
   const currentSeries =
     allSeries.find((s) => s.id === journal.seriesId)?.name ?? "";
+  const tracks = await listTracks(journal.id);
 
   return (
     <main className={`${appThemeClass(theme)} arcane-bg min-h-screen`}>
@@ -45,6 +47,7 @@ export default async function JournalSettingsPage({
           googleEnabled={googleConfigured}
           seriesName={currentSeries}
           seriesNames={allSeries.map((s) => s.name)}
+          tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
         />
       </div>
     </main>
