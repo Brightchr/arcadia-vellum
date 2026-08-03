@@ -114,6 +114,19 @@ export const journalContent = pgTable("journal_content", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+/** Owner-uploaded narration tracks (e.g. ElevenLabs renders), in play order. */
+export const journalAudio = pgTable("journal_audio", {
+  id: text("id").primaryKey(),
+  journalId: text("journal_id")
+    .notNull()
+    .references(() => journals.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  sortIndex: integer("sort_index").notNull().default(0),
+  contentType: text("content_type").notNull(),
+  data: bytea("data").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const journalImages = pgTable("journal_images", {
   id: text("id").primaryKey(),
   journalId: text("journal_id")

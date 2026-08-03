@@ -36,6 +36,13 @@
       "when": 1785706317993,
       "tag": "0004_series",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785772221136,
+      "tag": "0005_narration-tracks",
+      "breakpoints": true
     }
   ]
 }
