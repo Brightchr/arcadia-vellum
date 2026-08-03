@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listJournalsForOwner } from "@/lib/journals";
+import { listSeriesForOwner } from "@/lib/series";
 import { appThemeClass } from "@/lib/themes";
-import { JournalCard } from "@/components/dashboard/JournalCard";
+import { LibraryShelves } from "@/components/dashboard/LibraryShelves";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 
@@ -12,6 +13,7 @@ export default async function DashboardPage() {
   if (!session) redirect("/login");
 
   const journals = await listJournalsForOwner(session.user.id);
+  const seriesList = await listSeriesForOwner(session.user.id);
   const dashboardTheme =
     (session.user as { dashboardTheme?: string }).dashboardTheme ?? "";
 
@@ -59,11 +61,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {journals.map((j) => (
-              <JournalCard key={j.id} journal={j} />
-            ))}
-          </div>
+          <LibraryShelves journals={journals} seriesList={seriesList} />
         )}
       </div>
     </main>

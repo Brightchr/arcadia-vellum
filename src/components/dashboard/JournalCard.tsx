@@ -65,15 +65,22 @@ export function JournalCard({ journal }: { journal: Journal }) {
             <p className="text-sm text-ink-dim">by {journal.author}</p>
           )}
         </div>
-        <span
-          className={`text-xs px-2 py-1 rounded-full border ${
-            journal.visibility === "public"
-              ? "border-ember text-ember"
-              : "border-void-border text-ink-dim"
-          }`}
-        >
-          {journal.visibility}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {journal.volumeNumber !== null && (
+            <span className="text-xs px-2 py-1 rounded-full border border-arcane/60 text-arcane-bright">
+              Vol. {journal.volumeNumber}
+            </span>
+          )}
+          <span
+            className={`text-xs px-2 py-1 rounded-full border ${
+              journal.visibility === "public"
+                ? "border-ember text-ember"
+                : "border-void-border text-ink-dim"
+            }`}
+          >
+            {journal.visibility}
+          </span>
+        </div>
       </div>
 
       <p className="text-xs text-ink-dim">

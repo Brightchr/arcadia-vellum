@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession, googleConfigured } from "@/lib/auth";
 import { getOwnedJournal } from "@/lib/journals";
+import { listSeriesForOwner } from "@/lib/series";
 import { appThemeClass } from "@/lib/themes";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 
@@ -18,6 +19,9 @@ export default async function JournalSettingsPage({
   if (!journal) notFound();
 
   const theme = (session.user as { dashboardTheme?: string }).dashboardTheme;
+  const allSeries = await listSeriesForOwner(session.user.id);
+  const currentSeries =
+    allSeries.find((s) => s.id === journal.seriesId)?.name ?? "";
 
   return (
     <main className={`${appThemeClass(theme)} arcane-bg min-h-screen`}>
@@ -36,7 +40,12 @@ export default async function JournalSettingsPage({
             Open Tome
           </Link>
         </header>
-        <SettingsForm journal={journal} googleEnabled={googleConfigured} />
+        <SettingsForm
+          journal={journal}
+          googleEnabled={googleConfigured}
+          seriesName={currentSeries}
+          seriesNames={allSeries.map((s) => s.name)}
+        />
       </div>
     </main>
   );

@@ -13,12 +13,20 @@ type SourceType = "upload" | "gdoc";
 // (Connect Google Drive navigates away and back).
 const STORAGE_KEY = "av-new-journal";
 
-export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) {
+export function NewJournalWizard({
+  googleEnabled,
+  seriesNames = [],
+}: {
+  googleEnabled: boolean;
+  seriesNames?: string[];
+}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [author, setAuthor] = useState("");
+  const [seriesName, setSeriesName] = useState("");
+  const [volumeNumber, setVolumeNumber] = useState("");
   const [source, setSource] = useState<SourceType>("gdoc");
   const [file, setFile] = useState<File | null>(null);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
@@ -35,6 +43,10 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
         if (typeof saved.title === "string") setTitle(saved.title);
         if (typeof saved.subtitle === "string") setSubtitle(saved.subtitle);
         if (typeof saved.author === "string") setAuthor(saved.author);
+        if (typeof saved.seriesName === "string") setSeriesName(saved.seriesName);
+        if (typeof saved.volumeNumber === "string") {
+          setVolumeNumber(saved.volumeNumber);
+        }
         if (saved.source === "upload" || saved.source === "gdoc") {
           setSource(saved.source);
         }
@@ -55,9 +67,30 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
     if (!restored) return;
     sessionStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ step, title, subtitle, author, source, theme, pickedDoc })
+      JSON.stringify({
+        step,
+        title,
+        subtitle,
+        author,
+        seriesName,
+        volumeNumber,
+        source,
+        theme,
+        pickedDoc,
+      })
     );
-  }, [restored, step, title, subtitle, author, source, theme, pickedDoc]);
+  }, [
+    restored,
+    step,
+    title,
+    subtitle,
+    author,
+    seriesName,
+    volumeNumber,
+    source,
+    theme,
+    pickedDoc,
+  ]);
 
   const sourceReady = source === "upload" ? file !== null : pickedDoc !== null;
 
@@ -69,6 +102,8 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
       form.set("title", title);
       form.set("subtitle", subtitle);
       form.set("author", author);
+      form.set("seriesName", seriesName);
+      form.set("volumeNumber", volumeNumber);
       form.set("theme", theme);
       form.set("sourceType", source);
       if (source === "upload" && file) form.set("file", file);
@@ -166,6 +201,49 @@ export function NewJournalWizard({ googleEnabled }: { googleEnabled: boolean }) 
               maxLength={80}
               onChange={(e) => setAuthor(e.target.value)}
             />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+            <div>
+              <label
+                htmlFor="seriesName"
+                className="block text-sm mb-1 text-ink-dim"
+              >
+                Collection / series <span className="opacity-60">(optional)</span>
+              </label>
+              <input
+                id="seriesName"
+                className="input-arcane"
+                placeholder="The Veyr Chronicles"
+                value={seriesName}
+                maxLength={80}
+                list="series-names"
+                onChange={(e) => setSeriesName(e.target.value)}
+              />
+              <datalist id="series-names">
+                {seriesNames.map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label
+                htmlFor="volumeNumber"
+                className="block text-sm mb-1 text-ink-dim"
+              >
+                Volume #
+              </label>
+              <input
+                id="volumeNumber"
+                className="input-arcane"
+                placeholder="auto"
+                inputMode="numeric"
+                value={volumeNumber}
+                disabled={!seriesName.trim()}
+                onChange={(e) =>
+                  setVolumeNumber(e.target.value.replace(/\D/g, ""))
+                }
+              />
+            </div>
           </div>
         </div>
       )}

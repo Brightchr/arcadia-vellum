@@ -11,14 +11,22 @@ import { FormattingGuide } from "@/components/help/FormattingGuide";
 export function SettingsForm({
   journal,
   googleEnabled,
+  seriesName: initialSeriesName = "",
+  seriesNames = [],
 }: {
   journal: Journal;
   googleEnabled: boolean;
+  seriesName?: string;
+  seriesNames?: string[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(journal.title);
   const [subtitle, setSubtitle] = useState(journal.subtitle ?? "");
   const [author, setAuthor] = useState(journal.author ?? "");
+  const [seriesName, setSeriesName] = useState(initialSeriesName);
+  const [volumeNumber, setVolumeNumber] = useState(
+    journal.volumeNumber !== null ? String(journal.volumeNumber) : ""
+  );
   const [theme, setTheme] = useState(journal.theme as ThemeId);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -58,7 +66,17 @@ export function SettingsForm({
   }
 
   async function saveDetails() {
-    await patch({ title, subtitle, author }, "details");
+    const vol = parseInt(volumeNumber, 10);
+    await patch(
+      {
+        title,
+        subtitle,
+        author,
+        seriesName,
+        volumeNumber: Number.isFinite(vol) && vol > 0 ? vol : null,
+      },
+      "details"
+    );
   }
 
   async function saveTheme(next: ThemeId) {
@@ -185,6 +203,49 @@ export function SettingsForm({
             maxLength={80}
             onChange={(e) => setAuthor(e.target.value)}
           />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+          <div>
+            <label
+              htmlFor="seriesName"
+              className="block text-sm mb-1 text-ink-dim"
+            >
+              Collection / series{" "}
+              <span className="opacity-60">(blank to unshelve)</span>
+            </label>
+            <input
+              id="seriesName"
+              className="input-arcane"
+              value={seriesName}
+              maxLength={80}
+              list="settings-series-names"
+              onChange={(e) => setSeriesName(e.target.value)}
+            />
+            <datalist id="settings-series-names">
+              {seriesNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+          </div>
+          <div>
+            <label
+              htmlFor="volumeNumber"
+              className="block text-sm mb-1 text-ink-dim"
+            >
+              Volume #
+            </label>
+            <input
+              id="volumeNumber"
+              className="input-arcane"
+              inputMode="numeric"
+              placeholder="auto"
+              value={volumeNumber}
+              disabled={!seriesName.trim()}
+              onChange={(e) =>
+                setVolumeNumber(e.target.value.replace(/\D/g, ""))
+              }
+            />
+          </div>
         </div>
         <button
           type="button"
