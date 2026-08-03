@@ -93,9 +93,19 @@ export default async function SeriesReaderPage({
         >
           ← {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
-        <span className="text-ink-dim font-heading">
-          {volumes.length} volume{volumes.length === 1 ? "" : "s"}
-        </span>
+        <div className="flex items-center gap-4">
+          {trackLists.length > 0 && (
+            <Link
+              href={`/s/${s.slug}/listen`}
+              className="text-ink-dim hover:text-arcane-bright transition font-heading"
+            >
+              🎧 Audiobook
+            </Link>
+          )}
+          <span className="text-ink-dim font-heading">
+            {volumes.length} volume{volumes.length === 1 ? "" : "s"}
+          </span>
+        </div>
       </header>
 
       <div className="h-full w-full pt-10 pb-2 relative z-10">

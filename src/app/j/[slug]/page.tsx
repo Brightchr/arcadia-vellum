@@ -52,14 +52,24 @@ export default async function ReaderPage({
         >
           ← {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
-        {isOwner && (
-          <Link
-            href={`/journal/${journal.id}/settings`}
-            className="text-ink-dim hover:text-arcane-bright transition font-heading"
-          >
-            Settings
-          </Link>
-        )}
+        <div className="flex items-center gap-4">
+          {tracks.length > 0 && (
+            <Link
+              href={`/j/${journal.slug}/listen`}
+              className="text-ink-dim hover:text-arcane-bright transition font-heading"
+            >
+              🎧 Audiobook
+            </Link>
+          )}
+          {isOwner && (
+            <Link
+              href={`/journal/${journal.id}/settings`}
+              className="text-ink-dim hover:text-arcane-bright transition font-heading"
+            >
+              Settings
+            </Link>
+          )}
+        </div>
       </header>
 
       <div className="h-full w-full pt-10 pb-2 relative z-10">
