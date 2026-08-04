@@ -1,10 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
+
+function Chip({
+  tone = "dim",
+  title,
+  children,
+}: {
+  tone?: "arcane" | "ember" | "dim";
+  title?: string;
+  children: React.ReactNode;
+}) {
+  const tones = {
+    arcane: "bg-arcane/15 text-arcane-bright",
+    ember: "bg-ember/15 text-ember",
+    dim: "bg-white/5 text-ink-dim",
+  };
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
 
 export function JournalCard({
   journal,
@@ -16,13 +40,25 @@ export function JournalCard({
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const themeName =
     THEMES.find((t) => t.id === journal.theme)?.name ?? journal.theme;
   const audioOnly = journal.sourceType === "audio";
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDown(e: MouseEvent) {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuOpen]);
+
   async function call(action: string, fn: () => Promise<Response>) {
     setBusy(action);
     setError(null);
+    setMenuOpen(false);
     try {
       const res = await fn();
       if (!res.ok) {
@@ -55,6 +91,7 @@ export function JournalCard({
     );
 
   const remove = () => {
+    setMenuOpen(false);
     if (!window.confirm(`Burn "${journal.title}"? This cannot be undone.`)) {
       return;
     }
@@ -63,39 +100,96 @@ export function JournalCard({
     );
   };
 
+  const menuItem =
+    "block w-full text-left text-sm px-3 py-2 hover:bg-arcane/10 transition-colors";
+
   return (
-    <div className="panel-arcane p-5 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-heading text-lg leading-tight">{journal.title}</h2>
+    <div className="panel-arcane p-4 flex flex-col gap-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2
+            className="font-heading text-base leading-snug truncate"
+            title={journal.title}
+          >
+            {journal.title}
+          </h2>
           {journal.author && (
-            <p className="text-sm text-ink-dim">by {journal.author}</p>
+            <p className="text-xs text-ink-dim truncate">by {journal.author}</p>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
-          {journal.volumeNumber !== null && (
-            <span className="text-xs px-2 py-1 rounded-full border border-arcane/60 text-arcane-bright">
-              Vol. {journal.volumeNumber}
-            </span>
-          )}
-          {trackCount > 0 && (
-            <span
-              className="text-xs px-2 py-1 rounded-full border border-arcane/60 text-arcane-bright"
-              title={`${trackCount} narration track${trackCount === 1 ? "" : "s"}`}
-            >
-              🎧 {trackCount}
-            </span>
-          )}
-          <span
-            className={`text-xs px-2 py-1 rounded-full border ${
-              journal.visibility === "public"
-                ? "border-ember text-ember"
-                : "border-void-border text-ink-dim"
+
+        {/* Overflow menu */}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            aria-label="More actions"
+            aria-expanded={menuOpen}
+            disabled={busy !== null}
+            onClick={() => setMenuOpen((v) => !v)}
+            className={`rounded-md px-2 py-0.5 text-lg leading-none transition-colors ${
+              menuOpen
+                ? "bg-arcane/15 text-arcane-bright"
+                : "text-ink-dim hover:text-ink hover:bg-white/5"
             }`}
           >
-            {journal.visibility}
-          </span>
+            &#8943;
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 z-20 w-44 py-1 rounded-lg border border-void-border bg-void-raised shadow-xl shadow-black/50">
+              <Link
+                href={`/journal/${journal.id}/settings`}
+                className={menuItem}
+                onClick={() => setMenuOpen(false)}
+              >
+                Settings
+              </Link>
+              <Link
+                href={`/journal/${journal.id}/settings#narration`}
+                className={menuItem}
+                onClick={() => setMenuOpen(false)}
+              >
+                {trackCount > 0 ? "Manage Audio" : "Add Audio"}
+              </Link>
+              {journal.sourceType === "gdoc" && (
+                <button type="button" className={menuItem} onClick={resync}>
+                  {busy === "resync" ? "Syncing..." : "Resync"}
+                </button>
+              )}
+              <button
+                type="button"
+                className={menuItem}
+                onClick={toggleVisibility}
+              >
+                {journal.visibility === "public" ? "Make Private" : "Make Public"}
+              </button>
+              <div className="my-1 border-t border-void-border" />
+              <button
+                type="button"
+                className={`${menuItem} text-red-400 hover:bg-red-400/10`}
+                onClick={remove}
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {journal.volumeNumber !== null && (
+          <Chip tone="arcane">Vol. {journal.volumeNumber}</Chip>
+        )}
+        {trackCount > 0 && (
+          <Chip
+            tone="arcane"
+            title={`${trackCount} narration track${trackCount === 1 ? "" : "s"}`}
+          >
+            &#127911; {trackCount}
+          </Chip>
+        )}
+        <Chip tone={journal.visibility === "public" ? "ember" : "dim"}>
+          {journal.visibility}
+        </Chip>
       </div>
 
       <p className="text-xs text-ink-dim">
@@ -106,7 +200,7 @@ export function JournalCard({
             ? "Audiobook"
             : "Uploaded file"}
         {journal.lastSyncedAt &&
-          ` · synced ${new Date(journal.lastSyncedAt).toLocaleString()}`}
+          ` · synced ${new Date(journal.lastSyncedAt).toLocaleDateString()}`}
       </p>
 
       {error && (
@@ -115,68 +209,22 @@ export function JournalCard({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2 mt-auto pt-2">
+      <div className="flex gap-2 mt-auto pt-1.5">
         {audioOnly ? (
           <Link
             href={`/j/${journal.slug}/listen`}
             className="btn-arcane text-xs px-3 py-1.5"
           >
-            🎧 Listen
+            &#127911; Listen
           </Link>
         ) : (
-          <Link href={`/j/${journal.slug}`} className="btn-arcane text-xs px-3 py-1.5">
+          <Link
+            href={`/j/${journal.slug}`}
+            className="btn-arcane text-xs px-3 py-1.5"
+          >
             Open Tome
           </Link>
         )}
-        {trackCount === 0 ? (
-          <Link
-            href={`/journal/${journal.id}/settings#narration`}
-            className="btn-ghost text-xs px-3 py-1.5"
-          >
-            🎧 Add Audio
-          </Link>
-        ) : (
-          !audioOnly && (
-            <Link
-              href={`/j/${journal.slug}/listen`}
-              className="btn-ghost text-xs px-3 py-1.5"
-            >
-              🎧 Listen
-            </Link>
-          )
-        )}
-        <Link
-          href={`/journal/${journal.id}/settings`}
-          className="btn-ghost text-xs px-3 py-1.5"
-        >
-          Settings
-        </Link>
-        {journal.sourceType === "gdoc" && (
-          <button
-            type="button"
-            className="btn-ghost text-xs px-3 py-1.5"
-            disabled={busy !== null}
-            onClick={resync}
-          >
-            {busy === "resync" ? "Syncing..." : "Resync"}
-          </button>
-        )}
-        <button
-          type="button"
-          className="btn-ghost text-xs px-3 py-1.5"
-          disabled={busy !== null}
-          onClick={toggleVisibility}
-        >
-          {journal.visibility === "public" ? "Make Private" : "Make Public"}
-        </button>
-        <button
-          type="button"
-          className="btn-ghost text-xs px-3 py-1.5 !text-red-400 hover:!border-red-400"
-          disabled={busy !== null}
-          onClick={remove}
-        >
-          Delete
-        </button>
       </div>
     </div>
   );
