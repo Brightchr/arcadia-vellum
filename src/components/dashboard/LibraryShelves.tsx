@@ -119,20 +119,29 @@ export function LibraryShelves({
     );
   }
 
+  const byVolume = (a: Journal, b: Journal) =>
+    (a.volumeNumber ?? Number.MAX_SAFE_INTEGER) -
+      (b.volumeNumber ?? Number.MAX_SAFE_INTEGER) ||
+    a.createdAt.getTime() - b.createdAt.getTime();
+
+  // Audiobooks live on their own shelf; document journals fill the series
+  // shelves and the unbound section.
+  const audiobooks = journals
+    .filter((j) => j.sourceType === "audio")
+    .sort(byVolume);
+  const docs = journals.filter((j) => j.sourceType !== "audio");
+
   const grouped = seriesList
     .map((s) => ({
       series: s,
-      volumes: journals
-        .filter((j) => j.seriesId === s.id)
-        .sort(
-          (a, b) =>
-            (a.volumeNumber ?? Number.MAX_SAFE_INTEGER) -
-              (b.volumeNumber ?? Number.MAX_SAFE_INTEGER) ||
-            a.createdAt.getTime() - b.createdAt.getTime()
-        ),
+      volumes: docs.filter((j) => j.seriesId === s.id).sort(byVolume),
+      // The series listen page plays every volume, audio-only ones included.
+      hasAudio: journals.some(
+        (j) => j.seriesId === s.id && (trackCounts[j.id] ?? 0) > 0
+      ),
     }))
     .filter((g) => g.volumes.length > 0);
-  const loose = journals.filter((j) => !j.seriesId);
+  const loose = docs.filter((j) => !j.seriesId);
 
   const shelfClass = (key: string) =>
     `rounded-xl border transition-colors p-3.5 sm:p-5 ${
@@ -143,7 +152,7 @@ export function LibraryShelves({
 
   return (
     <div className={`space-y-8 ${busy ? "opacity-60 pointer-events-none" : ""}`}>
-      {grouped.map(({ series: s, volumes }) => (
+      {grouped.map(({ series: s, volumes, hasAudio }) => (
         <section
           key={s.id}
           className={shelfClass(s.id)}
@@ -159,7 +168,7 @@ export function LibraryShelves({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {volumes.some((v) => (trackCounts[v.id] ?? 0) > 0) && (
+              {hasAudio && (
                 <Link href={`/s/${s.slug}/listen`} className="btn-ghost">
                   🎧 Listen
                 </Link>
@@ -179,6 +188,34 @@ export function LibraryShelves({
           </div>
         </section>
       ))}
+
+      {audiobooks.length > 0 && (
+        <section className="rounded-xl border border-void-border bg-void-raised/40 p-3.5 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="font-display text-xl text-arcane-bright">
+                🎧 Audiobooks
+              </h2>
+              <p className="text-sm text-ink-dim">
+                Audio-only tomes — pure listening, no pages.
+              </p>
+            </div>
+            {audiobooks.some((j) => (trackCounts[j.id] ?? 0) > 0) && (
+              <Link href="/dashboard/listen" className="btn-arcane">
+                🎧 Listen All
+              </Link>
+            )}
+          </div>
+          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {audiobooks.map((j) => (
+              <div key={j.id}>
+                <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
+                <ShelfPicker journal={j} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className={shelfClass("loose")} {...dropHandlers("loose", "")}>
         <div className="mb-4">
