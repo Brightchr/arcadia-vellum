@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { NarrationTrack } from "./NarrationPlayer";
+import {
+  PauseIcon,
+  PlayIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+} from "@/components/icons";
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
+
+export interface NarrationTrack {
+  id: string;
+  title: string;
+}
 
 function fmt(t: number): string {
   if (!Number.isFinite(t)) return "0:00";
@@ -181,7 +191,7 @@ export function AudiobookPlayer({
           onClick={() => go(index - 1)}
           aria-label="Previous chapter"
         >
-          ⏮
+          <SkipBackIcon className="h-3.5 w-3.5" />
         </button>
         <button
           type="button"
@@ -197,7 +207,11 @@ export function AudiobookPlayer({
           onClick={toggle}
           aria-label={playing ? "Pause" : "Play"}
         >
-          {playing ? "❚❚" : "▶"}
+          {playing ? (
+            <PauseIcon className="h-6 w-6" />
+          ) : (
+            <PlayIcon className="h-6 w-6 translate-x-0.5" />
+          )}
         </button>
         <button
           type="button"
@@ -214,7 +228,7 @@ export function AudiobookPlayer({
           onClick={() => go(index + 1)}
           aria-label="Next chapter"
         >
-          ⏭
+          <SkipForwardIcon className="h-3.5 w-3.5" />
         </button>
       </div>
 

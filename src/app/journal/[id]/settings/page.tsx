@@ -6,6 +6,7 @@ import { listSeriesForOwner } from "@/lib/series";
 import { listTracks } from "@/lib/audio";
 import { appThemeClass } from "@/lib/themes";
 import { SettingsForm } from "@/components/settings/SettingsForm";
+import { ArrowLeftIcon } from "@/components/icons";
 
 export default async function JournalSettingsPage({
   params,
@@ -32,9 +33,9 @@ export default async function JournalSettingsPage({
           <div>
             <Link
               href="/dashboard"
-              className="text-sm text-ink-dim hover:text-arcane-bright"
+              className="inline-flex items-center gap-1.5 text-sm text-ink-dim hover:text-arcane-bright"
             >
-              ← Library
+              <ArrowLeftIcon className="h-3.5 w-3.5" /> Library
             </Link>
             <h1 className="font-display text-2xl mt-1">{journal.title}</h1>
           </div>

@@ -1,0 +1,87 @@
+/**
+ * Shared stroke-based UI icons (lucide-style), colored via currentColor.
+ * Size them with h-N and w-N classes at the call site (default h-4 w-4).
+ */
+
+type IconProps = { className?: string };
+
+function Icon({
+  className,
+  children,
+}: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`shrink-0 ${className ?? "h-4 w-4"}`}
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function HeadphonesIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+    </Icon>
+  );
+}
+
+export function BookOpenIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M12 7v14" />
+      <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+    </Icon>
+  );
+}
+
+export function ArrowLeftIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m12 19-7-7 7-7" />
+      <path d="M19 12H5" />
+    </Icon>
+  );
+}
+
+export function PlayIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <polygon points="6 3 20 12 6 21 6 3" fill="currentColor" />
+    </Icon>
+  );
+}
+
+export function PauseIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" />
+      <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" />
+    </Icon>
+  );
+}
+
+export function SkipBackIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <polygon points="19 20 9 12 19 4 19 20" fill="currentColor" stroke="none" />
+      <line x1="5" y1="19" x2="5" y2="5" />
+    </Icon>
+  );
+}
+
+export function SkipForwardIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none" />
+      <line x1="19" y1="5" x2="19" y2="19" />
+    </Icon>
+  );
+}
