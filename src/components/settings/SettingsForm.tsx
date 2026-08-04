@@ -368,7 +368,7 @@ export function SettingsForm({
       </section>
 
       {/* Narration */}
-      <section className="panel-arcane p-6 space-y-4">
+      <section id="narration" className="panel-arcane p-6 space-y-4 scroll-mt-6">
         <h2 className="font-heading text-lg">Narration</h2>
         <p className="text-sm text-ink-dim">
           Upload audio readings of your journal (.mp3, .m4a, .ogg, or .wav —
