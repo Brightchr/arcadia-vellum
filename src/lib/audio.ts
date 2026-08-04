@@ -10,7 +10,8 @@ export const AUDIO_TYPES: Record<string, string> = {
   ".wav": "audio/wav",
 };
 
-export const MAX_AUDIO_BYTES = 40 * 1024 * 1024;
+export const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
+export const MAX_AUDIO_MB = MAX_AUDIO_BYTES / 1024 / 1024;
 
 /** Track list without the audio bytes (for players and settings). */
 export async function listTracks(journalId: string) {

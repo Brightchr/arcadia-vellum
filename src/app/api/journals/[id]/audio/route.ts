@@ -1,6 +1,6 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
-import { addTrack, AUDIO_TYPES, MAX_AUDIO_BYTES } from "@/lib/audio";
+import { addTrack, AUDIO_TYPES, MAX_AUDIO_BYTES, MAX_AUDIO_MB } from "@/lib/audio";
 
 export const runtime = "nodejs";
 
@@ -30,7 +30,7 @@ export async function POST(
       );
     }
     if (file.size > MAX_AUDIO_BYTES) {
-      return jsonError(`"${file.name}" is over the 40 MB limit`, 400);
+      return jsonError(`"${file.name}" is over the ${MAX_AUDIO_MB} MB limit`, 400);
     }
     const title = file.name.replace(/\.[^.]+$/, "").slice(0, 120) || "Track";
     added.push(
