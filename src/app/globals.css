@@ -178,7 +178,10 @@ body {
   font-family: var(--font-cinzel), serif;
 }
 
-/* Shared form controls */
+/* Shared form controls.
+   Inside @layer components so Tailwind utilities (text-xs, px-3, ...) can
+   override their sizing — unlayered rules would silently win over utilities. */
+@layer components {
 .input-arcane {
   width: 100%;
   border: 1px solid var(--void-border);
@@ -261,4 +264,5 @@ body {
   border: 1px solid var(--void-border);
   border-radius: 0.75rem;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
 }
