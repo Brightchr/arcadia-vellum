@@ -1,0 +1,85 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getSession } from "@/lib/auth";
+import { listJournalsForOwner } from "@/lib/journals";
+import { listTracks } from "@/lib/audio";
+import { TomeAmbience } from "@/components/book/TomeAmbience";
+import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
+
+export const metadata: Metadata = {
+  title: "Your Audiobooks — Arcadia Vellum",
+};
+
+/** Every audiobook on the shelf, bound into one continuous playlist. */
+export default async function AllAudiobooksListenPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const audiobooks = (await listJournalsForOwner(session.user.id))
+    .filter((j) => j.sourceType === "audio")
+    .sort(
+      (a, b) =>
+        (a.volumeNumber ?? Number.MAX_SAFE_INTEGER) -
+          (b.volumeNumber ?? Number.MAX_SAFE_INTEGER) ||
+        a.createdAt.getTime() - b.createdAt.getTime()
+    );
+  if (audiobooks.length === 0) redirect("/dashboard");
+
+  const playlist = [];
+  for (const j of audiobooks) {
+    const tracks = await listTracks(j.id);
+    playlist.push(
+      ...tracks.map((t) => ({
+        id: t.id,
+        title: audiobooks.length > 1 ? `${j.title} — ${t.title}` : t.title,
+      }))
+    );
+  }
+
+  const theme = audiobooks[0].theme;
+  const author = audiobooks.find((j) => j.author)?.author ?? null;
+
+  return (
+    <main
+      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative`}
+    >
+      <TomeAmbience />
+      <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
+        <Link
+          href="/dashboard"
+          className="text-ink-dim hover:text-arcane-bright transition font-heading"
+        >
+          ← Library
+        </Link>
+      </header>
+
+      <div className="relative z-10 max-w-md mx-auto px-4 pb-10 pt-2 space-y-6">
+        <div className="text-center">
+          <h1 className="font-display text-2xl text-arcane-bright">
+            🎧 Your Audiobooks
+          </h1>
+          <p className="text-sm text-ink-dim mt-1">
+            {audiobooks.length} tome{audiobooks.length === 1 ? "" : "s"}, played
+            in shelf order.
+          </p>
+        </div>
+
+        {playlist.length > 0 ? (
+          <AudiobookPlayer
+            tracks={playlist}
+            title="Your Audiobooks"
+            author={author}
+            storageKey={`av-listen-all-${session.user.id}`}
+          />
+        ) : (
+          <div className="panel-arcane p-6 text-center">
+            <p className="text-sm text-ink-dim">
+              Your audiobooks have no narration tracks yet.
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
