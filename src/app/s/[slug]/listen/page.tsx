@@ -6,6 +6,7 @@ import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { listTracks } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
+import { ArrowLeftIcon, BookOpenIcon } from "@/components/icons";
 
 export async function generateMetadata({
   params,
@@ -37,6 +38,7 @@ export default async function SeriesListenPage({
 
   const trackList = [];
   for (const v of volumes) {
+    if (v.sourceType !== "audio") continue; // only audiobook volumes play
     const tracks = await listTracks(v.id);
     trackList.push(
       ...tracks.map((t) => ({
@@ -61,15 +63,15 @@ export default async function SeriesListenPage({
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
           href={isOwner ? "/dashboard" : "/"}
-          className="text-ink-dim hover:text-arcane-bright transition font-heading"
+          className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          ← {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
         <Link
           href={`/s/${s.slug}`}
-          className="text-ink-dim hover:text-arcane-bright transition font-heading"
+          className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          📖 Read instead
+          <BookOpenIcon /> Read instead
         </Link>
       </header>
 

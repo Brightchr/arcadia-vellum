@@ -6,6 +6,7 @@ import { getJournalBySlug } from "@/lib/journals";
 import { listTracks } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
+import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
 
 export async function generateMetadata({
   params,
@@ -33,6 +34,8 @@ export default async function ListenPage({
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
   if (journal.visibility !== "public" && !isOwner) notFound();
+  // Only audio-only tomes have a listening side.
+  if (journal.sourceType !== "audio") notFound();
 
   const tracks = await listTracks(journal.id);
   // Owners see a hint instead of a 404 so an empty audio-only tome isn't a
@@ -47,18 +50,10 @@ export default async function ListenPage({
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
           href={isOwner ? "/dashboard" : "/"}
-          className="text-ink-dim hover:text-arcane-bright transition font-heading"
+          className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          ← {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
-        {journal.sourceType !== "audio" && (
-          <Link
-            href={`/j/${journal.slug}`}
-            className="text-ink-dim hover:text-arcane-bright transition font-heading"
-          >
-            📖 Read instead
-          </Link>
-        )}
       </header>
 
       <div className="relative z-10 max-w-md mx-auto px-4 pb-10 pt-2 space-y-6">
@@ -96,7 +91,7 @@ export default async function ListenPage({
               href={`/journal/${journal.id}/settings#narration`}
               className="btn-arcane"
             >
-              🎧 Add Narration
+              <HeadphonesIcon /> Add Narration
             </Link>
           </div>
         )}

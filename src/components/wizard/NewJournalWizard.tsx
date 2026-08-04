@@ -6,6 +6,7 @@ import { THEMES, DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "./ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
+import { HeadphonesIcon } from "@/components/icons";
 
 type SourceType = "upload" | "gdoc" | "audio";
 
@@ -148,7 +149,7 @@ export function NewJournalWizard({
       const journal = body.journal;
       sessionStorage.removeItem(STORAGE_KEY);
 
-      if (audioFiles.length > 0) {
+      if (source === "audio" && audioFiles.length > 0) {
         const audioForm = new FormData();
         for (const f of audioFiles) audioForm.append("files", f);
         const audioRes = await fetch(`/api/journals/${journal.id}/audio`, {
@@ -338,7 +339,9 @@ export function NewJournalWizard({
                   : "border-void-border hover:border-arcane/50"
               }`}
             >
-              <p className="font-heading text-base mb-1">🎧 Audio only</p>
+              <p className="font-heading text-base mb-1 inline-flex items-center gap-1.5">
+                <HeadphonesIcon /> Audio only
+              </p>
               <p className="text-sm text-ink-dim">
                 An audiobook with a player — no text needed.
               </p>
@@ -370,21 +373,13 @@ export function NewJournalWizard({
             </label>
           )}
 
-          <div
-            className={
-              source === "audio" ? "" : "border-t border-void-border pt-4"
-            }
-          >
-            <p className="font-heading text-base mb-1">
-              Narration{" "}
-              {source !== "audio" && (
-                <span className="text-ink-dim text-sm">(optional)</span>
-              )}
-            </p>
+          {source === "audio" && (
+          <div>
+            <p className="font-heading text-base mb-1">Narration</p>
             <p className="text-sm text-ink-dim mb-3">
-              {source === "audio"
-                ? "These tracks are the tome — add at least one audio file (.mp3, .m4a, .ogg, or .wav — max 100 MB each). They play in order, so one file per chapter or session works beautifully."
-                : "Add audio readings to make this tome an audiobook (.mp3, .m4a, .ogg, or .wav — max 100 MB each). You can also add or manage tracks later from the journal's Settings."}
+              These tracks are the tome — add at least one audio file (.mp3,
+              .m4a, .ogg, or .wav — max 100 MB each). They play in order, so
+              one file per chapter or session works beautifully.
             </p>
             {audioFiles.length > 0 && (
               <ul className="space-y-1 mb-3">
@@ -418,11 +413,12 @@ export function NewJournalWizard({
                   e.target.value = "";
                 }}
               />
-              <span className="text-sm text-ink-dim">
-                🎧 Click to add narration audio
+              <span className="inline-flex items-center justify-center gap-1.5 text-sm text-ink-dim">
+                <HeadphonesIcon /> Click to add narration audio
               </span>
             </label>
           </div>
+          )}
         </div>
       )}
 

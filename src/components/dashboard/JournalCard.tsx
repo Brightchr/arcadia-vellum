@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
+import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
 
 function Chip({
   tone = "dim",
@@ -143,13 +144,15 @@ export function JournalCard({
               >
                 Settings
               </Link>
-              <Link
-                href={`/journal/${journal.id}/settings#narration`}
-                className={menuItem}
-                onClick={() => setMenuOpen(false)}
-              >
-                {trackCount > 0 ? "Manage Audio" : "Add Audio"}
-              </Link>
+              {audioOnly && (
+                <Link
+                  href={`/journal/${journal.id}/settings#narration`}
+                  className={menuItem}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {trackCount > 0 ? "Manage Audio" : "Add Audio"}
+                </Link>
+              )}
               {journal.sourceType === "gdoc" && (
                 <button type="button" className={menuItem} onClick={resync}>
                   {busy === "resync" ? "Syncing..." : "Resync"}
@@ -179,12 +182,12 @@ export function JournalCard({
         {journal.volumeNumber !== null && (
           <Chip tone="arcane">Vol. {journal.volumeNumber}</Chip>
         )}
-        {trackCount > 0 && (
+        {audioOnly && trackCount > 0 && (
           <Chip
             tone="arcane"
-            title={`${trackCount} narration track${trackCount === 1 ? "" : "s"}`}
+            title={`${trackCount} track${trackCount === 1 ? "" : "s"}`}
           >
-            &#127911; {trackCount}
+            <HeadphonesIcon className="h-3 w-3" /> {trackCount}
           </Chip>
         )}
         <Chip tone={journal.visibility === "public" ? "ember" : "dim"}>
@@ -215,14 +218,14 @@ export function JournalCard({
             href={`/j/${journal.slug}/listen`}
             className="btn-arcane text-xs px-3 py-1.5"
           >
-            &#127911; Listen
+            <HeadphonesIcon className="h-3.5 w-3.5" /> Listen
           </Link>
         ) : (
           <Link
             href={`/j/${journal.slug}`}
             className="btn-arcane text-xs px-3 py-1.5"
           >
-            Open Tome
+            <BookOpenIcon className="h-3.5 w-3.5" /> Open Tome
           </Link>
         )}
       </div>

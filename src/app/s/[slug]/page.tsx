@@ -8,7 +8,7 @@ import { autoSyncIfStale } from "@/lib/google/sync";
 import { listTracks } from "@/lib/audio";
 import TomeReader from "@/components/book/TomeReaderClient";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
-import { NarrationPlayer } from "@/components/book/NarrationPlayer";
+import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
 
 export async function generateMetadata({
   params,
@@ -53,6 +53,7 @@ export default async function SeriesReaderPage({
 
   const parts: string[] = [];
   for (const v of volumes) {
+    if (v.sourceType === "audio") continue; // audiobook volumes have no pages
     const content = await getJournalContent(v.id);
     const volumeLabel =
       v.volumeNumber !== null ? `Volume ${v.volumeNumber} — ` : "";
@@ -66,19 +67,14 @@ export default async function SeriesReaderPage({
   const theme = volumes[0].theme;
   const author = volumes.find((v) => v.author)?.author ?? null;
 
-  // Combined playlist: every volume's narration tracks, in volume order.
-  const trackLists = [];
+  // The series has an audiobook side if any audio-only volume has tracks.
+  let hasAudio = false;
   for (const v of volumes) {
-    const tracks = await listTracks(v.id);
-    trackLists.push(
-      ...tracks.map((t) => ({
-        id: t.id,
-        title:
-          volumes.length > 1 && v.volumeNumber !== null
-            ? `Vol. ${v.volumeNumber} — ${t.title}`
-            : t.title,
-      }))
-    );
+    if (v.sourceType !== "audio") continue;
+    if ((await listTracks(v.id)).length > 0) {
+      hasAudio = true;
+      break;
+    }
   }
 
   return (
@@ -89,17 +85,17 @@ export default async function SeriesReaderPage({
       <header className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
           href={isOwner ? "/dashboard" : "/"}
-          className="text-ink-dim hover:text-arcane-bright transition font-heading"
+          className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          ← {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
         <div className="flex items-center gap-4">
-          {trackLists.length > 0 && (
+          {hasAudio && (
             <Link
               href={`/s/${s.slug}/listen`}
-              className="text-ink-dim hover:text-arcane-bright transition font-heading"
+              className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
             >
-              🎧 Audiobook
+              <HeadphonesIcon /> Audiobook
             </Link>
           )}
           <span className="text-ink-dim font-heading">
@@ -117,8 +113,6 @@ export default async function SeriesReaderPage({
           author={author}
         />
       </div>
-
-      <NarrationPlayer tracks={trackLists} />
     </main>
   );
 }

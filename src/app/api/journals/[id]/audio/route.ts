@@ -14,6 +14,9 @@ export async function POST(
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);
+  if (journal.sourceType !== "audio") {
+    return jsonError("Only audio-only tomes hold narration tracks", 400);
+  }
 
   const form = await request.formData();
   const files = form.getAll("files").filter((f): f is File => f instanceof File);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import type { Series } from "@/lib/series";
 import { JournalCard } from "./JournalCard";
+import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
 
 /**
  * The library as shelves: one container per series plus a loose-journals
@@ -135,9 +136,12 @@ export function LibraryShelves({
     .map((s) => ({
       series: s,
       volumes: docs.filter((j) => j.seriesId === s.id).sort(byVolume),
-      // The series listen page plays every volume, audio-only ones included.
+      // The series listen page plays the audiobook volumes shelved here.
       hasAudio: journals.some(
-        (j) => j.seriesId === s.id && (trackCounts[j.id] ?? 0) > 0
+        (j) =>
+          j.seriesId === s.id &&
+          j.sourceType === "audio" &&
+          (trackCounts[j.id] ?? 0) > 0
       ),
     }))
     .filter((g) => g.volumes.length > 0);
@@ -170,11 +174,11 @@ export function LibraryShelves({
             <div className="flex items-center gap-2">
               {hasAudio && (
                 <Link href={`/s/${s.slug}/listen`} className="btn-ghost">
-                  🎧 Listen
+                  <HeadphonesIcon /> Listen
                 </Link>
               )}
               <Link href={`/s/${s.slug}`} className="btn-arcane">
-                Read the Series
+                <BookOpenIcon /> Read the Series
               </Link>
             </div>
           </div>
@@ -193,8 +197,8 @@ export function LibraryShelves({
         <section className="rounded-xl border border-void-border bg-void-raised/40 p-3.5 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="font-display text-xl text-arcane-bright">
-                🎧 Audiobooks
+              <h2 className="font-display text-xl text-arcane-bright inline-flex items-center gap-2">
+                <HeadphonesIcon className="h-5 w-5" /> Audiobooks
               </h2>
               <p className="text-sm text-ink-dim">
                 Audio-only tomes — pure listening, no pages.
@@ -202,7 +206,7 @@ export function LibraryShelves({
             </div>
             {audiobooks.some((j) => (trackCounts[j.id] ?? 0) > 0) && (
               <Link href="/dashboard/listen" className="btn-arcane">
-                🎧 Listen All
+                <HeadphonesIcon /> Listen to All
               </Link>
             )}
           </div>

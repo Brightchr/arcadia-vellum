@@ -367,14 +367,14 @@ export function SettingsForm({
         </button>
       </section>
 
-      {/* Narration */}
+      {/* Narration — audio-only tomes are made of these tracks */}
+      {journal.sourceType === "audio" && (
       <section id="narration" className="panel-arcane p-6 space-y-4 scroll-mt-6">
         <h2 className="font-heading text-lg">Narration</h2>
         <p className="text-sm text-ink-dim">
-          Upload audio readings of your journal (.mp3, .m4a, .ogg, or .wav —
-          e.g. rendered with ElevenLabs). Anyone who can read the tome gets a
-          player; multiple files play in order, so one file per session works
-          beautifully.
+          The audio tracks of this tome (.mp3, .m4a, .ogg, or .wav — e.g.
+          rendered with ElevenLabs). They play in order, so one file per
+          chapter or session works beautifully.
         </p>
 
         {tracks.length > 0 && (
@@ -430,6 +430,7 @@ export function SettingsForm({
           </span>
         </label>
       </section>
+      )}
 
       {/* Source */}
       <section className="panel-arcane p-6 space-y-4">
