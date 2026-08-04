@@ -28,9 +28,9 @@ export default async function DashboardPage() {
             <img
               src="/mark.png"
               alt=""
-              width={44}
-              height={44}
-              className="h-11 w-11 rounded-lg shadow shadow-black/40"
+              width={64}
+              height={64}
+              className="h-16 w-16"
             />
             <div>
               <Link href="/" className="font-display text-xl text-arcane-bright">
