@@ -6,7 +6,13 @@ import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
 
-export function JournalCard({ journal }: { journal: Journal }) {
+export function JournalCard({
+  journal,
+  trackCount = 0,
+}: {
+  journal: Journal;
+  trackCount?: number;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +77,14 @@ export function JournalCard({ journal }: { journal: Journal }) {
               Vol. {journal.volumeNumber}
             </span>
           )}
+          {trackCount > 0 && (
+            <span
+              className="text-xs px-2 py-1 rounded-full border border-arcane/60 text-arcane-bright"
+              title={`${trackCount} narration track${trackCount === 1 ? "" : "s"}`}
+            >
+              🎧 {trackCount}
+            </span>
+          )}
           <span
             className={`text-xs px-2 py-1 rounded-full border ${
               journal.visibility === "public"
@@ -100,6 +114,21 @@ export function JournalCard({ journal }: { journal: Journal }) {
         <Link href={`/j/${journal.slug}`} className="btn-arcane text-xs px-3 py-1.5">
           Open Tome
         </Link>
+        {trackCount > 0 ? (
+          <Link
+            href={`/j/${journal.slug}/listen`}
+            className="btn-ghost text-xs px-3 py-1.5"
+          >
+            🎧 Listen
+          </Link>
+        ) : (
+          <Link
+            href={`/journal/${journal.id}/settings#narration`}
+            className="btn-ghost text-xs px-3 py-1.5"
+          >
+            🎧 Add Audio
+          </Link>
+        )}
         <Link
           href={`/journal/${journal.id}/settings`}
           className="btn-ghost text-xs px-3 py-1.5"

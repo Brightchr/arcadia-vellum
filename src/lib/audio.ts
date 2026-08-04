@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { journalAudio } from "@/db/schema";
+import { journalAudio, journals } from "@/db/schema";
 import { asc, eq, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
 
@@ -24,6 +24,20 @@ export async function listTracks(journalId: string) {
     .from(journalAudio)
     .where(eq(journalAudio.journalId, journalId))
     .orderBy(asc(journalAudio.sortIndex), asc(journalAudio.createdAt));
+}
+
+/** Track counts per journal for all of an owner's journals (for the dashboard). */
+export async function trackCountsForOwner(ownerId: string) {
+  const rows = await db
+    .select({
+      journalId: journalAudio.journalId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(journalAudio)
+    .innerJoin(journals, eq(journalAudio.journalId, journals.id))
+    .where(eq(journals.ownerId, ownerId))
+    .groupBy(journalAudio.journalId);
+  return Object.fromEntries(rows.map((r) => [r.journalId, r.count]));
 }
 
 export async function getTrack(id: string) {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { listJournalsForOwner } from "@/lib/journals";
 import { listSeriesForOwner } from "@/lib/series";
+import { trackCountsForOwner } from "@/lib/audio";
 import { appThemeClass } from "@/lib/themes";
 import { LibraryShelves } from "@/components/dashboard/LibraryShelves";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
@@ -14,6 +15,7 @@ export default async function DashboardPage() {
 
   const journals = await listJournalsForOwner(session.user.id);
   const seriesList = await listSeriesForOwner(session.user.id);
+  const trackCounts = await trackCountsForOwner(session.user.id);
   const dashboardTheme =
     (session.user as { dashboardTheme?: string }).dashboardTheme ?? "";
 
@@ -61,7 +63,11 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <LibraryShelves journals={journals} seriesList={seriesList} />
+          <LibraryShelves
+            journals={journals}
+            seriesList={seriesList}
+            trackCounts={trackCounts}
+          />
         )}
       </div>
     </main>

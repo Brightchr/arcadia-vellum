@@ -15,9 +15,11 @@ import { JournalCard } from "./JournalCard";
 export function LibraryShelves({
   journals,
   seriesList,
+  trackCounts = {},
 }: {
   journals: Journal[];
   seriesList: Series[];
+  trackCounts?: Record<string, number>;
 }) {
   const router = useRouter();
   const [dragId, setDragId] = useState<string | null>(null);
@@ -156,14 +158,21 @@ export function LibraryShelves({
                 {volumes.length} volume{volumes.length === 1 ? "" : "s"}
               </p>
             </div>
-            <Link href={`/s/${s.slug}`} className="btn-arcane text-sm">
-              Read the Series
-            </Link>
+            <div className="flex items-center gap-2">
+              {volumes.some((v) => (trackCounts[v.id] ?? 0) > 0) && (
+                <Link href={`/s/${s.slug}/listen`} className="btn-ghost text-sm">
+                  🎧 Listen
+                </Link>
+              )}
+              <Link href={`/s/${s.slug}`} className="btn-arcane text-sm">
+                Read the Series
+              </Link>
+            </div>
           </div>
           <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {volumes.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
-                <JournalCard journal={j} />
+                <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
                 <ShelfPicker journal={j} />
               </div>
             ))}
@@ -185,7 +194,7 @@ export function LibraryShelves({
           <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {loose.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
-                <JournalCard journal={j} />
+                <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
                 <ShelfPicker journal={j} />
               </div>
             ))}
