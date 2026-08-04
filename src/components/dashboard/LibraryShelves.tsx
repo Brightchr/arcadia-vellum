@@ -160,11 +160,11 @@ export function LibraryShelves({
             </div>
             <div className="flex items-center gap-2">
               {volumes.some((v) => (trackCounts[v.id] ?? 0) > 0) && (
-                <Link href={`/s/${s.slug}/listen`} className="btn-ghost text-sm">
+                <Link href={`/s/${s.slug}/listen`} className="btn-ghost">
                   🎧 Listen
                 </Link>
               )}
-              <Link href={`/s/${s.slug}`} className="btn-arcane text-sm">
+              <Link href={`/s/${s.slug}`} className="btn-arcane">
                 Read the Series
               </Link>
             </div>

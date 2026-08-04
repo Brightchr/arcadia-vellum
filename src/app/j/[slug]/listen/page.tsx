@@ -94,7 +94,7 @@ export default async function ListenPage({
             </p>
             <Link
               href={`/journal/${journal.id}/settings#narration`}
-              className="btn-arcane text-sm"
+              className="btn-arcane"
             >
               🎧 Add Narration
             </Link>

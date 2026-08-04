@@ -205,10 +205,10 @@ body {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 0.375rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-family: var(--font-cinzel), serif;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
   color: #171122;
   background: linear-gradient(180deg, var(--arcane-bright), var(--arcane));
@@ -237,10 +237,10 @@ body {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 0.375rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-family: var(--font-cinzel), serif;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
   color: var(--ink);
   background: transparent;
