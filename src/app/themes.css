@@ -733,10 +733,16 @@
    (witch grimoire theme; other themes keep the plain arcane backdrop)
 -------------------------------------------------------------------------- */
 
-/* Reader chrome (back link, settings) tinted to the binding */
+/* Reader chrome (back link, settings, audiobook player) tinted to the
+   binding. Panels and buttons inside a tome scene derive their colors from
+   the theme's cover palette instead of the purple app chrome. */
 .tome-scene {
+  --ink: color-mix(in srgb, var(--tome-cover-ink, #e8e0d0) 45%, #e8e2d6);
   --ink-dim: color-mix(in srgb, var(--tome-cover-ink, #a89f8c) 62%, transparent);
+  --arcane: color-mix(in srgb, var(--tome-cover-ink, #9d7bd8) 82%, #101010);
   --arcane-bright: var(--tome-cover-ink, #c4a9f0);
+  --void-raised: color-mix(in srgb, var(--tome-cover-ink, #1a1524) 9%, #100f0d);
+  --void-border: color-mix(in srgb, var(--tome-cover-ink, #322a45) 32%, transparent);
 }
 
 .tome-scene .tome-ambience {
