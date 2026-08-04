@@ -29,6 +29,7 @@ export function NewJournalWizard({
   const [volumeNumber, setVolumeNumber] = useState("");
   const [source, setSource] = useState<SourceType>("gdoc");
   const [file, setFile] = useState<File | null>(null);
+  const [audioFiles, setAudioFiles] = useState<File[]>([]);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +95,25 @@ export function NewJournalWizard({
 
   const sourceReady = source === "upload" ? file !== null : pickedDoc !== null;
 
+  function addAudioFiles(list: FileList | null) {
+    if (!list) return;
+    const ok: File[] = [];
+    for (const f of Array.from(list)) {
+      const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
+      if (![".mp3", ".m4a", ".ogg", ".wav"].includes(ext)) {
+        setError(`"${f.name}" isn't audio we can bind. Use .mp3, .m4a, .ogg, or .wav.`);
+        return;
+      }
+      if (f.size > 40 * 1024 * 1024) {
+        setError(`"${f.name}" is over the 40 MB limit.`);
+        return;
+      }
+      ok.push(f);
+    }
+    setError(null);
+    setAudioFiles((prev) => [...prev, ...ok]);
+  }
+
   async function create() {
     setBusy(true);
     setError(null);
@@ -118,6 +138,21 @@ export function NewJournalWizard({
 
       const journal = body.journal;
       sessionStorage.removeItem(STORAGE_KEY);
+
+      if (audioFiles.length > 0) {
+        const audioForm = new FormData();
+        for (const f of audioFiles) audioForm.append("files", f);
+        const audioRes = await fetch(`/api/journals/${journal.id}/audio`, {
+          method: "POST",
+          body: audioForm,
+        });
+        if (!audioRes.ok) {
+          // The tome exists; send them to Settings to retry the narration.
+          router.push(`/journal/${journal.id}/settings#narration`);
+          return;
+        }
+      }
+
       if (source === "gdoc") {
         const syncRes = await fetch(`/api/journals/${journal.id}/sync`, {
           method: "POST",
@@ -305,6 +340,53 @@ export function NewJournalWizard({
               )}
             </label>
           )}
+
+          <div className="border-t border-void-border pt-4">
+            <p className="font-heading text-base mb-1">
+              Narration <span className="text-ink-dim text-sm">(optional)</span>
+            </p>
+            <p className="text-sm text-ink-dim mb-3">
+              Add audio readings to make this tome an audiobook (.mp3, .m4a,
+              .ogg, or .wav — max 40 MB each). You can also add or manage
+              tracks later from the journal&apos;s Settings.
+            </p>
+            {audioFiles.length > 0 && (
+              <ul className="space-y-1 mb-3">
+                {audioFiles.map((f, i) => (
+                  <li
+                    key={`${f.name}-${i}`}
+                    className="flex items-center justify-between gap-3 text-sm border border-void-border rounded-lg px-3 py-1.5"
+                  >
+                    <span className="truncate">{f.name}</span>
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs px-2 py-0.5 !text-red-400 hover:!border-red-400 shrink-0"
+                      onClick={() =>
+                        setAudioFiles((prev) => prev.filter((_, j) => j !== i))
+                      }
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <label className="block border border-dashed border-void-border rounded-lg p-4 text-center cursor-pointer hover:border-arcane/60 transition">
+              <input
+                type="file"
+                accept=".mp3,.m4a,.ogg,.wav,audio/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  addAudioFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <span className="text-sm text-ink-dim">
+                🎧 Click to add narration audio
+              </span>
+            </label>
+          </div>
         </div>
       )}
 
