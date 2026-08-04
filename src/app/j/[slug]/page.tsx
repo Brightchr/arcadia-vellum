@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
@@ -33,6 +33,9 @@ export default async function ReaderPage({
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
   if (journal.visibility !== "public" && !isOwner) notFound();
+
+  // Audio-only tomes have no pages to read — go straight to the player.
+  if (journal.sourceType === "audio") redirect(`/j/${journal.slug}/listen`);
 
   // Keep the owner's view fresh without blocking readers on Google errors.
   if (isOwner) await autoSyncIfStale(journal);

@@ -426,7 +426,7 @@ export function SettingsForm({
           <span className="text-sm text-ink-dim">
             {busy === "narration"
               ? "Uploading..."
-              : "Click to add narration audio (max 40 MB per file)"}
+              : "Click to add narration audio (max 100 MB per file)"}
           </span>
         </label>
       </section>
@@ -437,7 +437,12 @@ export function SettingsForm({
           <h2 className="font-heading text-lg">Source</h2>
           <FormattingGuide />
         </div>
-        {journal.sourceType === "gdoc" ? (
+        {journal.sourceType === "audio" ? (
+          <p className="text-sm text-ink-dim">
+            This is an audio-only tome — the narration tracks above are its
+            content. Readers get the audiobook player instead of pages.
+          </p>
+        ) : journal.sourceType === "gdoc" ? (
           <>
             <p className="text-sm text-ink-dim">
               Linked to a Google Doc.

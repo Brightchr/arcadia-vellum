@@ -7,7 +7,7 @@ import { ThemePreview } from "./ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
 
-type SourceType = "upload" | "gdoc";
+type SourceType = "upload" | "gdoc" | "audio";
 
 // Wizard progress survives the round-trip to Google's consent screen
 // (Connect Google Drive navigates away and back).
@@ -48,7 +48,11 @@ export function NewJournalWizard({
         if (typeof saved.volumeNumber === "string") {
           setVolumeNumber(saved.volumeNumber);
         }
-        if (saved.source === "upload" || saved.source === "gdoc") {
+        if (
+          saved.source === "upload" ||
+          saved.source === "gdoc" ||
+          saved.source === "audio"
+        ) {
           setSource(saved.source);
         }
         if (typeof saved.theme === "string" && isThemeId(saved.theme)) {
@@ -93,7 +97,12 @@ export function NewJournalWizard({
     pickedDoc,
   ]);
 
-  const sourceReady = source === "upload" ? file !== null : pickedDoc !== null;
+  const sourceReady =
+    source === "upload"
+      ? file !== null
+      : source === "gdoc"
+        ? pickedDoc !== null
+        : audioFiles.length > 0;
 
   function addAudioFiles(list: FileList | null) {
     if (!list) return;
@@ -104,8 +113,8 @@ export function NewJournalWizard({
         setError(`"${f.name}" isn't audio we can bind. Use .mp3, .m4a, .ogg, or .wav.`);
         return;
       }
-      if (f.size > 40 * 1024 * 1024) {
-        setError(`"${f.name}" is over the 40 MB limit.`);
+      if (f.size > 100 * 1024 * 1024) {
+        setError(`"${f.name}" is over the 100 MB limit.`);
         return;
       }
       ok.push(f);
@@ -151,6 +160,11 @@ export function NewJournalWizard({
           router.push(`/journal/${journal.id}/settings#narration`);
           return;
         }
+      }
+
+      if (source === "audio") {
+        router.push(`/j/${journal.slug}/listen`);
+        return;
       }
 
       if (source === "gdoc") {
@@ -288,7 +302,7 @@ export function NewJournalWizard({
           <div className="flex justify-end">
             <FormattingGuide />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <button
               type="button"
               onClick={() => setSource("gdoc")}
@@ -315,15 +329,30 @@ export function NewJournalWizard({
               <p className="font-heading text-base mb-1">Upload a file</p>
               <p className="text-sm text-ink-dim">.docx, .md, or .txt</p>
             </button>
+            <button
+              type="button"
+              onClick={() => setSource("audio")}
+              className={`rounded-lg border p-4 text-left transition ${
+                source === "audio"
+                  ? "border-arcane bg-arcane/10"
+                  : "border-void-border hover:border-arcane/50"
+              }`}
+            >
+              <p className="font-heading text-base mb-1">🎧 Audio only</p>
+              <p className="text-sm text-ink-dim">
+                An audiobook with a player — no text needed.
+              </p>
+            </button>
           </div>
 
-          {source === "gdoc" ? (
+          {source === "gdoc" && (
             <GdocSourcePanel
               googleEnabled={googleEnabled}
               picked={pickedDoc}
               onPick={setPickedDoc}
             />
-          ) : (
+          )}
+          {source === "upload" && (
             <label className="block border border-dashed border-void-border rounded-lg p-6 text-center cursor-pointer hover:border-arcane/60 transition">
               <input
                 type="file"
@@ -341,14 +370,21 @@ export function NewJournalWizard({
             </label>
           )}
 
-          <div className="border-t border-void-border pt-4">
+          <div
+            className={
+              source === "audio" ? "" : "border-t border-void-border pt-4"
+            }
+          >
             <p className="font-heading text-base mb-1">
-              Narration <span className="text-ink-dim text-sm">(optional)</span>
+              Narration{" "}
+              {source !== "audio" && (
+                <span className="text-ink-dim text-sm">(optional)</span>
+              )}
             </p>
             <p className="text-sm text-ink-dim mb-3">
-              Add audio readings to make this tome an audiobook (.mp3, .m4a,
-              .ogg, or .wav — max 40 MB each). You can also add or manage
-              tracks later from the journal&apos;s Settings.
+              {source === "audio"
+                ? "These tracks are the tome — add at least one audio file (.mp3, .m4a, .ogg, or .wav — max 100 MB each). They play in order, so one file per chapter or session works beautifully."
+                : "Add audio readings to make this tome an audiobook (.mp3, .m4a, .ogg, or .wav — max 100 MB each). You can also add or manage tracks later from the journal's Settings."}
             </p>
             {audioFiles.length > 0 && (
               <ul className="space-y-1 mb-3">

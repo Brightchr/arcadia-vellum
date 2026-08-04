@@ -18,6 +18,7 @@ export function JournalCard({
   const [error, setError] = useState<string | null>(null);
   const themeName =
     THEMES.find((t) => t.id === journal.theme)?.name ?? journal.theme;
+  const audioOnly = journal.sourceType === "audio";
 
   async function call(action: string, fn: () => Promise<Response>) {
     setBusy(action);
@@ -99,7 +100,11 @@ export function JournalCard({
 
       <p className="text-xs text-ink-dim">
         {themeName} ·{" "}
-        {journal.sourceType === "gdoc" ? "Google Doc" : "Uploaded file"}
+        {journal.sourceType === "gdoc"
+          ? "Google Doc"
+          : audioOnly
+            ? "Audiobook"
+            : "Uploaded file"}
         {journal.lastSyncedAt &&
           ` · synced ${new Date(journal.lastSyncedAt).toLocaleString()}`}
       </p>
@@ -111,23 +116,34 @@ export function JournalCard({
       )}
 
       <div className="flex flex-wrap gap-2 mt-auto pt-2">
-        <Link href={`/j/${journal.slug}`} className="btn-arcane text-xs px-3 py-1.5">
-          Open Tome
-        </Link>
-        {trackCount > 0 ? (
+        {audioOnly ? (
           <Link
             href={`/j/${journal.slug}/listen`}
-            className="btn-ghost text-xs px-3 py-1.5"
+            className="btn-arcane text-xs px-3 py-1.5"
           >
             🎧 Listen
           </Link>
         ) : (
+          <Link href={`/j/${journal.slug}`} className="btn-arcane text-xs px-3 py-1.5">
+            Open Tome
+          </Link>
+        )}
+        {trackCount === 0 ? (
           <Link
             href={`/journal/${journal.id}/settings#narration`}
             className="btn-ghost text-xs px-3 py-1.5"
           >
             🎧 Add Audio
           </Link>
+        ) : (
+          !audioOnly && (
+            <Link
+              href={`/j/${journal.slug}/listen`}
+              className="btn-ghost text-xs px-3 py-1.5"
+            >
+              🎧 Listen
+            </Link>
+          )
         )}
         <Link
           href={`/journal/${journal.id}/settings`}

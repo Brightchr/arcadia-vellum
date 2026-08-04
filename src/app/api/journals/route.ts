@@ -11,9 +11,11 @@ const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 /**
  * Create a journal. Multipart form:
  *  - title (required), characterName?, theme?
- *  - sourceType: "upload" | "gdoc"
+ *  - sourceType: "upload" | "gdoc" | "audio"
  *  - file: the uploaded document (sourceType=upload)
  *  - gdocFileId: Google Doc file id (sourceType=gdoc; content synced separately)
+ *  - sourceType=audio creates an audio-only tome; the client then uploads
+ *    narration tracks via POST /api/journals/[id]/audio
  */
 export async function POST(request: Request) {
   const session = await sessionFromRequest(request);
@@ -28,7 +30,11 @@ export async function POST(request: Request) {
 
   if (!title) return jsonError("Title is required", 400);
   if (title.length > 120) return jsonError("Title is too long", 400);
-  if (sourceType !== "upload" && sourceType !== "gdoc") {
+  if (
+    sourceType !== "upload" &&
+    sourceType !== "gdoc" &&
+    sourceType !== "audio"
+  ) {
     return jsonError("Invalid source type", 400);
   }
   const theme = isThemeId(themeRaw) ? themeRaw : undefined;
@@ -74,6 +80,20 @@ export async function POST(request: Request) {
       await deleteJournal(journal.id);
       return jsonError(result.error, 400);
     }
+    return Response.json({ journal });
+  }
+
+  if (sourceType === "audio") {
+    const journal = await createJournal({
+      ownerId: session.user.id,
+      title,
+      subtitle,
+      author,
+      seriesId,
+      volumeNumber,
+      theme,
+      sourceType: "audio",
+    });
     return Response.json({ journal });
   }
 

@@ -96,7 +96,7 @@ export const journals = pgTable("journals", {
   author: text("author"),
   slug: text("slug").notNull().unique(),
   theme: text("theme").notNull().default("witch-grimoire"),
-  sourceType: text("source_type", { enum: ["gdoc", "upload"] }).notNull(),
+  sourceType: text("source_type", { enum: ["gdoc", "upload", "audio"] }).notNull(),
   gdocFileId: text("gdoc_file_id"),
   visibility: text("visibility", { enum: ["public", "private"] })
     .notNull()

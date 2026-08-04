@@ -35,7 +35,9 @@ export default async function ListenPage({
   if (journal.visibility !== "public" && !isOwner) notFound();
 
   const tracks = await listTracks(journal.id);
-  if (tracks.length === 0) notFound();
+  // Owners see a hint instead of a 404 so an empty audio-only tome isn't a
+  // dead end.
+  if (tracks.length === 0 && !isOwner) notFound();
 
   return (
     <main
@@ -49,12 +51,14 @@ export default async function ListenPage({
         >
           ← {isOwner ? "Library" : "Arcadia Vellum"}
         </Link>
-        <Link
-          href={`/j/${journal.slug}`}
-          className="text-ink-dim hover:text-arcane-bright transition font-heading"
-        >
-          📖 Read instead
-        </Link>
+        {journal.sourceType !== "audio" && (
+          <Link
+            href={`/j/${journal.slug}`}
+            className="text-ink-dim hover:text-arcane-bright transition font-heading"
+          >
+            📖 Read instead
+          </Link>
+        )}
       </header>
 
       <div className="relative z-10 max-w-md mx-auto px-4 pb-10 pt-2 space-y-6">
@@ -76,12 +80,26 @@ export default async function ListenPage({
           </div>
         </div>
 
-        <AudiobookPlayer
-          tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
-          title={journal.title}
-          author={journal.author}
-          storageKey={`av-listen-${journal.id}`}
-        />
+        {tracks.length > 0 ? (
+          <AudiobookPlayer
+            tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
+            title={journal.title}
+            author={journal.author}
+            storageKey={`av-listen-${journal.id}`}
+          />
+        ) : (
+          <div className="panel-arcane p-6 text-center space-y-3">
+            <p className="text-sm text-ink-dim">
+              No narration yet — this tome is silent until you add audio.
+            </p>
+            <Link
+              href={`/journal/${journal.id}/settings#narration`}
+              className="btn-arcane text-sm"
+            >
+              🎧 Add Narration
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );
