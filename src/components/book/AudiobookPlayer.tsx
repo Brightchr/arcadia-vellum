@@ -10,6 +10,8 @@ import {
   SkipBackIcon,
   SkipForwardIcon,
   VolumeIcon,
+  VolumeLowIcon,
+  VolumeMuteIcon,
 } from "@/components/icons";
 
 type RepeatMode = "off" | "all" | "one";
@@ -58,6 +60,7 @@ export function AudiobookPlayer({
   const [speed, setSpeed] = useState(1);
   const [volume, setVolume] = useState(1);
   const [chaptersOpen, setChaptersOpen] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>("off");
   const restored = useRef(false);
   const pendingSeek = useRef(0);
@@ -287,16 +290,16 @@ export function AudiobookPlayer({
         <span className="w-10">{fmt(duration)}</span>
       </div>
 
-      {/* One row: speed · transport · volume (wraps gracefully on phones) */}
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+      {/* One row: speed | transport (true center) | repeat + volume */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <button
           type="button"
-          className="btn-ghost !px-2.5 !py-1.5 text-xs order-1"
+          className="btn-ghost !px-2.5 !py-1.5 text-xs justify-self-start"
           onClick={cycleSpeed}
         >
           {speed}×
         </button>
-        <div className="flex items-center gap-2 sm:gap-3 order-2">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             className="btn-ghost !px-2.5 !py-2 text-xs"
@@ -344,9 +347,10 @@ export function AudiobookPlayer({
             <SkipForwardIcon className="h-3.5 w-3.5" />
           </button>
         </div>
+        <div className="justify-self-end flex items-center">
         <button
           type="button"
-          className={`order-3 rounded-md px-2 py-1.5 transition-colors ${
+          className={`rounded-md px-2 py-1.5 transition-colors ${
             repeat === "off"
               ? "text-ink-dim hover:text-ink hover:bg-white/5"
               : "text-arcane-bright bg-arcane/15"
@@ -373,18 +377,40 @@ export function AudiobookPlayer({
             <RepeatIcon className="h-4 w-4" />
           )}
         </button>
-        <div className="flex items-center gap-2 text-ink-dim order-4">
-          <VolumeIcon className="h-4 w-4" />
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={volume}
+        {/* Volume: icon reflects the level; slider floats above on hover/click */}
+        <div className="group relative flex items-center text-ink-dim">
+          <button
+            type="button"
             aria-label="Volume"
-            className="w-20 accent-[var(--arcane)]"
-            onChange={(e) => changeVolume(Number(e.target.value))}
-          />
+            aria-expanded={volumeOpen}
+            className="rounded-md px-2 py-1.5 hover:text-ink hover:bg-white/5 transition-colors"
+            onClick={() => setVolumeOpen((v) => !v)}
+          >
+            {volume === 0 ? (
+              <VolumeMuteIcon className="h-4 w-4" />
+            ) : volume < 0.5 ? (
+              <VolumeLowIcon className="h-4 w-4" />
+            ) : (
+              <VolumeIcon className="h-4 w-4" />
+            )}
+          </button>
+          <div
+            className={`absolute bottom-full right-0 mb-1.5 rounded-lg border border-white/10 bg-void-raised/95 backdrop-blur px-3 py-2 shadow-xl shadow-black/40 ${
+              volumeOpen ? "block" : "hidden group-hover:block"
+            }`}
+          >
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              aria-label="Volume level"
+              className="w-24 accent-[var(--arcane)] block"
+              onChange={(e) => changeVolume(Number(e.target.value))}
+            />
+          </div>
+        </div>
         </div>
       </div>
 
