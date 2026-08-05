@@ -7,6 +7,7 @@ import { listTracks } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, BookOpenIcon } from "@/components/icons";
+import { volumeLabel } from "@/lib/volume";
 
 export async function generateMetadata({
   params,
@@ -40,11 +41,14 @@ export default async function SeriesListenPage({
   for (const v of volumes) {
     if (v.sourceType !== "audio") continue; // only audiobook volumes play
     const tracks = await listTracks(v.id);
-    const label = v.volumeNumber !== null ? `Vol. ${v.volumeNumber}` : v.title;
+    const vl = volumeLabel(v);
+    const label = vl !== null ? `Vol. ${vl}` : v.title;
+    const coverUrl = v.coverImageId ? `/api/images/${v.coverImageId}` : null;
     trackList.push(
       ...tracks.map((t, i) => ({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
+        coverUrl,
       }))
     );
   }
@@ -55,7 +59,7 @@ export default async function SeriesListenPage({
 
   return (
     <main
-      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative`}
+      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative flex flex-col`}
     >
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
@@ -73,28 +77,29 @@ export default async function SeriesListenPage({
         </Link>
       </header>
 
-      <div className="relative z-10 max-w-md mx-auto px-4 pb-10 pt-2 space-y-6">
-        <div className="w-56 h-80 mx-auto shadow-2xl shadow-black/60">
-          <div className="tome-cover !p-6">
-            <div className="tome-cover-ornament tome-cover-ornament--front" />
-            <h1 className="tome-cover-title !text-xl">{s.name}</h1>
-            <hr className="tome-cover-rule" />
-            <p className="tome-cover-subtitle !text-xs">
-              The complete chronicle in {volumes.length} volume
-              {volumes.length === 1 ? "" : "s"}
-            </p>
-            {author && (
-              <p className="tome-cover-author !bottom-8 !text-xs">{author}</p>
-            )}
-            <div className="tome-cover-runes !bottom-4">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
-          </div>
-        </div>
-
+      <div className="relative z-10 flex-1 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
         <AudiobookPlayer
           tracks={trackList}
           title={s.name}
           author={author}
           storageKey={`av-listen-series-${s.id}`}
+          fallbackArt={
+            <div className="w-48 h-72 shadow-2xl shadow-black/60">
+              <div className="tome-cover !p-6">
+                <div className="tome-cover-ornament tome-cover-ornament--front" />
+                <h1 className="tome-cover-title !text-xl">{s.name}</h1>
+                <hr className="tome-cover-rule" />
+                <p className="tome-cover-subtitle !text-xs">
+                  The complete chronicle in {volumes.length} volume
+                  {volumes.length === 1 ? "" : "s"}
+                </p>
+                {author && (
+                  <p className="tome-cover-author !bottom-8 !text-xs">{author}</p>
+                )}
+                <div className="tome-cover-runes !bottom-4">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+              </div>
+            </div>
+          }
         />
       </div>
     </main>

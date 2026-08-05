@@ -91,6 +91,8 @@ export const journals = pgTable("journals", {
     onDelete: "set null",
   }),
   volumeNumber: integer("volume_number"),
+  /** Optional chapter/part within the volume — displays as "Vol. 1.2". */
+  partNumber: integer("part_number"),
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   author: text("author"),
@@ -100,6 +102,8 @@ export const journals = pgTable("journals", {
     enum: ["gdoc", "upload", "audio", "write"],
   }).notNull(),
   gdocFileId: text("gdoc_file_id"),
+  /** Optional cover art (journal_images id) — the listening page backdrop. */
+  coverImageId: text("cover_image_id"),
   visibility: text("visibility", { enum: ["public", "private"] })
     .notNull()
     .default("private"),

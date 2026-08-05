@@ -34,6 +34,9 @@ export function SettingsForm({
   const [volumeNumber, setVolumeNumber] = useState(
     journal.volumeNumber !== null ? String(journal.volumeNumber) : ""
   );
+  const [partNumber, setPartNumber] = useState(
+    journal.partNumber !== null ? String(journal.partNumber) : ""
+  );
   const [theme, setTheme] = useState(journal.theme as ThemeId);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -74,6 +77,7 @@ export function SettingsForm({
 
   async function saveDetails() {
     const vol = parseInt(volumeNumber, 10);
+    const part = parseInt(partNumber, 10);
     await patch(
       {
         title,
@@ -81,6 +85,7 @@ export function SettingsForm({
         author,
         seriesName,
         volumeNumber: Number.isFinite(vol) && vol > 0 ? vol : null,
+        partNumber: Number.isFinite(part) && part > 0 ? part : null,
       },
       "details"
     );
@@ -158,6 +163,45 @@ export function SettingsForm({
       });
       if (res.ok) router.refresh();
       else setError("Could not remove the track.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function uploadCover(f: File | null | undefined) {
+    if (!f) return;
+    setBusy("cover");
+    setError(null);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.set("file", f);
+      const res = await fetch(`/api/journals/${journal.id}/cover`, {
+        method: "POST",
+        body: form,
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) setError(body?.error ?? "Upload failed.");
+      else {
+        setNotice("Cover set.");
+        router.refresh();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removeCover() {
+    setBusy("cover");
+    setError(null);
+    try {
+      const res = await fetch(`/api/journals/${journal.id}/cover`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setNotice("Cover removed.");
+        router.refresh();
+      } else setError("Could not remove the cover.");
     } finally {
       setBusy(null);
     }
@@ -250,7 +294,7 @@ export function SettingsForm({
             onChange={(e) => setAuthor(e.target.value)}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+        <div className="grid gap-4 sm:grid-cols-[1fr_6rem_6rem]">
           <div>
             <label
               htmlFor="seriesName"
@@ -289,6 +333,26 @@ export function SettingsForm({
               disabled={!seriesName.trim()}
               onChange={(e) =>
                 setVolumeNumber(e.target.value.replace(/\D/g, ""))
+              }
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="partNumber"
+              className="block text-sm mb-1 text-ink-dim"
+              title="Chapter/part within the volume — shows as Vol. 1.2"
+            >
+              Part #
+            </label>
+            <input
+              id="partNumber"
+              className="input-arcane"
+              inputMode="numeric"
+              placeholder="—"
+              value={partNumber}
+              disabled={!seriesName.trim() || !volumeNumber.trim()}
+              onChange={(e) =>
+                setPartNumber(e.target.value.replace(/\D/g, ""))
               }
             />
           </div>
@@ -430,6 +494,54 @@ export function SettingsForm({
           </span>
         </label>
       </section>
+      )}
+
+      {/* Cover image — the listening page backdrop */}
+      {journal.sourceType === "audio" && (
+        <section className="panel-arcane p-6 space-y-4">
+          <h2 className="font-heading text-lg">Cover Image</h2>
+          <p className="text-sm text-ink-dim">
+            Shown as the full-screen backdrop while this volume plays —
+            including in series and listen-to-all playlists.
+          </p>
+          {journal.coverImageId && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/images/${journal.coverImageId}`}
+              alt="Current cover"
+              className="h-40 rounded-lg object-cover border border-void-border"
+            />
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="btn-arcane cursor-pointer">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                disabled={busy !== null}
+                onChange={(e) => {
+                  void uploadCover(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+              {busy === "cover"
+                ? "Working..."
+                : journal.coverImageId
+                  ? "Replace Cover"
+                  : "Upload Cover"}
+            </label>
+            {journal.coverImageId && (
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={busy !== null}
+                onClick={removeCover}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Source */}

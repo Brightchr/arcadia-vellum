@@ -2,12 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronDownIcon,
   PauseIcon,
   PlayIcon,
+  RepeatIcon,
+  RepeatOneIcon,
   SkipBackIcon,
   SkipForwardIcon,
   VolumeIcon,
 } from "@/components/icons";
+
+type RepeatMode = "off" | "all" | "one";
 
 const VOLUME_KEY = "av-volume";
 
@@ -16,6 +21,8 @@ const SPEEDS = [0.75, 1, 1.25, 1.5];
 export interface NarrationTrack {
   id: string;
   title: string;
+  /** Backdrop for while this track plays (the volume's cover image). */
+  coverUrl?: string | null;
 }
 
 function fmt(t: number): string {
@@ -34,11 +41,14 @@ export function AudiobookPlayer({
   title,
   author,
   storageKey,
+  fallbackArt,
 }: {
   tracks: NarrationTrack[];
   title: string;
   author?: string | null;
   storageKey: string;
+  /** Shown as album art when the playing track has no cover image. */
+  fallbackArt?: React.ReactNode;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [index, setIndex] = useState(0);
@@ -47,8 +57,13 @@ export function AudiobookPlayer({
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [volume, setVolume] = useState(1);
+  const [chaptersOpen, setChaptersOpen] = useState(false);
+  const [repeat, setRepeat] = useState<RepeatMode>("off");
   const restored = useRef(false);
   const pendingSeek = useRef(0);
+  // onEnded closures need the current mode without re-mounting the audio tag.
+  const repeatRef = useRef<RepeatMode>("off");
+  repeatRef.current = repeat;
 
   const track = tracks[Math.min(index, tracks.length - 1)];
 
@@ -61,6 +76,7 @@ export function AudiobookPlayer({
         pendingSeek.current = typeof saved.t === "number" ? saved.t : 0;
       }
       if (saved && SPEEDS.includes(saved.s)) setSpeed(saved.s);
+      if (saved && ["off", "all", "one"].includes(saved.r)) setRepeat(saved.r);
       const v = parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
       if (Number.isFinite(v) && v >= 0 && v <= 1) setVolume(v);
     } catch {
@@ -72,10 +88,21 @@ export function AudiobookPlayer({
 
   function persist(i: number, t: number, s: number) {
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ i, t, s }));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ i, t, s, r: repeatRef.current })
+      );
     } catch {
       // Storage full/blocked — position memory is best-effort.
     }
+  }
+
+  function cycleRepeat() {
+    const next: RepeatMode =
+      repeat === "off" ? "all" : repeat === "all" ? "one" : "off";
+    setRepeat(next);
+    repeatRef.current = next;
+    persist(index, audioRef.current?.currentTime ?? 0, speed);
   }
 
   // Lock-screen / media-key metadata.
@@ -85,7 +112,9 @@ export function AudiobookPlayer({
       title: track.title,
       artist: author ?? title,
       album: title,
-      artwork: [{ src: "/mark.png", sizes: "192x192", type: "image/png" }],
+      artwork: track.coverUrl
+        ? [{ src: track.coverUrl }]
+        : [{ src: "/mark.png", sizes: "192x192", type: "image/png" }],
     });
     navigator.mediaSession.setActionHandler("play", () => {
       void audioRef.current?.play();
@@ -147,7 +176,22 @@ export function AudiobookPlayer({
   if (!track) return null;
 
   return (
-    <div className="panel-arcane p-5 sm:p-6 w-full">
+    <div className="flex-1 flex flex-col w-full min-h-0">
+      {/* Album art floats over the theme's ambience; swaps per volume. */}
+      <div className="flex-1 grid place-items-center py-4">
+        {track.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={track.coverUrl}
+            alt=""
+            className="w-52 sm:w-64 aspect-[3/4] object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
+          />
+        ) : (
+          fallbackArt
+        )}
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-5 w-full space-y-3">
       <audio
         ref={audioRef}
         key={track.id}
@@ -170,14 +214,58 @@ export function AudiobookPlayer({
         }}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={() => {
-          if (index < tracks.length - 1) go(index + 1);
-          else {
+        onEnded={(e) => {
+          const el = e.currentTarget;
+          const mode = repeatRef.current;
+          if (mode === "one") {
+            el.currentTime = 0;
+            void el.play().catch(() => {});
+          } else if (index < tracks.length - 1) {
+            go(index + 1);
+          } else if (mode === "all") {
+            if (tracks.length === 1) {
+              el.currentTime = 0;
+              void el.play().catch(() => {});
+            } else {
+              go(0);
+            }
+          } else {
             setPlaying(false);
             persist(0, 0, speed);
           }
         }}
       />
+
+      {/* Now playing */}
+      {tracks.length > 1 && (
+        <p className="text-center font-heading text-sm text-arcane-bright truncate">
+          {track.title}
+        </p>
+      )}
+
+      {/* Chapters (collapsed by default so the dock stays lean) */}
+      {tracks.length > 1 && chaptersOpen && (
+        <ol className="max-h-44 overflow-y-auto space-y-1 pr-1 border-b border-void-border pb-3">
+          {tracks.map((t, i) => (
+            <li key={t.id}>
+              <button
+                type="button"
+                onClick={() => go(i)}
+                className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition ${
+                  i === index
+                    ? "bg-arcane/15 text-arcane-bright"
+                    : "text-ink-dim hover:text-ink hover:bg-void-raised"
+                }`}
+              >
+                <span className="font-heading text-xs mr-2">
+                  {i === index && playing ? "♪" : i + 1 + "."}
+                </span>
+                {t.title}
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
 
       {/* Seek */}
       <div className="flex items-center gap-3 text-xs text-ink-dim font-heading">
@@ -199,65 +287,93 @@ export function AudiobookPlayer({
         <span className="w-10">{fmt(duration)}</span>
       </div>
 
-      {/* Transport */}
-      <div className="flex items-center justify-center gap-3 sm:gap-5 mt-4">
+      {/* One row: speed · transport · volume (wraps gracefully on phones) */}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
         <button
           type="button"
-          className="btn-ghost !px-3 !py-2 text-xs"
-          disabled={index === 0}
-          onClick={() => go(index - 1)}
-          aria-label="Previous chapter"
-        >
-          <SkipBackIcon className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          className="btn-ghost !px-3 !py-2 text-xs"
-          onClick={() => skip(-15)}
-          aria-label="Back 15 seconds"
-        >
-          −15s
-        </button>
-        <button
-          type="button"
-          className="btn-arcane !rounded-full h-14 w-14 !p-0 text-xl"
-          onClick={toggle}
-          aria-label={playing ? "Pause" : "Play"}
-        >
-          {playing ? (
-            <PauseIcon className="h-6 w-6" />
-          ) : (
-            <PlayIcon className="h-6 w-6 translate-x-0.5" />
-          )}
-        </button>
-        <button
-          type="button"
-          className="btn-ghost !px-3 !py-2 text-xs"
-          onClick={() => skip(15)}
-          aria-label="Forward 15 seconds"
-        >
-          +15s
-        </button>
-        <button
-          type="button"
-          className="btn-ghost !px-3 !py-2 text-xs"
-          disabled={index === tracks.length - 1}
-          onClick={() => go(index + 1)}
-          aria-label="Next chapter"
-        >
-          <SkipForwardIcon className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      <div className="flex items-center justify-center gap-5 mt-3">
-        <button
-          type="button"
-          className="btn-ghost !px-3 !py-1 text-xs"
+          className="btn-ghost !px-2.5 !py-1.5 text-xs order-1"
           onClick={cycleSpeed}
         >
-          {speed}× speed
+          {speed}×
         </button>
-        <div className="flex items-center gap-2 text-ink-dim">
+        <div className="flex items-center gap-2 sm:gap-3 order-2">
+          <button
+            type="button"
+            className="btn-ghost !px-2.5 !py-2 text-xs"
+            disabled={index === 0}
+            onClick={() => go(index - 1)}
+            aria-label="Previous chapter"
+          >
+            <SkipBackIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            className="btn-ghost !px-2.5 !py-2 text-xs"
+            onClick={() => skip(-15)}
+            aria-label="Back 15 seconds"
+          >
+            −15s
+          </button>
+          <button
+            type="button"
+            className="btn-arcane !rounded-full h-12 w-12 !p-0"
+            onClick={toggle}
+            aria-label={playing ? "Pause" : "Play"}
+          >
+            {playing ? (
+              <PauseIcon className="h-5 w-5" />
+            ) : (
+              <PlayIcon className="h-5 w-5 translate-x-0.5" />
+            )}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost !px-2.5 !py-2 text-xs"
+            onClick={() => skip(15)}
+            aria-label="Forward 15 seconds"
+          >
+            +15s
+          </button>
+          <button
+            type="button"
+            className="btn-ghost !px-2.5 !py-2 text-xs"
+            disabled={index === tracks.length - 1}
+            onClick={() => go(index + 1)}
+            aria-label="Next chapter"
+          >
+            <SkipForwardIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <button
+          type="button"
+          className={`order-3 rounded-md px-2 py-1.5 transition-colors ${
+            repeat === "off"
+              ? "text-ink-dim hover:text-ink hover:bg-white/5"
+              : "text-arcane-bright bg-arcane/15"
+          }`}
+          aria-label={
+            repeat === "off"
+              ? "Repeat off — tap for repeat playlist"
+              : repeat === "all"
+                ? "Repeat playlist — tap for repeat one"
+                : "Repeat one — tap to turn off"
+          }
+          title={
+            repeat === "off"
+              ? "Repeat off"
+              : repeat === "all"
+                ? "Repeat playlist"
+                : "Repeat one"
+          }
+          onClick={cycleRepeat}
+        >
+          {repeat === "one" ? (
+            <RepeatOneIcon className="h-4 w-4" />
+          ) : (
+            <RepeatIcon className="h-4 w-4" />
+          )}
+        </button>
+        <div className="flex items-center gap-2 text-ink-dim order-4">
           <VolumeIcon className="h-4 w-4" />
           <input
             type="range"
@@ -266,33 +382,26 @@ export function AudiobookPlayer({
             step={0.05}
             value={volume}
             aria-label="Volume"
-            className="w-24 accent-[var(--arcane)]"
+            className="w-20 accent-[var(--arcane)]"
             onChange={(e) => changeVolume(Number(e.target.value))}
           />
         </div>
       </div>
 
-      {/* Chapters */}
-      <ol className="mt-5 max-h-48 overflow-y-auto space-y-1 pr-1">
-        {tracks.map((t, i) => (
-          <li key={t.id}>
-            <button
-              type="button"
-              onClick={() => go(i)}
-              className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition ${
-                i === index
-                  ? "bg-arcane/15 text-arcane-bright"
-                  : "text-ink-dim hover:text-ink hover:bg-void-raised"
-              }`}
-            >
-              <span className="font-heading text-xs mr-2">
-                {i === index && playing ? "♪" : i + 1 + "."}
-              </span>
-              {t.title}
-            </button>
-          </li>
-        ))}
-      </ol>
+      {tracks.length > 1 && (
+        <button
+          type="button"
+          className="mx-auto flex items-center gap-1.5 text-xs font-heading text-ink-dim hover:text-arcane-bright transition"
+          aria-expanded={chaptersOpen}
+          onClick={() => setChaptersOpen((v) => !v)}
+        >
+          <ChevronDownIcon
+            className={`h-3.5 w-3.5 transition-transform ${chaptersOpen ? "" : "rotate-180"}`}
+          />
+          {chaptersOpen ? "Hide chapters" : `Chapters (${tracks.length})`}
+        </button>
+      )}
+      </div>
     </div>
   );
 }

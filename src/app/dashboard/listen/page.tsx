@@ -7,6 +7,7 @@ import { listTracks } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
+import { compareVolumes, volumeLabel } from "@/lib/volume";
 
 export const metadata: Metadata = {
   title: "Your Audiobooks — Arcadia Vellum",
@@ -19,23 +20,20 @@ export default async function AllAudiobooksListenPage() {
 
   const audiobooks = (await listJournalsForOwner(session.user.id))
     .filter((j) => j.sourceType === "audio")
-    .sort(
-      (a, b) =>
-        (a.volumeNumber ?? Number.MAX_SAFE_INTEGER) -
-          (b.volumeNumber ?? Number.MAX_SAFE_INTEGER) ||
-        a.createdAt.getTime() - b.createdAt.getTime()
-    );
+    .sort(compareVolumes);
   if (audiobooks.length === 0) redirect("/dashboard");
 
   const playlist = [];
   for (const j of audiobooks) {
     const tracks = await listTracks(j.id);
-    const label =
-      j.volumeNumber !== null ? `${j.title} Vol. ${j.volumeNumber}` : j.title;
+    const vl = volumeLabel(j);
+    const label = vl !== null ? `${j.title} Vol. ${vl}` : j.title;
+    const coverUrl = j.coverImageId ? `/api/images/${j.coverImageId}` : null;
     playlist.push(
       ...tracks.map((t, i) => ({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
+        coverUrl,
       }))
     );
   }
@@ -45,7 +43,7 @@ export default async function AllAudiobooksListenPage() {
 
   return (
     <main
-      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative`}
+      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative flex flex-col`}
     >
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
@@ -57,7 +55,7 @@ export default async function AllAudiobooksListenPage() {
         </Link>
       </header>
 
-      <div className="relative z-10 max-w-md mx-auto px-4 pb-10 pt-2 space-y-6">
+      <div className="relative z-10 flex-1 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
         <div className="text-center">
           <h1 className="font-display text-2xl text-arcane-bright inline-flex items-center gap-2.5">
             <HeadphonesIcon className="h-6 w-6" /> Your Audiobooks
@@ -76,7 +74,7 @@ export default async function AllAudiobooksListenPage() {
             storageKey={`av-listen-all-${session.user.id}`}
           />
         ) : (
-          <div className="panel-arcane p-6 text-center">
+          <div className="panel-arcane p-6 text-center mt-auto">
             <p className="text-sm text-ink-dim">
               Your audiobooks have no narration tracks yet.
             </p>
