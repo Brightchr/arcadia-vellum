@@ -101,7 +101,7 @@ body {
   --arcane: #d8a03c;
   --arcane-bright: #eec678;
   --ember: #b0512f;
-  --app-display-font: var(--font-unifraktur);
+  --app-display-font: var(--font-cinzel-deco);
 }
 
 .app-theme-ancient-tome.arcane-bg {
