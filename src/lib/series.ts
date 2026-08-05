@@ -18,6 +18,42 @@ export async function getSeriesBySlug(slug: string) {
   return rows[0] ?? null;
 }
 
+export async function getOwnedSeries(id: string, ownerId: string) {
+  const rows = await db
+    .select()
+    .from(series)
+    .where(and(eq(series.id, id), eq(series.ownerId, ownerId)));
+  return rows[0] ?? null;
+}
+
+/** Another series of the owner already using this name (case-insensitive)? */
+export async function findSeriesByName(
+  ownerId: string,
+  name: string,
+  excludeId?: string
+) {
+  const rows = await db
+    .select()
+    .from(series)
+    .where(
+      and(
+        eq(series.ownerId, ownerId),
+        sql`lower(${series.name}) = lower(${name.trim()})`
+      )
+    );
+  return rows.find((r) => r.id !== excludeId) ?? null;
+}
+
+/** Rename only — the slug (and share links) stay stable. */
+export async function renameSeries(id: string, name: string) {
+  const [row] = await db
+    .update(series)
+    .set({ name: name.trim().slice(0, 80) })
+    .where(eq(series.id, id))
+    .returning();
+  return row ?? null;
+}
+
 /** Case-insensitive find-or-create by name, scoped to the owner. */
 export async function findOrCreateSeries(ownerId: string, name: string) {
   const trimmed = name.trim().slice(0, 80);

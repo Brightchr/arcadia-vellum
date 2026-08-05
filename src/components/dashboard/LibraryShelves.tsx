@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import type { Series } from "@/lib/series";
 import { JournalCard } from "./JournalCard";
-import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
+import { BookOpenIcon, HeadphonesIcon, PenIcon } from "@/components/icons";
 import { compareVolumes } from "@/lib/volume";
 
 /**
@@ -42,6 +42,42 @@ export function LibraryShelves({
       setDragId(null);
       setOverShelf(null);
     }
+  }
+
+  async function rename(s: Series) {
+    const name = window.prompt("Rename this collection:", s.name)?.trim();
+    if (!name || name === s.name) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/series/${s.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        window.alert(body?.error ?? "Rename failed.");
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function RenameButton({ series: s }: { series: Series }) {
+    return (
+      <button
+        type="button"
+        aria-label={`Rename ${s.name}`}
+        title="Rename collection"
+        disabled={busy}
+        onClick={() => void rename(s)}
+        className="rounded-md p-1.5 text-ink-dim hover:text-arcane-bright hover:bg-white/5 transition-colors shrink-0"
+      >
+        <PenIcon className="h-3.5 w-3.5" />
+      </button>
+    );
   }
 
   function dropHandlers(shelfKey: string, seriesName: string | null) {
@@ -169,8 +205,9 @@ export function LibraryShelves({
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="font-display text-xl text-arcane-bright">
+              <h2 className="font-display text-xl text-arcane-bright inline-flex items-center gap-1.5">
                 {s.name}
+                <RenameButton series={s} />
               </h2>
               <p className="text-sm text-ink-dim">
                 {volumes.length} volume{volumes.length === 1 ? "" : "s"}
@@ -219,11 +256,12 @@ export function LibraryShelves({
             {audioBySeries.map(({ series: s, volumes }) => (
               <div key={s.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                  <h3 className="font-heading text-base text-arcane-bright">
+                  <h3 className="font-heading text-base text-arcane-bright inline-flex items-center gap-1.5">
                     {s.name}{" "}
                     <span className="text-ink-dim text-sm font-normal">
                       · {volumes.length} volume{volumes.length === 1 ? "" : "s"}
                     </span>
+                    <RenameButton series={s} />
                   </h3>
                   {volumes.some((v) => (trackCounts[v.id] ?? 0) > 0) && (
                     <Link
