@@ -77,6 +77,29 @@ export function SkipBackIcon({ className }: IconProps) {
   );
 }
 
+export function VolumeIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path
+        d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <path d="M16 9a5 5 0 0 1 0 6" />
+      <path d="M19.364 18.364a9 9 0 0 0 0-12.728" />
+    </Icon>
+  );
+}
+
+export function PenIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M12 20h9" />
+      <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
+    </Icon>
+  );
+}
+
 export function SkipForwardIcon({ className }: IconProps) {
   return (
     <Icon className={className}>

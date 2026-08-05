@@ -6,7 +6,10 @@ import {
   PlayIcon,
   SkipBackIcon,
   SkipForwardIcon,
+  VolumeIcon,
 } from "@/components/icons";
+
+const VOLUME_KEY = "av-volume";
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
 
@@ -43,6 +46,7 @@ export function AudiobookPlayer({
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1);
+  const [volume, setVolume] = useState(1);
   const restored = useRef(false);
   const pendingSeek = useRef(0);
 
@@ -57,6 +61,8 @@ export function AudiobookPlayer({
         pendingSeek.current = typeof saved.t === "number" ? saved.t : 0;
       }
       if (saved && SPEEDS.includes(saved.s)) setSpeed(saved.s);
+      const v = parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
+      if (Number.isFinite(v) && v >= 0 && v <= 1) setVolume(v);
     } catch {
       // First listen.
     }
@@ -121,6 +127,16 @@ export function AudiobookPlayer({
     el.currentTime = Math.max(0, Math.min(el.duration || 0, el.currentTime + delta));
   }
 
+  function changeVolume(v: number) {
+    setVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+    try {
+      localStorage.setItem(VOLUME_KEY, String(v));
+    } catch {
+      // Best-effort.
+    }
+  }
+
   function cycleSpeed() {
     const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
     setSpeed(next);
@@ -141,6 +157,7 @@ export function AudiobookPlayer({
           const el = e.currentTarget;
           setDuration(el.duration || 0);
           el.playbackRate = speed;
+          el.volume = volume;
           if (pendingSeek.current > 0) {
             el.currentTime = Math.min(pendingSeek.current, el.duration || 0);
             pendingSeek.current = 0;
@@ -232,7 +249,7 @@ export function AudiobookPlayer({
         </button>
       </div>
 
-      <div className="flex items-center justify-center mt-3">
+      <div className="flex items-center justify-center gap-5 mt-3">
         <button
           type="button"
           className="btn-ghost !px-3 !py-1 text-xs"
@@ -240,6 +257,19 @@ export function AudiobookPlayer({
         >
           {speed}× speed
         </button>
+        <div className="flex items-center gap-2 text-ink-dim">
+          <VolumeIcon className="h-4 w-4" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            aria-label="Volume"
+            className="w-24 accent-[var(--arcane)]"
+            onChange={(e) => changeVolume(Number(e.target.value))}
+          />
+        </div>
       </div>
 
       {/* Chapters */}
