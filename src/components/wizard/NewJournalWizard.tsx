@@ -6,9 +6,9 @@ import { THEMES, DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "./ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
-import { HeadphonesIcon } from "@/components/icons";
+import { HeadphonesIcon, PenIcon } from "@/components/icons";
 
-type SourceType = "upload" | "gdoc" | "audio";
+type SourceType = "upload" | "gdoc" | "audio" | "write";
 
 // Wizard progress survives the round-trip to Google's consent screen
 // (Connect Google Drive navigates away and back).
@@ -52,7 +52,8 @@ export function NewJournalWizard({
         if (
           saved.source === "upload" ||
           saved.source === "gdoc" ||
-          saved.source === "audio"
+          saved.source === "audio" ||
+          saved.source === "write"
         ) {
           setSource(saved.source);
         }
@@ -103,7 +104,9 @@ export function NewJournalWizard({
       ? file !== null
       : source === "gdoc"
         ? pickedDoc !== null
-        : audioFiles.length > 0;
+        : source === "audio"
+          ? audioFiles.length > 0
+          : true; // "write" starts blank — the editor comes next
 
   function addAudioFiles(list: FileList | null) {
     if (!list) return;
@@ -165,6 +168,11 @@ export function NewJournalWizard({
 
       if (source === "audio") {
         router.push(`/j/${journal.slug}/listen`);
+        return;
+      }
+
+      if (source === "write") {
+        router.push(`/journal/${journal.id}/write`);
         return;
       }
 
@@ -303,7 +311,7 @@ export function NewJournalWizard({
           <div className="flex justify-end">
             <FormattingGuide />
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => setSource("gdoc")}
@@ -332,6 +340,22 @@ export function NewJournalWizard({
             </button>
             <button
               type="button"
+              onClick={() => setSource("write")}
+              className={`rounded-lg border p-4 text-left transition ${
+                source === "write"
+                  ? "border-arcane bg-arcane/10"
+                  : "border-void-border hover:border-arcane/50"
+              }`}
+            >
+              <p className="font-heading text-base mb-1 inline-flex items-center gap-1.5">
+                <PenIcon /> Write it here
+              </p>
+              <p className="text-sm text-ink-dim">
+                Compose directly in Arcadia Vellum&apos;s editor.
+              </p>
+            </button>
+            <button
+              type="button"
               onClick={() => setSource("audio")}
               className={`rounded-lg border p-4 text-left transition ${
                 source === "audio"
@@ -347,6 +371,13 @@ export function NewJournalWizard({
               </p>
             </button>
           </div>
+
+          {source === "write" && (
+            <p className="text-sm text-ink-dim border border-dashed border-void-border rounded-lg p-4">
+              The tome starts with blank pages — you&apos;ll land in the editor
+              right after binding.
+            </p>
+          )}
 
           {source === "gdoc" && (
             <GdocSourcePanel

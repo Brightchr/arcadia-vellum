@@ -77,6 +77,22 @@ export async function setJournalContent(
     .where(eq(journals.id, journalId));
 }
 
+/**
+ * Save content written in the built-in editor: markdown → html through the
+ * same localize/sanitize pipeline, keeping the markdown source for re-editing.
+ */
+export async function saveWrittenContent(
+  journalId: string,
+  markdown: string
+): Promise<void> {
+  const rawHtml = marked.parse(markdown, { async: false });
+  await setJournalContent(journalId, rawHtml);
+  await db
+    .update(journalContent)
+    .set({ sourceMd: markdown })
+    .where(eq(journalContent.journalId, journalId));
+}
+
 /** Ingest an upload end-to-end: convert → localize → sanitize → store. */
 export async function ingestUpload(
   journalId: string,

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
-import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
+import { BookOpenIcon, HeadphonesIcon, PenIcon } from "@/components/icons";
 
 function Chip({
   tone = "dim",
@@ -201,7 +201,9 @@ export function JournalCard({
           ? "Google Doc"
           : audioOnly
             ? "Audiobook"
-            : "Uploaded file"}
+            : journal.sourceType === "write"
+              ? "Written here"
+              : "Uploaded file"}
         {journal.lastSyncedAt &&
           ` · synced ${new Date(journal.lastSyncedAt).toLocaleDateString()}`}
       </p>
@@ -226,6 +228,14 @@ export function JournalCard({
             className="btn-arcane text-xs px-3 py-1.5"
           >
             <BookOpenIcon className="h-3.5 w-3.5" /> Open Tome
+          </Link>
+        )}
+        {journal.sourceType === "write" && (
+          <Link
+            href={`/journal/${journal.id}/write`}
+            className="btn-ghost text-xs px-3 py-1.5"
+          >
+            <PenIcon className="h-3.5 w-3.5" /> Write
           </Link>
         )}
       </div>

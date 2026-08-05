@@ -443,6 +443,17 @@ export function SettingsForm({
             This is an audio-only tome — the narration tracks above are its
             content. Readers get the audiobook player instead of pages.
           </p>
+        ) : journal.sourceType === "write" ? (
+          <>
+            <p className="text-sm text-ink-dim">
+              Written in Arcadia Vellum&apos;s editor.
+              {journal.lastSyncedAt &&
+                ` Last saved ${new Date(journal.lastSyncedAt).toLocaleString()}.`}
+            </p>
+            <a href={`/journal/${journal.id}/write`} className="btn-arcane">
+              Open the Editor
+            </a>
+          </>
         ) : journal.sourceType === "gdoc" ? (
           <>
             <p className="text-sm text-ink-dim">

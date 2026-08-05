@@ -96,7 +96,9 @@ export const journals = pgTable("journals", {
   author: text("author"),
   slug: text("slug").notNull().unique(),
   theme: text("theme").notNull().default("witch-grimoire"),
-  sourceType: text("source_type", { enum: ["gdoc", "upload", "audio"] }).notNull(),
+  sourceType: text("source_type", {
+    enum: ["gdoc", "upload", "audio", "write"],
+  }).notNull(),
   gdocFileId: text("gdoc_file_id"),
   visibility: text("visibility", { enum: ["public", "private"] })
     .notNull()
@@ -110,6 +112,8 @@ export const journalContent = pgTable("journal_content", {
     .primaryKey()
     .references(() => journals.id, { onDelete: "cascade" }),
   html: text("html").notNull(),
+  /** Markdown source for journals written in the built-in editor. */
+  sourceMd: text("source_md"),
   plainLength: integer("plain_length").notNull().default(0),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

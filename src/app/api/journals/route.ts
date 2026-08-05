@@ -11,11 +11,13 @@ const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 /**
  * Create a journal. Multipart form:
  *  - title (required), characterName?, theme?
- *  - sourceType: "upload" | "gdoc" | "audio"
+ *  - sourceType: "upload" | "gdoc" | "audio" | "write"
  *  - file: the uploaded document (sourceType=upload)
  *  - gdocFileId: Google Doc file id (sourceType=gdoc; content synced separately)
  *  - sourceType=audio creates an audio-only tome; the client then uploads
  *    narration tracks via POST /api/journals/[id]/audio
+ *  - sourceType=write creates an empty tome for the built-in editor; content
+ *    is saved via PUT /api/journals/[id]/content
  */
 export async function POST(request: Request) {
   const session = await sessionFromRequest(request);
@@ -33,7 +35,8 @@ export async function POST(request: Request) {
   if (
     sourceType !== "upload" &&
     sourceType !== "gdoc" &&
-    sourceType !== "audio"
+    sourceType !== "audio" &&
+    sourceType !== "write"
   ) {
     return jsonError("Invalid source type", 400);
   }
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
     return Response.json({ journal });
   }
 
-  if (sourceType === "audio") {
+  if (sourceType === "audio" || sourceType === "write") {
     const journal = await createJournal({
       ownerId: session.user.id,
       title,
@@ -92,7 +95,7 @@ export async function POST(request: Request) {
       seriesId,
       volumeNumber,
       theme,
-      sourceType: "audio",
+      sourceType,
     });
     return Response.json({ journal });
   }

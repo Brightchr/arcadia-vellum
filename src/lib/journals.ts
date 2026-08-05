@@ -48,7 +48,7 @@ export async function createJournal(input: {
   seriesId?: string | null;
   volumeNumber?: number | null;
   theme?: ThemeId;
-  sourceType: "gdoc" | "upload" | "audio";
+  sourceType: "gdoc" | "upload" | "audio" | "write";
   gdocFileId?: string | null;
 }) {
   const id = newId();

@@ -265,4 +265,81 @@ body {
   border-radius: 0.75rem;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
+
+/* Markdown preview in the write editor */
+.editor-preview {
+  line-height: 1.65;
+}
+
+.editor-preview h1,
+.editor-preview h2,
+.editor-preview h3 {
+  font-family: var(--font-cinzel), serif;
+  color: var(--arcane-bright);
+  margin: 1.25em 0 0.5em;
+  line-height: 1.25;
+}
+
+.editor-preview h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+
+.editor-preview h2 {
+  font-size: 1.25rem;
+}
+
+.editor-preview h3 {
+  font-size: 1.05rem;
+}
+
+.editor-preview p,
+.editor-preview ul,
+.editor-preview ol,
+.editor-preview blockquote {
+  margin: 0 0 0.9em;
+}
+
+.editor-preview ul,
+.editor-preview ol {
+  padding-left: 1.5em;
+}
+
+.editor-preview ul {
+  list-style: disc;
+}
+
+.editor-preview ol {
+  list-style: decimal;
+}
+
+.editor-preview blockquote {
+  border-left: 3px solid var(--arcane);
+  padding-left: 1em;
+  color: var(--ink-dim);
+  font-style: italic;
+}
+
+.editor-preview hr {
+  border: none;
+  border-top: 1px solid var(--void-border);
+  margin: 1.5em 0;
+}
+
+.editor-preview a {
+  color: var(--arcane-bright);
+  text-decoration: underline;
+}
+
+.editor-preview code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.editor-preview img {
+  max-width: 100%;
+  border-radius: 0.375rem;
+}
 }
