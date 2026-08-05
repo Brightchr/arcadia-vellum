@@ -737,12 +737,12 @@
    binding. Panels and buttons inside a tome scene derive their colors from
    the theme's cover palette instead of the purple app chrome. */
 .tome-scene {
-  --ink: color-mix(in srgb, var(--tome-cover-ink, #e8e0d0) 45%, #e8e2d6);
-  --ink-dim: color-mix(in srgb, var(--tome-cover-ink, #a89f8c) 62%, transparent);
-  --arcane: color-mix(in srgb, var(--tome-cover-ink, #9d7bd8) 82%, #101010);
-  --arcane-bright: var(--tome-cover-ink, #c4a9f0);
-  --void-raised: color-mix(in srgb, var(--tome-cover-ink, #1a1524) 9%, #100f0d);
-  --void-border: color-mix(in srgb, var(--tome-cover-ink, #322a45) 32%, transparent);
+  --ink: color-mix(in srgb, var(--tome-cover-ink, #e8e0d0) 35%, #f3efe6);
+  --ink-dim: color-mix(in srgb, var(--tome-cover-ink, #a89f8c) 78%, white);
+  --arcane: color-mix(in srgb, var(--tome-cover-ink, #9d7bd8) 88%, white);
+  --arcane-bright: color-mix(in srgb, var(--tome-cover-ink, #c4a9f0) 68%, white);
+  --void-raised: color-mix(in srgb, var(--tome-cover-ink, #1a1524) 12%, #12110f);
+  --void-border: color-mix(in srgb, var(--tome-cover-ink, #322a45) 45%, transparent);
 }
 
 .tome-scene .tome-ambience {
