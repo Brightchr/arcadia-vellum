@@ -122,7 +122,7 @@
   --tome-ink: #3d2b1a;
   --tome-accent: #7a3b1e;
   --tome-accent-2: #5c452a;
-  --tome-heading-font: var(--font-unifraktur), serif;
+  --tome-heading-font: var(--font-cinzel-deco), serif;
   --tome-body-font: var(--font-fell), serif;
   --tome-body-size: 1.02rem;
   --tome-body-line: 1.55;
@@ -132,7 +132,7 @@
     linear-gradient(150deg, #4a3220 0%, #33210f 55%, #241608 100%);
   --tome-cover-ink: #d8b26a;
   --tome-cover-border: rgba(216, 178, 106, 0.6);
-  --tome-cover-font: var(--font-unifraktur), serif;
+  --tome-cover-font: var(--font-cinzel-deco), serif;
   --tome-img-filter: sepia(0.5) saturate(0.7) contrast(0.95);
   --tome-vignette: rgba(80, 50, 15, 0.35);
   --tome-ornament: "❦";
