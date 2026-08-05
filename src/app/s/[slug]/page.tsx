@@ -9,6 +9,7 @@ import { listTracks } from "@/lib/audio";
 import TomeReader from "@/components/book/TomeReaderClient";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
+import { volumeLabel } from "@/lib/volume";
 
 export async function generateMetadata({
   params,
@@ -55,9 +56,9 @@ export default async function SeriesReaderPage({
   for (const v of volumes) {
     if (v.sourceType === "audio") continue; // audiobook volumes have no pages
     const content = await getJournalContent(v.id);
-    const volumeLabel =
-      v.volumeNumber !== null ? `Volume ${v.volumeNumber} — ` : "";
-    parts.push(`<h1>${escapeHtml(`${volumeLabel}${v.title}`)}</h1>`);
+    const label = volumeLabel(v);
+    const prefix = label !== null ? `Volume ${label} — ` : "";
+    parts.push(`<h1>${escapeHtml(`${prefix}${v.title}`)}</h1>`);
     if (v.subtitle) {
       parts.push(`<p><em>${escapeHtml(v.subtitle)}</em></p>`);
     }

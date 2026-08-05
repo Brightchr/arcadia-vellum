@@ -46,6 +46,7 @@ export async function listVolumes(seriesId: string) {
     .where(eq(journals.seriesId, seriesId))
     .orderBy(
       sql`${journals.volumeNumber} ASC NULLS LAST`,
+      sql`coalesce(${journals.partNumber}, 0) ASC`,
       asc(journals.createdAt)
     );
 }

@@ -7,6 +7,7 @@ import type { Journal } from "@/lib/journals";
 import type { Series } from "@/lib/series";
 import { JournalCard } from "./JournalCard";
 import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
+import { compareVolumes } from "@/lib/volume";
 
 /**
  * The library as shelves: one container per series plus a loose-journals
@@ -120,22 +121,17 @@ export function LibraryShelves({
     );
   }
 
-  const byVolume = (a: Journal, b: Journal) =>
-    (a.volumeNumber ?? Number.MAX_SAFE_INTEGER) -
-      (b.volumeNumber ?? Number.MAX_SAFE_INTEGER) ||
-    a.createdAt.getTime() - b.createdAt.getTime();
-
   // Audiobooks live on their own shelf; document journals fill the series
   // shelves and the unbound section.
   const audiobooks = journals
     .filter((j) => j.sourceType === "audio")
-    .sort(byVolume);
+    .sort(compareVolumes);
   const docs = journals.filter((j) => j.sourceType !== "audio");
 
   const grouped = seriesList
     .map((s) => ({
       series: s,
-      volumes: docs.filter((j) => j.seriesId === s.id).sort(byVolume),
+      volumes: docs.filter((j) => j.seriesId === s.id).sort(compareVolumes),
       // The series listen page plays the audiobook volumes shelved here.
       hasAudio: journals.some(
         (j) =>

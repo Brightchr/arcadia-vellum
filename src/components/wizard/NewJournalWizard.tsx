@@ -28,6 +28,7 @@ export function NewJournalWizard({
   const [author, setAuthor] = useState("");
   const [seriesName, setSeriesName] = useState("");
   const [volumeNumber, setVolumeNumber] = useState("");
+  const [partNumber, setPartNumber] = useState("");
   const [source, setSource] = useState<SourceType>("gdoc");
   const [file, setFile] = useState<File | null>(null);
   const [audioFiles, setAudioFiles] = useState<File[]>([]);
@@ -48,6 +49,9 @@ export function NewJournalWizard({
         if (typeof saved.seriesName === "string") setSeriesName(saved.seriesName);
         if (typeof saved.volumeNumber === "string") {
           setVolumeNumber(saved.volumeNumber);
+        }
+        if (typeof saved.partNumber === "string") {
+          setPartNumber(saved.partNumber);
         }
         if (
           saved.source === "upload" ||
@@ -81,6 +85,7 @@ export function NewJournalWizard({
         author,
         seriesName,
         volumeNumber,
+        partNumber,
         source,
         theme,
         pickedDoc,
@@ -94,6 +99,7 @@ export function NewJournalWizard({
     author,
     seriesName,
     volumeNumber,
+    partNumber,
     source,
     theme,
     pickedDoc,
@@ -137,6 +143,7 @@ export function NewJournalWizard({
       form.set("author", author);
       form.set("seriesName", seriesName);
       form.set("volumeNumber", volumeNumber);
+      form.set("partNumber", partNumber);
       form.set("theme", theme);
       form.set("sourceType", source);
       if (source === "upload" && file) form.set("file", file);
@@ -260,7 +267,7 @@ export function NewJournalWizard({
               onChange={(e) => setAuthor(e.target.value)}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+          <div className="grid gap-4 sm:grid-cols-[1fr_6rem_6rem]">
             <div>
               <label
                 htmlFor="seriesName"
@@ -302,7 +309,34 @@ export function NewJournalWizard({
                 }
               />
             </div>
+            <div>
+              <label
+                htmlFor="partNumber"
+                className="block text-sm mb-1 text-ink-dim"
+                title="Chapter/part within the volume — shows as Vol. 1.2"
+              >
+                Part #
+              </label>
+              <input
+                id="partNumber"
+                className="input-arcane"
+                placeholder="—"
+                inputMode="numeric"
+                value={partNumber}
+                disabled={!seriesName.trim() || !volumeNumber.trim()}
+                onChange={(e) =>
+                  setPartNumber(e.target.value.replace(/\D/g, ""))
+                }
+              />
+            </div>
           </div>
+          {seriesName.trim() && (
+            <p className="text-xs text-ink-dim -mt-2">
+              Writing by chapter? Give each entry the same Volume # and a Part
+              # — they shelve and play as Vol. {volumeNumber || "1"}.1, Vol.{" "}
+              {volumeNumber || "1"}.2, and so on.
+            </p>
+          )}
         </div>
       )}
 

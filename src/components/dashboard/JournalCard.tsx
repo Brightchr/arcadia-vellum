@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
 import { BookOpenIcon, HeadphonesIcon, PenIcon } from "@/components/icons";
+import { volumeLabel } from "@/lib/volume";
 
 function Chip({
   tone = "dim",
@@ -180,7 +181,7 @@ export function JournalCard({
 
       <div className="flex flex-wrap items-center gap-1.5">
         {journal.volumeNumber !== null && (
-          <Chip tone="arcane">Vol. {journal.volumeNumber}</Chip>
+          <Chip tone="arcane">Vol. {volumeLabel(journal)}</Chip>
         )}
         {audioOnly && trackCount > 0 && (
           <Chip

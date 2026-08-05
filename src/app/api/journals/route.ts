@@ -46,8 +46,10 @@ export async function POST(request: Request) {
   // volume number wasn't given.
   const seriesName = String(form.get("seriesName") ?? "").trim();
   const volumeRaw = parseInt(String(form.get("volumeNumber") ?? ""), 10);
+  const partRaw = parseInt(String(form.get("partNumber") ?? ""), 10);
   let seriesId: string | null = null;
   let volumeNumber: number | null = null;
+  let partNumber: number | null = null;
   if (seriesName) {
     const s = await findOrCreateSeries(session.user.id, seriesName);
     seriesId = s.id;
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
       Number.isFinite(volumeRaw) && volumeRaw > 0
         ? volumeRaw
         : await nextVolumeNumber(s.id);
+    partNumber = Number.isFinite(partRaw) && partRaw > 0 ? partRaw : null;
   }
 
   if (sourceType === "upload") {
@@ -71,6 +74,7 @@ export async function POST(request: Request) {
       author,
       seriesId,
       volumeNumber,
+      partNumber,
       theme,
       sourceType: "upload",
     });
@@ -94,6 +98,7 @@ export async function POST(request: Request) {
       author,
       seriesId,
       volumeNumber,
+      partNumber,
       theme,
       sourceType,
     });
@@ -112,6 +117,7 @@ export async function POST(request: Request) {
     author,
     seriesId,
     volumeNumber,
+    partNumber,
     theme,
     sourceType: "gdoc",
     gdocFileId,

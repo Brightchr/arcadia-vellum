@@ -47,6 +47,7 @@ export async function createJournal(input: {
   author?: string | null;
   seriesId?: string | null;
   volumeNumber?: number | null;
+  partNumber?: number | null;
   theme?: ThemeId;
   sourceType: "gdoc" | "upload" | "audio" | "write";
   gdocFileId?: string | null;
@@ -63,6 +64,7 @@ export async function createJournal(input: {
       author: input.author ?? null,
       seriesId: input.seriesId ?? null,
       volumeNumber: input.volumeNumber ?? null,
+      partNumber: input.partNumber ?? null,
       slug,
       theme: input.theme ?? DEFAULT_THEME,
       sourceType: input.sourceType,
@@ -82,6 +84,7 @@ export async function updateJournal(
       | "author"
       | "seriesId"
       | "volumeNumber"
+      | "partNumber"
       | "theme"
       | "visibility"
       | "gdocFileId"

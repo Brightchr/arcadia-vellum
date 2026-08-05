@@ -37,6 +37,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       | "author"
       | "seriesId"
       | "volumeNumber"
+      | "partNumber"
       | "theme"
       | "visibility"
       | "gdocFileId"
@@ -80,6 +81,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     } else {
       patch.seriesId = null;
       patch.volumeNumber = null;
+      patch.partNumber = null;
     }
   }
   if (typeof body.volumeNumber === "number" || body.volumeNumber === null) {
@@ -89,6 +91,20 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       body.volumeNumber > 0
         ? Math.floor(body.volumeNumber)
         : null;
+  }
+  if (typeof body.partNumber === "number" || body.partNumber === null) {
+    patch.partNumber =
+      typeof body.partNumber === "number" &&
+      Number.isFinite(body.partNumber) &&
+      body.partNumber > 0
+        ? Math.floor(body.partNumber)
+        : null;
+  }
+  // A part only makes sense within a numbered volume.
+  const volumeAfterPatch =
+    patch.volumeNumber !== undefined ? patch.volumeNumber : journal.volumeNumber;
+  if (volumeAfterPatch === null) {
+    patch.partNumber = null;
   }
 
   if (Object.keys(patch).length === 0) {
