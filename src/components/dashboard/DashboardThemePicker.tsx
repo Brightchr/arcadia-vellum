@@ -3,23 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { THEMES, type ThemeId } from "@/lib/themes";
+import { THEMES, isThemeId } from "@/lib/themes";
 
-const SWATCHES: Record<ThemeId, [string, string]> = {
-  "witch-grimoire": ["#6e9fa0", "#492153"],
-  "ancient-tome": ["#eec678", "#b0512f"],
-  "elven-chronicle": ["#aedec0", "#d8c66a"],
-  "captains-log": ["#85cfe0", "#d8aa5c"],
-  "arcane-codex": ["#f2d896", "#8ea0d8"],
-};
-
-/** Round swatches that set (and persist) the user's app chrome theme. */
+/** Dropdown that sets (and persists) the user's app chrome theme. */
 export function DashboardThemePicker({ current }: { current: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
-  async function pick(id: ThemeId) {
-    if (busy || id === current) return;
+  async function pick(id: string) {
+    if (busy || !isThemeId(id) || id === current) return;
     setBusy(true);
     try {
       await authClient.updateUser({ dashboardTheme: id } as Parameters<
@@ -32,30 +24,18 @@ export function DashboardThemePicker({ current }: { current: string }) {
   }
 
   return (
-    <div
-      className="flex items-center gap-2"
-      role="radiogroup"
+    <select
+      className="input-arcane !w-auto !py-1.5 !px-2.5 text-sm"
+      value={current}
       aria-label="Dashboard theme"
+      disabled={busy}
+      onChange={(e) => void pick(e.target.value)}
     >
       {THEMES.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          role="radio"
-          aria-checked={current === t.id}
-          title={t.name}
-          disabled={busy}
-          onClick={() => pick(t.id)}
-          className={`h-5 w-5 rounded-full transition-transform hover:scale-125 ${
-            current === t.id
-              ? "ring-2 ring-arcane-bright ring-offset-2 ring-offset-void scale-110"
-              : "opacity-70"
-          }`}
-          style={{
-            background: `linear-gradient(135deg, ${SWATCHES[t.id][0]}, ${SWATCHES[t.id][1]})`,
-          }}
-        />
+        <option key={t.id} value={t.id}>
+          {t.name}
+        </option>
       ))}
-    </div>
+    </select>
   );
 }
