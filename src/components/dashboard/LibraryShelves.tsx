@@ -143,6 +143,15 @@ export function LibraryShelves({
     .filter((g) => g.volumes.length > 0);
   const loose = docs.filter((j) => !j.seriesId);
 
+  // Audiobooks grouped by series — each group links to its series playlist.
+  const audioBySeries = seriesList
+    .map((s) => ({
+      series: s,
+      volumes: audiobooks.filter((j) => j.seriesId === s.id),
+    }))
+    .filter((g) => g.volumes.length > 0);
+  const looseAudio = audiobooks.filter((j) => !j.seriesId);
+
   const shelfClass = (key: string) =>
     `rounded-xl border transition-colors p-3.5 sm:p-5 ${
       overShelf === key
@@ -206,13 +215,60 @@ export function LibraryShelves({
               </Link>
             )}
           </div>
-          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {audiobooks.map((j) => (
-              <div key={j.id}>
-                <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
-                <ShelfPicker journal={j} />
+          <div className="space-y-6">
+            {audioBySeries.map(({ series: s, volumes }) => (
+              <div key={s.id}>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                  <h3 className="font-heading text-base text-arcane-bright">
+                    {s.name}{" "}
+                    <span className="text-ink-dim text-sm font-normal">
+                      · {volumes.length} volume{volumes.length === 1 ? "" : "s"}
+                    </span>
+                  </h3>
+                  {volumes.some((v) => (trackCounts[v.id] ?? 0) > 0) && (
+                    <Link
+                      href={`/s/${s.slug}/listen`}
+                      className="btn-ghost text-xs px-3 py-1.5"
+                    >
+                      <HeadphonesIcon className="h-3.5 w-3.5" /> Listen to the
+                      Series
+                    </Link>
+                  )}
+                </div>
+                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {volumes.map((j) => (
+                    <div key={j.id}>
+                      <JournalCard
+                        journal={j}
+                        trackCount={trackCounts[j.id] ?? 0}
+                      />
+                      <ShelfPicker journal={j} />
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
+
+            {looseAudio.length > 0 && (
+              <div>
+                {audioBySeries.length > 0 && (
+                  <h3 className="font-heading text-base text-ink-dim mb-3">
+                    Unshelved
+                  </h3>
+                )}
+                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {looseAudio.map((j) => (
+                    <div key={j.id}>
+                      <JournalCard
+                        journal={j}
+                        trackCount={trackCounts[j.id] ?? 0}
+                      />
+                      <ShelfPicker journal={j} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
