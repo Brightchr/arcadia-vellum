@@ -77,7 +77,12 @@ export default async function ListenPage({
 
         {tracks.length > 0 ? (
           <AudiobookPlayer
-            tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
+            tracks={tracks.map((t, i) => ({
+              id: t.id,
+              // Uploaded filenames make poor chapter names — label by part.
+              title:
+                tracks.length === 1 ? journal.title : `Part ${i + 1}`,
+            }))}
             title={journal.title}
             author={journal.author}
             storageKey={`av-listen-${journal.id}`}

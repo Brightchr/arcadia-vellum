@@ -40,13 +40,11 @@ export default async function SeriesListenPage({
   for (const v of volumes) {
     if (v.sourceType !== "audio") continue; // only audiobook volumes play
     const tracks = await listTracks(v.id);
+    const label = v.volumeNumber !== null ? `Vol. ${v.volumeNumber}` : v.title;
     trackList.push(
-      ...tracks.map((t) => ({
+      ...tracks.map((t, i) => ({
         id: t.id,
-        title:
-          v.volumeNumber !== null
-            ? `Vol. ${v.volumeNumber} — ${t.title}`
-            : t.title,
+        title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
       }))
     );
   }

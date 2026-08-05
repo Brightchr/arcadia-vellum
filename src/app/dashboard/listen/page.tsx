@@ -30,10 +30,12 @@ export default async function AllAudiobooksListenPage() {
   const playlist = [];
   for (const j of audiobooks) {
     const tracks = await listTracks(j.id);
+    const label =
+      j.volumeNumber !== null ? `${j.title} Vol. ${j.volumeNumber}` : j.title;
     playlist.push(
-      ...tracks.map((t) => ({
+      ...tracks.map((t, i) => ({
         id: t.id,
-        title: audiobooks.length > 1 ? `${j.title} — ${t.title}` : t.title,
+        title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
       }))
     );
   }
