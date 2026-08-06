@@ -25,6 +25,8 @@ export const user = pgTable("user", {
   bio: text("bio"),
   /** profile_images id for the uploaded avatar. */
   avatarImageId: text("avatar_image_id"),
+  /** profile_images id for the profile banner (wide header art). */
+  bannerImageId: text("banner_image_id"),
   profileVisibility: text("profile_visibility", {
     enum: ["public", "friends", "private"],
   })
@@ -34,6 +36,16 @@ export const user = pgTable("user", {
   showSavedOnProfile: boolean("show_saved_on_profile")
     .notNull()
     .default(false),
+  /** Show shared (public/friends) playlists on the profile page. */
+  showPlaylistsOnProfile: boolean("show_playlists_on_profile")
+    .notNull()
+    .default(false),
+  /** Show follower/following/friend counts on the profile page. */
+  showCountsOnProfile: boolean("show_counts_on_profile")
+    .notNull()
+    .default(true),
+  /** Appear in user search (lookup by username or display name). */
+  searchable: boolean("searchable").notNull().default(true),
   /** JSON array ordering the profile sections, e.g. ["bio","featured","works","saved"]. */
   profileLayout: text("profile_layout"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -336,7 +348,7 @@ export const readingActivity = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
 );
 
-/** User-made listening playlists (Spotify-style, private to the owner). */
+/** User-made listening playlists (Spotify-style; shareable per visibility). */
 export const playlists = pgTable("playlists", {
   id: text("id").primaryKey(),
   ownerId: text("owner_id")
@@ -345,6 +357,12 @@ export const playlists = pgTable("playlists", {
   name: text("name").notNull(),
   /** Sidebar icon (emoji). */
   icon: text("icon"),
+  /** Who can open this playlist (owner always can). */
+  visibility: text("visibility", {
+    enum: ["private", "friends", "public"],
+  })
+    .notNull()
+    .default("private"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

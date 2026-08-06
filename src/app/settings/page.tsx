@@ -7,7 +7,7 @@ import { AppShell } from "@/components/nav/AppShell";
 import { ProfileSettingsForm } from "@/components/social/ProfileSettingsForm";
 
 export const metadata: Metadata = {
-  title: "Settings — Arcadia Vellum",
+  title: "Settings — Vellum",
 };
 
 export default async function SettingsPage() {
@@ -34,9 +34,13 @@ export default async function SettingsPage() {
             username: me.username,
             bio: me.bio,
             avatarImageId: me.avatarImageId,
+            bannerImageId: me.bannerImageId,
             profileVisibility: me.profileVisibility,
             allowFriendRequests: me.allowFriendRequests,
             showSavedOnProfile: me.showSavedOnProfile,
+            showPlaylistsOnProfile: me.showPlaylistsOnProfile,
+            showCountsOnProfile: me.showCountsOnProfile,
+            searchable: me.searchable,
             profileLayout: (() => {
               try {
                 const parsed = JSON.parse(me.profileLayout ?? "null");

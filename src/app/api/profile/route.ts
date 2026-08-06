@@ -52,8 +52,17 @@ export async function PATCH(request: Request) {
   if (typeof body.showSavedOnProfile === "boolean") {
     patch.showSavedOnProfile = body.showSavedOnProfile;
   }
+  if (typeof body.showPlaylistsOnProfile === "boolean") {
+    patch.showPlaylistsOnProfile = body.showPlaylistsOnProfile;
+  }
+  if (typeof body.showCountsOnProfile === "boolean") {
+    patch.showCountsOnProfile = body.showCountsOnProfile;
+  }
+  if (typeof body.searchable === "boolean") {
+    patch.searchable = body.searchable;
+  }
   if (Array.isArray(body.profileLayout)) {
-    const allowed = new Set(["bio", "featured", "works", "saved"]);
+    const allowed = new Set(["bio", "featured", "works", "saved", "playlists"]);
     const layout = (body.profileLayout as unknown[]).filter(
       (s): s is string => typeof s === "string" && allowed.has(s)
     );

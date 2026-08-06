@@ -10,19 +10,24 @@ export interface ProfileSettings {
   username: string | null;
   bio: string | null;
   avatarImageId: string | null;
+  bannerImageId: string | null;
   profileVisibility: string;
   allowFriendRequests: boolean;
   showSavedOnProfile: boolean;
+  showPlaylistsOnProfile: boolean;
+  showCountsOnProfile: boolean;
+  searchable: boolean;
   profileLayout: string[] | null;
 }
 
 const SECTION_LABELS: Record<string, string> = {
-  bio: "Bio",
+  bio: "About / Bio",
   featured: "Featured Works",
-  works: "All Works",
+  works: "Works",
   saved: "Saved Shelf",
+  playlists: "Shared Playlists",
 };
-const ALL_SECTIONS = ["bio", "featured", "works", "saved"];
+const ALL_SECTIONS = ["works", "playlists", "saved", "bio", "featured"];
 
 export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
   const router = useRouter();
@@ -35,6 +40,11 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
     profile.allowFriendRequests
   );
   const [showSaved, setShowSaved] = useState(profile.showSavedOnProfile);
+  const [showPlaylists, setShowPlaylists] = useState(
+    profile.showPlaylistsOnProfile
+  );
+  const [showCounts, setShowCounts] = useState(profile.showCountsOnProfile);
+  const [searchable, setSearchable] = useState(profile.searchable);
   const [layout, setLayout] = useState<string[]>(
     profile.profileLayout && profile.profileLayout.length > 0
       ? profile.profileLayout
@@ -95,6 +105,9 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
           profileVisibility: visibility,
           allowFriendRequests: allowRequests,
           showSavedOnProfile: showSaved,
+          showPlaylistsOnProfile: showPlaylists,
+          showCountsOnProfile: showCounts,
+          searchable,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -146,14 +159,17 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
     }
   }
 
-  async function uploadAvatar(f: File | null | undefined) {
+  async function uploadImage(
+    endpoint: "avatar" | "banner",
+    f: File | null | undefined
+  ) {
     if (!f) return;
-    setBusy("avatar");
+    setBusy(endpoint);
     setError(null);
     try {
       const form = new FormData();
       form.set("file", f);
-      const res = await fetch("/api/profile/avatar", {
+      const res = await fetch(`/api/profile/${endpoint}`, {
         method: "POST",
         body: form,
       });
@@ -178,6 +194,55 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
 
       <section className="panel-arcane p-6 space-y-4">
         <h2 className="font-heading text-lg">Profile</h2>
+
+        {/* Banner */}
+        <div className="space-y-2">
+          <p className="text-sm text-ink-dim">
+            Banner <span className="opacity-60">(wide header image, up to 5 MB)</span>
+          </p>
+          {profile.bannerImageId ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/avatars/${profile.bannerImageId}`}
+              alt=""
+              className="w-full aspect-[4/1] object-cover rounded-xl border border-white/10"
+            />
+          ) : (
+            <div
+              aria-hidden
+              className="w-full aspect-[5/1] rounded-xl border border-dashed border-void-border bg-gradient-to-r from-arcane/20 via-void-raised to-ember/10"
+            />
+          )}
+          <div className="flex items-center gap-2">
+            <label className="btn-ghost cursor-pointer">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                disabled={busy !== null}
+                onChange={(e) => {
+                  void uploadImage("banner", e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+              {busy === "banner" ? "Uploading..." : "Change Banner"}
+            </label>
+            {profile.bannerImageId && (
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={busy !== null}
+                onClick={async () => {
+                  await fetch("/api/profile/banner", { method: "DELETE" });
+                  router.refresh();
+                }}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-4">
           <Avatar
             name={profile.name}
@@ -192,7 +257,7 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
                 className="hidden"
                 disabled={busy !== null}
                 onChange={(e) => {
-                  void uploadAvatar(e.target.files?.[0]);
+                  void uploadImage("avatar", e.target.files?.[0]);
                   e.target.value = "";
                 }}
               />
@@ -270,7 +335,9 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
       <section className="panel-arcane p-6 space-y-4">
         <h2 className="font-heading text-lg">Profile Layout</h2>
         <p className="text-sm text-ink-dim">
-          Choose which sections appear on your profile and their order.
+          Choose which tabs appear on your profile and their order. Featured
+          works show at the top of the Works tab; the Shelf and Playlists tabs
+          also need their privacy toggles below.
         </p>
         <ul className="space-y-1.5">
           {[...layout, ...ALL_SECTIONS.filter((s) => !layout.includes(s))].map(
@@ -367,6 +434,30 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
             onChange={(e) => setShowSaved(e.target.checked)}
           />
           Show my saved shelf on my profile
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showPlaylists}
+            onChange={(e) => setShowPlaylists(e.target.checked)}
+          />
+          Show my shared playlists on my profile
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showCounts}
+            onChange={(e) => setShowCounts(e.target.checked)}
+          />
+          Show follower / friend counts on my profile
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={searchable}
+            onChange={(e) => setSearchable(e.target.checked)}
+          />
+          Let others find me in user search
         </label>
         <button
           type="button"
