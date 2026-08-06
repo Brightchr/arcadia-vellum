@@ -504,7 +504,9 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2.5rem;
+  /* Proportional (percentages track cover width) so the text always sits
+     clear of the border frame, from card thumbnails to the full reader. */
+  padding: 9% 12%;
   overflow: hidden;
   box-shadow:
     inset 0 0 0 6px rgba(0, 0, 0, 0.35),
@@ -514,7 +516,8 @@
 .tome-cover::before {
   content: "";
   position: absolute;
-  inset: 1.1rem;
+  /* ~6% of the width on every side of a 3:4 cover — inside the padding. */
+  inset: 4.5% 6%;
   border: 2px solid var(--tome-cover-border);
   outline: 1px solid rgba(0, 0, 0, 0.4);
   outline-offset: 4px;
@@ -547,6 +550,10 @@
   letter-spacing: 0.03em;
   margin: 0 0 0.8rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  /* Long titles wrap evenly instead of running into the border frame. */
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .tome-cover-subtitle {

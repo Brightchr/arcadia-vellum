@@ -90,7 +90,7 @@ export default async function ListenPage({
             storageKey={`av-listen-${journal.id}`}
             fallbackArt={
               <div className="w-full h-full shadow-2xl shadow-black/60">
-                <div className="tome-cover !p-[calc(var(--art,13rem)*0.09)]">
+                <div className="tome-cover">
                   <div className="tome-cover-ornament tome-cover-ornament--front" />
                   <h1 className="tome-cover-title !text-[clamp(1rem,calc(var(--art,13rem)*0.08),2.4rem)]">
                     {journal.title}

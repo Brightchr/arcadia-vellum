@@ -45,7 +45,7 @@ export function WorkCover({
   }
   return (
     <div className={`theme-${work.theme} aspect-[3/4] w-full ${className}`}>
-      <div className="tome-cover !p-3 rounded-lg overflow-hidden h-full">
+      <div className="tome-cover rounded-lg overflow-hidden h-full">
         <div className="tome-cover-ornament tome-cover-ornament--front" />
         <h3 className="tome-cover-title !text-sm line-clamp-3">{work.title}</h3>
         <hr className="tome-cover-rule" />
