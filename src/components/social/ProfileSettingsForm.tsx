@@ -13,7 +13,16 @@ export interface ProfileSettings {
   profileVisibility: string;
   allowFriendRequests: boolean;
   showSavedOnProfile: boolean;
+  profileLayout: string[] | null;
 }
+
+const SECTION_LABELS: Record<string, string> = {
+  bio: "Bio",
+  featured: "Featured Works",
+  works: "All Works",
+  saved: "Saved Shelf",
+};
+const ALL_SECTIONS = ["bio", "featured", "works", "saved"];
 
 export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
   const router = useRouter();
@@ -26,6 +35,11 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
     profile.allowFriendRequests
   );
   const [showSaved, setShowSaved] = useState(profile.showSavedOnProfile);
+  const [layout, setLayout] = useState<string[]>(
+    profile.profileLayout && profile.profileLayout.length > 0
+      ? profile.profileLayout
+      : ALL_SECTIONS
+  );
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -87,6 +101,44 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
       if (!res.ok) setError(body?.error ?? "Could not save privacy settings.");
       else {
         setNotice("Privacy settings saved.");
+        router.refresh();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function moveSection(key: string, delta: -1 | 1) {
+    setLayout((prev) => {
+      const i = prev.indexOf(key);
+      const j = i + delta;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
+  function toggleSection(key: string) {
+    setLayout((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  }
+
+  async function saveLayout() {
+    setBusy("layout");
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileLayout: layout }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) setError(body?.error ?? "Could not save the layout.");
+      else {
+        setNotice("Profile layout saved.");
         router.refresh();
       }
     } finally {
@@ -212,6 +264,67 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
           onClick={saveProfile}
         >
           {busy === "profile" ? "Saving..." : "Save Profile"}
+        </button>
+      </section>
+
+      <section className="panel-arcane p-6 space-y-4">
+        <h2 className="font-heading text-lg">Profile Layout</h2>
+        <p className="text-sm text-ink-dim">
+          Choose which sections appear on your profile and their order.
+        </p>
+        <ul className="space-y-1.5">
+          {[...layout, ...ALL_SECTIONS.filter((s) => !layout.includes(s))].map(
+            (key) => {
+              const enabled = layout.includes(key);
+              const idx = layout.indexOf(key);
+              return (
+                <li
+                  key={key}
+                  className={`flex items-center gap-3 border border-void-border rounded-lg px-3 py-2 ${
+                    enabled ? "" : "opacity-60"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    aria-label={`Show ${SECTION_LABELS[key]}`}
+                    onChange={() => toggleSection(key)}
+                  />
+                  <span className="text-sm flex-1">{SECTION_LABELS[key]}</span>
+                  {enabled && (
+                    <span className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        className="btn-ghost text-xs px-2 py-0.5"
+                        disabled={idx <= 0}
+                        aria-label={`Move ${SECTION_LABELS[key]} up`}
+                        onClick={() => moveSection(key, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost text-xs px-2 py-0.5"
+                        disabled={idx >= layout.length - 1}
+                        aria-label={`Move ${SECTION_LABELS[key]} down`}
+                        onClick={() => moveSection(key, 1)}
+                      >
+                        ↓
+                      </button>
+                    </span>
+                  )}
+                </li>
+              );
+            }
+          )}
+        </ul>
+        <button
+          type="button"
+          className="btn-arcane"
+          disabled={busy !== null}
+          onClick={saveLayout}
+        >
+          {busy === "layout" ? "Saving..." : "Save Layout"}
         </button>
       </section>
 
