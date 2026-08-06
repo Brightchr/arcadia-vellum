@@ -327,3 +327,30 @@ export const readingActivity = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
 );
+
+/** User-made listening playlists (Spotify-style, private to the owner). */
+export const playlists = pgTable("playlists", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  /** Sidebar icon (emoji). */
+  icon: text("icon"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/** Audiobooks in a playlist, played in sortIndex order. */
+export const playlistItems = pgTable(
+  "playlist_items",
+  {
+    playlistId: text("playlist_id")
+      .notNull()
+      .references(() => playlists.id, { onDelete: "cascade" }),
+    journalId: text("journal_id")
+      .notNull()
+      .references(() => journals.id, { onDelete: "cascade" }),
+    sortIndex: integer("sort_index").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.playlistId, t.journalId] })]
+);
