@@ -74,22 +74,26 @@ export default async function ListenPage({
             author={journal.author}
             storageKey={`av-listen-${journal.id}`}
             fallbackArt={
-              <div className="w-48 h-72 shadow-2xl shadow-black/60">
-                <div className="tome-cover !p-6">
+              <div className="w-full h-full shadow-2xl shadow-black/60">
+                <div className="tome-cover !p-[calc(var(--art,13rem)*0.09)]">
                   <div className="tome-cover-ornament tome-cover-ornament--front" />
-                  <h1 className="tome-cover-title !text-xl">{journal.title}</h1>
+                  <h1 className="tome-cover-title !text-[clamp(1rem,calc(var(--art,13rem)*0.08),2.4rem)]">
+                    {journal.title}
+                  </h1>
                   <hr className="tome-cover-rule" />
                   {journal.subtitle && (
-                    <p className="tome-cover-subtitle !text-xs">
+                    <p className="tome-cover-subtitle !text-[clamp(0.6rem,calc(var(--art,13rem)*0.034),1.05rem)]">
                       {journal.subtitle}
                     </p>
                   )}
                   {journal.author && (
-                    <p className="tome-cover-author !bottom-8 !text-xs">
+                    <p className="tome-cover-author !bottom-[calc(var(--art,13rem)*0.09)] !text-[clamp(0.6rem,calc(var(--art,13rem)*0.034),1.05rem)]">
                       {journal.author}
                     </p>
                   )}
-                  <div className="tome-cover-runes !bottom-4">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+                  <div className="tome-cover-runes !bottom-[calc(var(--art,13rem)*0.04)]">
+                    ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ
+                  </div>
                 </div>
               </div>
             }

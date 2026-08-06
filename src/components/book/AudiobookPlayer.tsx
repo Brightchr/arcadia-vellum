@@ -78,6 +78,23 @@ export function AudiobookPlayer({
   const segments = track?.segmentIds?.length ? track.segmentIds : track ? [track.id] : [];
   const audioId = segments[Math.min(segIndex, segments.length - 1)];
 
+  // Size the album art to the largest 3:4 box that fits the free space —
+  // as wide as the player when the screen is tall enough.
+  const artZoneRef = useRef<HTMLDivElement>(null);
+  const [artWidth, setArtWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const el = artZoneRef.current;
+    if (!el) return;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setArtWidth(Math.max(0, Math.floor(Math.min(r.width, r.height * 0.75))));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Restore last listening position.
   useEffect(() => {
     try {
@@ -203,17 +220,29 @@ export function AudiobookPlayer({
   return (
     <div className="flex-1 flex flex-col w-full min-h-0">
       {/* Album art floats over the theme's ambience; swaps per volume. */}
-      <div className="flex-1 grid place-items-center py-4">
-        {track.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={track.coverUrl}
-            alt=""
-            className="w-52 sm:w-64 aspect-[3/4] object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
-          />
-        ) : (
-          fallbackArt
-        )}
+      <div
+        ref={artZoneRef}
+        className="flex-1 min-h-0 grid place-items-center py-4"
+      >
+        <div
+          className="aspect-[3/4]"
+          style={
+            artWidth !== null
+              ? ({ width: artWidth, "--art": `${artWidth}px` } as React.CSSProperties)
+              : { width: 208, visibility: "hidden" }
+          }
+        >
+          {track.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={track.coverUrl}
+              alt=""
+              className="w-full h-full object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
+            />
+          ) : (
+            fallbackArt
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-5 w-full space-y-3">
