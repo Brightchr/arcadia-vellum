@@ -68,6 +68,15 @@ export async function isFollowingSeries(userId: string, seriesId: string) {
   return rows.length > 0;
 }
 
+/** Series ids this user follows (for the home feed). */
+export async function listFollowedSeriesIds(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ seriesId: seriesFollows.seriesId })
+    .from(seriesFollows)
+    .where(eq(seriesFollows.userId, userId));
+  return rows.map((r) => r.seriesId);
+}
+
 export async function seriesFollowerIds(seriesId: string): Promise<string[]> {
   const rows = await db
     .select({ userId: seriesFollows.userId })
