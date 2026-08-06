@@ -25,6 +25,15 @@ function Icon({
   );
 }
 
+export function SearchIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </Icon>
+  );
+}
+
 export function HeadphonesIcon({ className }: IconProps) {
   return (
     <Icon className={className}>
