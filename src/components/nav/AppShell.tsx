@@ -94,6 +94,9 @@ export function AppShell({
       const next = !v;
       try {
         localStorage.setItem("av-nav-collapsed", next ? "1" : "0");
+        // The cookie lets the server render the collapsed state into the
+        // HTML, so hard refreshes paint correctly with zero flicker.
+        document.cookie = `av-nav-collapsed=${next ? "1" : "0"};path=/;max-age=31536000;samesite=lax`;
       } catch {
         // Storage blocked — the toggle still works for this page.
       }

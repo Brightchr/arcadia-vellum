@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   IM_Fell_English,
   Caveat,
@@ -65,19 +66,29 @@ export const metadata: Metadata = {
     "Turn your TTRPG campaign journal (Google Doc or upload) into a beautiful page-flipping ancient tome you can share with your table.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The sidenav's collapsed state is mirrored into a cookie so the server
+  // renders html[data-nav-collapsed] itself — hydration then matches exactly
+  // and a hard refresh can't flash or animate the rail.
+  const navCollapsed =
+    (await cookies()).get("av-nav-collapsed")?.value === "1";
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-nav-collapsed={navCollapsed ? "1" : undefined}
+    >
       <head>
-        {/* Applies the stored sidenav state before first paint so the bar
-            doesn't flash open and snap shut on navigation. */}
+        {/* Fallback for visitors whose preference predates the cookie: apply
+            the localStorage state before first paint and backfill the cookie
+            so the server gets it right from the next load on. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem("av-nav-collapsed")==="1")document.documentElement.dataset.navCollapsed="1"}catch(e){}`,
+            __html: `try{var v=localStorage.getItem("av-nav-collapsed");if(v==="1")document.documentElement.dataset.navCollapsed="1";else if(v==="0")delete document.documentElement.dataset.navCollapsed;if(v!==null)document.cookie="av-nav-collapsed="+(v==="1"?"1":"0")+";path=/;max-age=31536000;samesite=lax"}catch(e){}`,
           }}
         />
       </head>
