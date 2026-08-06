@@ -25,6 +25,22 @@ function Icon({
   );
 }
 
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m15 18-6-6 6-6" />
+    </Icon>
+  );
+}
+
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m9 18 6-6-6-6" />
+    </Icon>
+  );
+}
+
 export function SearchIcon({ className }: IconProps) {
   return (
     <Icon className={className}>

@@ -9,6 +9,8 @@ import { NotificationsBell } from "./NotificationsBell";
 import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 import {
   BookOpenIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   HeadphonesIcon,
   PenIcon,
   UsersIcon,
@@ -39,7 +41,7 @@ export interface SidebarPin {
 }
 
 const NAV = [
-  { key: "library", label: "Library", href: "/dashboard", icon: LibraryIcon },
+  { key: "library", label: "Home", href: "/dashboard", icon: LibraryIcon },
   { key: "browse", label: "Browse", href: "/browse", icon: CompassIcon },
   { key: "saved", label: "Saved", href: "/saved", icon: BookmarkIcon },
   { key: "friends", label: "Friends", href: "/friends", icon: UsersIcon },
@@ -319,6 +321,28 @@ export function AppShell({
         <header
           className={`sticky top-0 z-50 h-14 shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 border-b ${glass}`}
         >
+          {/* History navigation — pages like Settings have no other way back */}
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              aria-label="Go back"
+              title="Back"
+              className="p-1.5 rounded-full bg-white/5 text-ink-dim hover:text-ink hover:bg-white/10 transition-colors"
+              onClick={() => router.back()}
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Go forward"
+              title="Forward"
+              className="p-1.5 rounded-full bg-white/5 text-ink-dim hover:text-ink hover:bg-white/10 transition-colors"
+              onClick={() => router.forward()}
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+
           {/* Mobile / logged-out branding + nav */}
           <Link
             href={user ? "/dashboard" : "/"}
