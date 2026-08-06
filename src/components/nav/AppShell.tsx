@@ -71,9 +71,18 @@ export function AppShell({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // The pre-paint script in the root layout already set the width via the
-    // html attribute; this syncs the inner layout (labels vs icon rail).
-    setCollapsed(document.documentElement.dataset.navCollapsed === "1");
+    // localStorage is the source of truth: the pre-paint script handles the
+    // first frame, but React's hydration can strip the html attribute, so
+    // re-apply it here as well as syncing the inner layout.
+    let stored = false;
+    try {
+      stored = localStorage.getItem("av-nav-collapsed") === "1";
+    } catch {
+      // Storage blocked — leave expanded.
+    }
+    setCollapsed(stored);
+    if (stored) document.documentElement.dataset.navCollapsed = "1";
+    else delete document.documentElement.dataset.navCollapsed;
   }, []);
 
   function toggleCollapsed() {

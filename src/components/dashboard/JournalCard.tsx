@@ -76,14 +76,12 @@ export function JournalCard({
     }
   }
 
-  const toggleVisibility = () =>
+  const setVisibility = (visibility: string) =>
     call("update visibility", () =>
       fetch(`/api/journals/${journal.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visibility: journal.visibility === "public" ? "private" : "public",
-        }),
+        body: JSON.stringify({ visibility }),
       })
     );
 
@@ -159,14 +157,25 @@ export function JournalCard({
                   {busy === "resync" ? "Syncing..." : "Resync"}
                 </button>
               )}
-              <button
-                type="button"
-                className={menuItem}
-                onClick={toggleVisibility}
-              >
-                {journal.visibility === "public" ? "Make Private" : "Make Public"}
-              </button>
-              {journal.visibility === "public" && (
+              <div className="my-1 border-t border-void-border" />
+              {([
+                ["public", "Everyone"],
+                ["friends", "Friends Only"],
+                ["restricted", "By Request"],
+                ["private", "Only Me"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={menuItem}
+                  onClick={() => setVisibility(value)}
+                >
+                  {journal.visibility === value ? "✓ " : ""}
+                  {label}
+                </button>
+              ))}
+              {(journal.visibility === "public" ||
+                journal.visibility === "restricted") && (
                 <button
                   type="button"
                   className={menuItem}
@@ -208,8 +217,22 @@ export function JournalCard({
             <HeadphonesIcon className="h-3 w-3" /> {trackCount}
           </Chip>
         )}
-        <Chip tone={journal.visibility === "public" ? "ember" : "dim"}>
-          {journal.visibility}
+        <Chip
+          tone={
+            journal.visibility === "public"
+              ? "ember"
+              : journal.visibility === "restricted"
+                ? "arcane"
+                : "dim"
+          }
+        >
+          {journal.visibility === "restricted"
+            ? "by request"
+            : journal.visibility}
+          {!journal.listed &&
+            (journal.visibility === "public" ||
+              journal.visibility === "restricted") &&
+            " · unlisted"}
         </Chip>
       </div>
 

@@ -8,6 +8,9 @@ import { listTracks } from "@/lib/audio";
 import { listReviews } from "@/lib/reviews";
 import { isSaved } from "@/lib/saves";
 import { volumeLabel } from "@/lib/volume";
+import { canAccessJournal, grantStatus, listGrants } from "@/lib/access";
+import { RequestAccessButton } from "@/components/discover/RequestAccessButton";
+import { AccessManager } from "@/components/discover/AccessManager";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { WorkCover } from "@/components/discover/WorkCard";
@@ -40,7 +43,18 @@ export default async function BookHomePage({
 
   const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === journal.ownerId;
-  if (journal.visibility !== "public" && !isOwner) notFound();
+  const canAccess = await canAccessJournal(session?.user.id ?? null, journal);
+  // Everything except private has a homepage: discoverable works show their
+  // teaser to all, friends-only works show a "friends can open this" teaser.
+  if (!canAccess && journal.visibility === "private") notFound();
+  const requestState =
+    !canAccess && session
+      ? await grantStatus(session.user.id, "journal", journal.id)
+      : "none";
+  const grants =
+    isOwner && journal.visibility === "restricted"
+      ? await listGrants("journal", journal.id)
+      : [];
 
   const [work, reviews, tracks] = await Promise.all([
     workForJournal(journal),
@@ -85,6 +99,12 @@ export default async function BookHomePage({
               </p>
             </div>
 
+            {journal.description && (
+              <p className="text-sm max-w-xl whitespace-pre-wrap">
+                {journal.description}
+              </p>
+            )}
+
             <div className="flex items-center gap-2 text-sm text-ink-dim">
               {work.avgRating !== null ? (
                 <>
@@ -119,14 +139,27 @@ export default async function BookHomePage({
             )}
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              {work.hasAudio ? (
-                <Link href={`/j/${journal.slug}/listen`} className="btn-arcane">
-                  <HeadphonesIcon /> Listen
-                </Link>
+              {canAccess ? (
+                work.hasAudio ? (
+                  <Link href={`/j/${journal.slug}/listen`} className="btn-arcane">
+                    <HeadphonesIcon /> Listen
+                  </Link>
+                ) : (
+                  <Link href={`/j/${journal.slug}`} className="btn-arcane">
+                    <BookOpenIcon /> Read
+                  </Link>
+                )
+              ) : journal.visibility === "restricted" ? (
+                <RequestAccessButton
+                  kind="journal"
+                  itemId={journal.id}
+                  status={requestState === "pending" ? "pending" : "none"}
+                  signedIn={!!session}
+                />
               ) : (
-                <Link href={`/j/${journal.slug}`} className="btn-arcane">
-                  <BookOpenIcon /> Read
-                </Link>
+                <span className="text-sm text-ink-dim">
+                  Only the scribe's friends can open this tome.
+                </span>
               )}
               <SaveButton
                 kind="journal"
@@ -146,7 +179,7 @@ export default async function BookHomePage({
           </div>
         </div>
 
-        {tracks.length > 0 && (
+        {canAccess && tracks.length > 0 && (
           <section className="panel-arcane p-5 sm:p-6">
             <h2 className="font-heading text-lg mb-3">Episodes</h2>
             <ol className="space-y-1">
@@ -178,6 +211,10 @@ export default async function BookHomePage({
           </section>
         )}
 
+        {isOwner && journal.visibility === "restricted" && (
+          <AccessManager kind="journal" itemId={journal.id} grants={grants} />
+        )}
+
         <ReviewsSection
           kind="journal"
           itemId={journal.id}
@@ -188,6 +225,7 @@ export default async function BookHomePage({
           viewerId={session?.user.id ?? null}
           isOwner={isOwner ?? false}
           signedIn={!!session}
+          canReview={canAccess}
         />
       </div>
       </AppShell>

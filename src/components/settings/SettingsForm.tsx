@@ -46,6 +46,9 @@ export function SettingsForm({
   const [theme, setTheme] = useState(journal.theme as ThemeId);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [tagsInput, setTagsInput] = useState(tagNames.join(", "));
+  const [description, setDescription] = useState(journal.description ?? "");
+  const [visibility, setVisibility] = useState<string>(journal.visibility);
+  const [listed, setListed] = useState(journal.listed);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [combineFiles, setCombineFiles] = useState(false);
@@ -94,6 +97,7 @@ export function SettingsForm({
         seriesName,
         volumeNumber: Number.isFinite(vol) && vol > 0 ? vol : null,
         partNumber: Number.isFinite(part) && part > 0 ? part : null,
+        description,
       },
       "details"
     );
@@ -104,11 +108,8 @@ export function SettingsForm({
     await patch({ theme: next }, "theme");
   }
 
-  async function toggleVisibility() {
-    await patch(
-      { visibility: journal.visibility === "public" ? "private" : "public" },
-      "visibility"
-    );
+  async function saveSharing() {
+    await patch({ visibility, listed }, "visibility");
   }
 
   async function resync() {
@@ -375,6 +376,25 @@ export function SettingsForm({
             onChange={(e) => setAuthor(e.target.value)}
           />
         </div>
+        <div>
+          <label
+            htmlFor="description"
+            className="block text-sm mb-1 text-ink-dim"
+          >
+            Description{" "}
+            <span className="opacity-60">
+              (what it&apos;s about — shown on the tome&apos;s homepage)
+            </span>
+          </label>
+          <textarea
+            id="description"
+            className="input-arcane min-h-24 resize-y"
+            value={description}
+            maxLength={2000}
+            placeholder="A campaign diary of the Hollowmere affair — marsh horror, found family, and a debt to something old."
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-[1fr_6rem_6rem]">
           <div>
             <label
@@ -495,13 +515,57 @@ export function SettingsForm({
       </section>
 
       {/* Sharing */}
-      <section className="panel-arcane p-6 space-y-3">
-        <h2 className="font-heading text-lg">Sharing</h2>
-        <p className="text-sm text-ink-dim">
-          {journal.visibility === "public"
-            ? "This link is live — anyone who has it can read the tome in its binding, no account needed."
-            : "This will be the share link. It stays locked (404 for everyone but you) until you make the tome public."}
-        </p>
+      <section className="panel-arcane p-6 space-y-4">
+        <h2 className="font-heading text-lg">Sharing &amp; Access</h2>
+        <div>
+          <label htmlFor="visibility" className="block text-sm mb-1 text-ink-dim">
+            Who can open this tome
+          </label>
+          <select
+            id="visibility"
+            className="input-arcane !w-auto"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+          >
+            <option value="public">Everyone</option>
+            <option value="friends">Friends only</option>
+            <option value="restricted">By request — readers ask, you approve</option>
+            <option value="private">Only me</option>
+          </select>
+          <p className="text-xs text-ink-dim mt-1">
+            {visibility === "restricted"
+              ? "The homepage (cover, description, tags) is visible; the pages and audio unlock per reader you approve. Requests appear on the tome's homepage and in your notifications."
+              : visibility === "friends"
+                ? "Only your accepted friends can open it. It never appears in Browse."
+                : visibility === "private"
+                  ? "Invisible to everyone but you."
+                  : "Anyone with the link can open it."}
+          </p>
+        </div>
+        {(visibility === "public" || visibility === "restricted") && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={listed}
+              onChange={(e) => setListed(e.target.checked)}
+            />
+            Show in Browse &amp; search
+            <span className="text-xs text-ink-dim">
+              (unchecked = unlisted, link-only)
+            </span>
+          </label>
+        )}
+        <button
+          type="button"
+          className="btn-arcane"
+          disabled={
+            busy !== null ||
+            (visibility === journal.visibility && listed === journal.listed)
+          }
+          onClick={saveSharing}
+        >
+          {busy === "visibility" ? "Saving..." : "Save Sharing"}
+        </button>
         <div className="flex gap-2">
           <input
             className={`input-arcane flex-1 ${
@@ -525,14 +589,6 @@ export function SettingsForm({
             Copy
           </button>
         </div>
-        <button
-          type="button"
-          className="btn-ghost"
-          disabled={busy !== null}
-          onClick={toggleVisibility}
-        >
-          {journal.visibility === "public" ? "Make Private" : "Make Public"}
-        </button>
       </section>
 
       {/* Narration — audio-only tomes are made of these tracks */}

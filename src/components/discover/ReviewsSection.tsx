@@ -25,6 +25,7 @@ export function ReviewsSection({
   viewerId,
   isOwner,
   signedIn,
+  canReview = true,
 }: {
   kind: WorkKind;
   itemId: string;
@@ -32,6 +33,8 @@ export function ReviewsSection({
   viewerId: string | null;
   isOwner: boolean;
   signedIn: boolean;
+  /** False when the viewer lacks access to the work (form hidden). */
+  canReview?: boolean;
 }) {
   const router = useRouter();
   const mine = reviews.find((r) => r.userId === viewerId) ?? null;
@@ -83,7 +86,12 @@ export function ReviewsSection({
         Reviews{reviews.length > 0 && ` (${reviews.length})`}
       </h2>
 
-      {signedIn && !isOwner && (
+      {signedIn && !isOwner && !canReview && (
+        <p className="text-sm text-ink-dim border-b border-void-border pb-5">
+          Reviews are open to readers with access to this work.
+        </p>
+      )}
+      {signedIn && !isOwner && canReview && (
         <div className="space-y-3 border-b border-void-border pb-5">
           <div className="flex items-center gap-3">
             <StarPicker value={rating} onChange={setRating} />

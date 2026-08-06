@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug } from "@/lib/journals";
 import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
@@ -34,7 +35,16 @@ export default async function ListenPage({
 
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
-  if (journal.visibility !== "public" && !isOwner) notFound();
+  if (journal.visibility !== "public" && !isOwner) {
+    const allowed = await canAccessJournal(session?.user.id ?? null, journal);
+    if (!allowed) {
+      // Gated-but-visible works bounce to their teaser homepage.
+      if (isDiscoverable(journal.visibility) || journal.visibility === "friends") {
+        redirect(`/book/${journal.slug}`);
+      }
+      notFound();
+    }
+  }
   // Only audio-only tomes have a listening side.
   if (journal.sourceType !== "audio") notFound();
 

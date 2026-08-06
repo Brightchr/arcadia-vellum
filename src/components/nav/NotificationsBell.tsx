@@ -31,6 +31,10 @@ function message(n: NotificationItem): string {
       return `New volume in ${n.itemTitle ?? "a series you follow"}`;
     case "new_work":
       return `${who} published ${n.itemTitle ?? "a new work"}`;
+    case "access_request":
+      return `${who} requested access to ${n.itemTitle ?? "your work"}`;
+    case "access_granted":
+      return `${who} granted you access to ${n.itemTitle ?? "a work"}`;
     default:
       return "Something happened";
   }

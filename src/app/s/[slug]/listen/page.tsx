@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { accessibleJournalIds } from "@/lib/access";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
@@ -33,9 +34,12 @@ export default async function SeriesListenPage({
 
   const session = await getSession();
   const isOwner = session?.user.id === s.ownerId;
-  const volumes = (await listVolumes(s.id)).filter(
-    (v) => isOwner || v.visibility === "public"
+  const allVolumes = await listVolumes(s.id);
+  const accessible = await accessibleJournalIds(
+    session?.user.id ?? null,
+    allVolumes
   );
+  const volumes = allVolumes.filter((v) => accessible.has(v.id));
   if (volumes.length === 0) notFound();
 
   if (session) {

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
 import TomeReader from "@/components/book/TomeReaderClient";
@@ -32,7 +33,16 @@ export default async function ReaderPage({
 
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
-  if (journal.visibility !== "public" && !isOwner) notFound();
+  if (journal.visibility !== "public" && !isOwner) {
+    const allowed = await canAccessJournal(session?.user.id ?? null, journal);
+    if (!allowed) {
+      // Gated-but-visible works bounce to their teaser homepage.
+      if (isDiscoverable(journal.visibility) || journal.visibility === "friends") {
+        redirect(`/book/${journal.slug}`);
+      }
+      notFound();
+    }
+  }
 
   // Audio-only tomes have no pages to read — go straight to the player.
   if (journal.sourceType === "audio") redirect(`/j/${journal.slug}/listen`);

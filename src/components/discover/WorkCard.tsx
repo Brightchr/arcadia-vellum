@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Work } from "@/lib/discovery";
 import { Stars } from "./StarRating";
-import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
+import { BookOpenIcon, HeadphonesIcon, LockIcon } from "@/components/icons";
 
 export function workHref(work: Pick<Work, "kind" | "slug">) {
   return work.kind === "series" ? `/series/${work.slug}` : `/book/${work.slug}`;
@@ -56,6 +56,9 @@ export function WorkCard({ work }: { work: Work }) {
         {work.author ?? work.ownerName}
       </p>
       <div className="flex items-center gap-2 mt-1.5 text-xs text-ink-dim">
+        {work.restricted && (
+          <LockIcon className="h-3.5 w-3.5 text-arcane-bright" />
+        )}
         {work.hasWritten && <BookOpenIcon className="h-3.5 w-3.5" />}
         {work.hasAudio && <HeadphonesIcon className="h-3.5 w-3.5" />}
         {work.volumeCount > 1 && <span>{work.volumeCount} vols</span>}

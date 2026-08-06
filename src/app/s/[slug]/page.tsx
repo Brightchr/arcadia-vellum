@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { accessibleJournalIds } from "@/lib/access";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
@@ -44,9 +45,12 @@ export default async function SeriesReaderPage({
   const session = await getSession();
   const isOwner = session?.user.id === s.ownerId;
 
-  const volumes = (await listVolumes(s.id)).filter(
-    (v) => isOwner || v.visibility === "public"
+  const allVolumes = await listVolumes(s.id);
+  const accessible = await accessibleJournalIds(
+    session?.user.id ?? null,
+    allVolumes
   );
+  const volumes = allVolumes.filter((v) => accessible.has(v.id));
   if (volumes.length === 0) notFound();
 
   // Audiobook volumes have no pages — an all-audio series goes straight to

@@ -25,6 +25,7 @@ export function NewJournalWizard({
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
+  const [description, setDescription] = useState("");
   const [author, setAuthor] = useState("");
   const [seriesName, setSeriesName] = useState("");
   const [volumeNumber, setVolumeNumber] = useState("");
@@ -140,6 +141,7 @@ export function NewJournalWizard({
       const form = new FormData();
       form.set("title", title);
       form.set("subtitle", subtitle);
+      form.set("description", description);
       form.set("author", author);
       form.set("seriesName", seriesName);
       form.set("volumeNumber", volumeNumber);

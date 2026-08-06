@@ -10,6 +10,14 @@ import { isSaved } from "@/lib/saves";
 import { getUserById } from "@/lib/profile";
 import { isFollowingSeries } from "@/lib/social";
 import { FollowSeriesButton } from "@/components/social/FollowSeriesButton";
+import {
+  accessibleJournalIds,
+  grantStatus,
+  listGrants,
+} from "@/lib/access";
+import { RequestAccessButton } from "@/components/discover/RequestAccessButton";
+import { AccessManager } from "@/components/discover/AccessManager";
+import { SeriesDescription } from "@/components/discover/SeriesDescription";
 import { compareVolumes, volumeLabel } from "@/lib/volume";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
@@ -17,7 +25,7 @@ import { WorkCover } from "@/components/discover/WorkCard";
 import { Stars } from "@/components/discover/StarRating";
 import { SaveButton } from "@/components/discover/SaveButton";
 import { ReviewsSection } from "@/components/discover/ReviewsSection";
-import { BookOpenIcon, HeadphonesIcon } from "@/components/icons";
+import { BookOpenIcon, HeadphonesIcon, LockIcon } from "@/components/icons";
 
 export async function generateMetadata({
   params,
@@ -55,12 +63,26 @@ export default async function SeriesHomePage({
   );
   const allTags = [...new Set(tagLists.flat())].sort();
   const saved = session ? await isSaved(session.user.id, "series", s.id) : false;
+  const accessible = await accessibleJournalIds(session?.user.id ?? null, volumes);
+  const hasLocked = volumes.some((v) => !accessible.has(v.id));
+  const requestState =
+    hasLocked && session && !isOwner
+      ? await grantStatus(session.user.id, "series", s.id)
+      : "none";
+  const grants =
+    isOwner && volumes.some((v) => v.visibility === "restricted")
+      ? await listGrants("series", s.id)
+      : [];
   const followingSeries = session
     ? await isFollowingSeries(session.user.id, s.id)
     : false;
 
-  const hasWritten = volumes.some((v) => v.sourceType !== "audio");
-  const hasAudio = volumes.some((v) => v.sourceType === "audio");
+  const hasWritten = volumes.some(
+    (v) => v.sourceType !== "audio" && accessible.has(v.id)
+  );
+  const hasAudio = volumes.some(
+    (v) => v.sourceType === "audio" && accessible.has(v.id)
+  );
   const withCover = volumes.find((v) => v.coverImageId);
   const author = volumes.find((v) => v.author)?.author ?? null;
   const avg =
@@ -105,6 +127,12 @@ export default async function SeriesHomePage({
                 · {volumes.length} volume{volumes.length === 1 ? "" : "s"}
               </p>
             </div>
+
+            <SeriesDescription
+              seriesId={s.id}
+              description={s.description}
+              isOwner={isOwner ?? false}
+            />
 
             <div className="flex items-center gap-2 text-sm text-ink-dim">
               {avg !== null ? (
@@ -154,6 +182,14 @@ export default async function SeriesHomePage({
                 saved={saved}
                 signedIn={!!session}
               />
+              {hasLocked && !isOwner && (
+                <RequestAccessButton
+                  kind="series"
+                  itemId={s.id}
+                  status={requestState === "pending" ? "pending" : "none"}
+                  signedIn={!!session}
+                />
+              )}
               {!isOwner && (
                 <FollowSeriesButton
                   seriesId={s.id}
@@ -189,21 +225,31 @@ export default async function SeriesHomePage({
                       private
                     </span>
                   )}
-                  <Link
-                    href={
-                      v.sourceType === "audio"
-                        ? `/j/${v.slug}/listen`
-                        : `/j/${v.slug}`
-                    }
-                    className="ml-auto text-xs font-heading text-arcane-bright hover:underline shrink-0"
-                  >
-                    {v.sourceType === "audio" ? "Play" : "Read"}
-                  </Link>
+                  {accessible.has(v.id) ? (
+                    <Link
+                      href={
+                        v.sourceType === "audio"
+                          ? `/j/${v.slug}/listen`
+                          : `/j/${v.slug}`
+                      }
+                      className="ml-auto text-xs font-heading text-arcane-bright hover:underline shrink-0"
+                    >
+                      {v.sourceType === "audio" ? "Play" : "Read"}
+                    </Link>
+                  ) : (
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs font-heading text-ink-dim shrink-0">
+                      <LockIcon className="h-3 w-3" /> by request
+                    </span>
+                  )}
                 </li>
               );
             })}
           </ol>
         </section>
+
+        {isOwner && grants.length >= 0 && volumes.some((v) => v.visibility === "restricted") && (
+          <AccessManager kind="series" itemId={s.id} grants={grants} />
+        )}
 
         <ReviewsSection
           kind="series"
@@ -215,6 +261,7 @@ export default async function SeriesHomePage({
           viewerId={session?.user.id ?? null}
           isOwner={isOwner ?? false}
           signedIn={!!session}
+          canReview={accessible.size > 0}
         />
       </div>
       </AppShell>
