@@ -1,5 +1,5 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
-import { isAdmin, setUserBanned } from "@/lib/admin";
+import { isAdmin, setUserBanned, logAdminAction } from "@/lib/admin";
 import { getUserById } from "@/lib/profile";
 
 export const runtime = "nodejs";
@@ -30,5 +30,15 @@ export async function POST(request: Request) {
     return jsonError("Admins can't be banned", 400);
   }
   await setUserBanned(target.id, body.banned);
-  return Response.json({ ok: true, banned: body.banned });
+  // Every moderation action is recorded permanently.
+  await logAdminAction(
+    session.user.id,
+    body.banned ? "ban" : "unban",
+    target.id,
+    `${target.name}${target.username ? ` (@${target.username})` : ""}`
+  );
+  return Response.json(
+    { ok: true, banned: body.banned },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

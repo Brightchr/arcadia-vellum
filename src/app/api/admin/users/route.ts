@@ -11,17 +11,20 @@ export async function GET(request: Request) {
   }
   const q = new URL(request.url).searchParams.get("q") ?? undefined;
   const users = await listUsersForAdmin(q);
-  return Response.json({
-    users: users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      username: u.username,
-      email: u.email,
-      avatarImageId: u.avatarImageId,
-      role: u.role,
-      banned: u.banned,
-      bannedAt: u.bannedAt,
-      createdAt: u.createdAt,
-    })),
-  });
+  return Response.json(
+    {
+      users: users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        username: u.username,
+        email: u.email,
+        avatarImageId: u.avatarImageId,
+        role: u.role,
+        banned: u.banned,
+        bannedAt: u.bannedAt,
+        createdAt: u.createdAt,
+      })),
+    },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

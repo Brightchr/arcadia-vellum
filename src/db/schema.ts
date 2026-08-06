@@ -387,6 +387,23 @@ export const playlistItems = pgTable(
 );
 
 /**
+ * Audit trail of moderation actions (bans, unbans). Append-only — rows are
+ * never updated or deleted, so there's always a record of who did what.
+ */
+export const adminActions = pgTable("admin_actions", {
+  id: text("id").primaryKey(),
+  adminId: text("admin_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  action: text("action").notNull(),
+  targetUserId: text("target_user_id").references(() => user.id, {
+    onDelete: "cascade",
+  }),
+  details: text("details"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/**
  * Access grants for works with "restricted" visibility: a pending row is a
  * request awaiting the owner; granted rows unlock the work. A series-level
  * grant covers every volume, current and future.

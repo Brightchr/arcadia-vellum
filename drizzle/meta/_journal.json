@@ -134,6 +134,13 @@
       "when": 1786042804533,
       "tag": "0018_admin-roles-bans",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786043717526,
+      "tag": "0019_admin-audit-log",
+      "breakpoints": true
     }
   ]
 }
