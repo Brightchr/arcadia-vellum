@@ -39,6 +39,10 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
+      // Moderation fields — read-only through the session; only the admin
+      // API mutates them.
+      role: { type: "string", defaultValue: "user", input: false },
+      banned: { type: "boolean", defaultValue: false, input: false },
     },
   },
   socialProviders: {

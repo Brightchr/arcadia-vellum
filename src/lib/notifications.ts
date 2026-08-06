@@ -11,7 +11,8 @@ export type NotificationType =
   | "new_volume"
   | "new_work"
   | "access_request"
-  | "access_granted";
+  | "access_granted"
+  | "user_banned";
 
 export async function notify(
   userId: string,

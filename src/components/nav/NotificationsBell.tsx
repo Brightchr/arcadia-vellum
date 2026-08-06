@@ -35,6 +35,8 @@ function message(n: NotificationItem): string {
       return `${who} requested access to ${n.itemTitle ?? "your work"}`;
     case "access_granted":
       return `${who} granted you access to ${n.itemTitle ?? "a work"}`;
+    case "user_banned":
+      return `${who} was banned — works you saved from them are no longer available`;
     default:
       return "Something happened";
   }
@@ -47,6 +49,7 @@ function href(n: NotificationItem): string {
   if (n.type === "new_follower") {
     return n.actorUsername ? `/u/${n.actorUsername}` : "/friends";
   }
+  if (n.type === "user_banned") return "/saved";
   return n.itemHref ?? "/browse";
 }
 

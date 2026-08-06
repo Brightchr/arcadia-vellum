@@ -46,6 +46,11 @@ export const user = pgTable("user", {
     .default(true),
   /** Appear in user search (lookup by username or display name). */
   searchable: boolean("searchable").notNull().default(true),
+  /** "admin" unlocks the admin dashboard and shows the profile badge. */
+  role: text("role", { enum: ["user", "admin"] }).notNull().default("user"),
+  /** Banned users' works, reviews, and profile are hidden platform-wide. */
+  banned: boolean("banned").notNull().default(false),
+  bannedAt: timestamp("banned_at"),
   /** JSON array ordering the profile sections, e.g. ["bio","featured","works","saved"]. */
   profileLayout: text("profile_layout"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

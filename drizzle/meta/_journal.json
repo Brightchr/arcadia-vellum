@@ -127,6 +127,13 @@
       "when": 1786038098137,
       "tag": "0017_profile-banner-sharing",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786042804533,
+      "tag": "0018_admin-roles-bans",
+      "breakpoints": true
     }
   ]
 }
