@@ -34,6 +34,8 @@ export const user = pgTable("user", {
   showSavedOnProfile: boolean("show_saved_on_profile")
     .notNull()
     .default(false),
+  /** JSON array ordering the profile sections, e.g. ["bio","featured","works","saved"]. */
+  profileLayout: text("profile_layout"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -95,6 +97,8 @@ export const series = pgTable("series", {
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** Sidebar icon (an emoji the owner picks, Spotify-playlist style). */
+  icon: text("icon"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -250,6 +254,8 @@ export const savedItems = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     kind: text("kind", { enum: ["journal", "series"] }).notNull(),
     itemId: text("item_id").notNull(),
+    /** Sidebar icon (an emoji the saver picks). */
+    icon: text("icon"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
@@ -271,4 +277,53 @@ export const reviews = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [unique().on(t.userId, t.kind, t.itemId)]
+);
+
+/** Follows on a series — get notified when new volumes are published. */
+export const seriesFollows = pgTable(
+  "series_follows",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    seriesId: text("series_id")
+      .notNull()
+      .references(() => series.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.seriesId] })]
+);
+
+/**
+ * In-app notifications. type: friend_request | friend_accept | new_follower |
+ * review | new_volume | new_work. actorId is who caused it; kind/itemId point
+ * at the related work when there is one.
+ */
+export const notifications = pgTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  actorId: text("actor_id").references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind"),
+  itemId: text("item_id"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/** Last-opened works per user — powers the "jump back in" shelf. */
+export const readingActivity = pgTable(
+  "reading_activity",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+    itemId: text("item_id").notNull(),
+    /** "read" or "listen" — picks the continue link. */
+    mode: text("mode").notNull().default("read"),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
 );

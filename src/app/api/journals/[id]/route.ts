@@ -11,6 +11,8 @@ import {
   deleteSeriesIfEmpty,
   nextVolumeNumber,
 } from "@/lib/series";
+import { seriesFollowerIds, followerIds } from "@/lib/social";
+import { notifyMany } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -118,6 +120,22 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   const updated = await updateJournal(id, patch);
+
+  // Publishing moment: tell series followers and the author's followers.
+  if (journal.visibility === "private" && updated?.visibility === "public") {
+    if (updated.seriesId) {
+      await notifyMany(await seriesFollowerIds(updated.seriesId), "new_volume", {
+        actorId: session.user.id,
+        kind: "series",
+        itemId: updated.seriesId,
+      });
+    }
+    await notifyMany(await followerIds(session.user.id), "new_work", {
+      actorId: session.user.id,
+      kind: updated.seriesId ? "series" : "journal",
+      itemId: updated.seriesId ?? updated.id,
+    });
+  }
 
   // Tidy up a series the journal just left.
   if (journal.seriesId && patch.seriesId !== undefined && patch.seriesId !== journal.seriesId) {

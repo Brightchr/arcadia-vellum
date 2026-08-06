@@ -1,6 +1,7 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { isWorkPublic } from "@/lib/discovery";
 import { upsertReview, deleteReview } from "@/lib/reviews";
+import { notify } from "@/lib/notifications";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 
 export const runtime = "nodejs";
@@ -34,6 +35,13 @@ export async function PUT(request: Request) {
   }
 
   await upsertReview(session.user.id, kind, itemId, rating, text || null);
+  if (ownerId) {
+    await notify(ownerId, "review", {
+      actorId: session.user.id,
+      kind,
+      itemId,
+    });
+  }
   return Response.json({ ok: true });
 }
 

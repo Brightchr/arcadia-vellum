@@ -1,6 +1,7 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getUserById } from "@/lib/profile";
 import { followUser, unfollowUser } from "@/lib/social";
+import { notify } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,7 @@ export async function POST(
   if (userId === session.user.id) return jsonError("That's you", 400);
   if (!(await getUserById(userId))) return jsonError("User not found", 404);
   await followUser(session.user.id, userId);
+  await notify(userId, "new_follower", { actorId: session.user.id });
   return Response.json({ ok: true });
 }
 

@@ -1,3 +1,6 @@
+import { db } from "@/db";
+import { savedItems } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { isWorkPublic } from "@/lib/discovery";
 import { saveItem, unsaveItem } from "@/lib/saves";
@@ -22,6 +25,30 @@ export async function POST(request: Request) {
   const { ok } = await isWorkPublic(parsed.kind, parsed.itemId);
   if (!ok) return jsonError("Work not found", 404);
   await saveItem(session.user.id, parsed.kind, parsed.itemId);
+  return Response.json({ ok: true });
+}
+
+/** Set the sidebar icon on a saved item. JSON: {kind, itemId, icon} */
+export async function PATCH(request: Request) {
+  const session = await sessionFromRequest(request);
+  if (!session) return jsonError("Not signed in", 401);
+  const raw = (await request.json().catch(() => null)) as {
+    icon?: unknown;
+  } | null;
+  const parsed = parseBody(raw);
+  if (!parsed) return jsonError("kind and itemId are required", 400);
+  const icon =
+    typeof raw?.icon === "string" ? raw.icon.trim().slice(0, 8) : null;
+  await db
+    .update(savedItems)
+    .set({ icon: icon || null })
+    .where(
+      and(
+        eq(savedItems.userId, session.user.id),
+        eq(savedItems.kind, parsed.kind),
+        eq(savedItems.itemId, parsed.itemId)
+      )
+    );
   return Response.json({ ok: true });
 }
 

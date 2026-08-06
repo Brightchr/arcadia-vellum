@@ -5,6 +5,7 @@ import {
   acceptFriendship,
   removeFriendship,
 } from "@/lib/social";
+import { notify } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,7 @@ export async function POST(
     return jsonError("This user isn't accepting friend requests", 403);
   }
   await requestFriendship(session.user.id, userId);
+  await notify(userId, "friend_request", { actorId: session.user.id });
   return Response.json({ ok: true });
 }
 
@@ -36,6 +38,7 @@ export async function PATCH(
   const { userId } = await params;
   const ok = await acceptFriendship(session.user.id, userId);
   if (!ok) return jsonError("No pending request from this user", 400);
+  await notify(userId, "friend_accept", { actorId: session.user.id });
   return Response.json({ ok: true });
 }
 

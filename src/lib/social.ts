@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { follows, friendships, user } from "@/db/schema";
+import { follows, friendships, seriesFollows, user } from "@/db/schema";
 import { and, eq, or } from "drizzle-orm";
 import { newId } from "@/lib/id";
 
@@ -33,6 +33,55 @@ export async function isFollowing(followerId: string, followingId: string) {
       )
     );
   return rows.length > 0;
+}
+
+// --- Series follows -------------------------------------------------------
+
+export async function followSeries(userId: string, seriesId: string) {
+  await db
+    .insert(seriesFollows)
+    .values({ userId, seriesId })
+    .onConflictDoNothing();
+}
+
+export async function unfollowSeries(userId: string, seriesId: string) {
+  await db
+    .delete(seriesFollows)
+    .where(
+      and(
+        eq(seriesFollows.userId, userId),
+        eq(seriesFollows.seriesId, seriesId)
+      )
+    );
+}
+
+export async function isFollowingSeries(userId: string, seriesId: string) {
+  const rows = await db
+    .select({ u: seriesFollows.userId })
+    .from(seriesFollows)
+    .where(
+      and(
+        eq(seriesFollows.userId, userId),
+        eq(seriesFollows.seriesId, seriesId)
+      )
+    );
+  return rows.length > 0;
+}
+
+export async function seriesFollowerIds(seriesId: string): Promise<string[]> {
+  const rows = await db
+    .select({ userId: seriesFollows.userId })
+    .from(seriesFollows)
+    .where(eq(seriesFollows.seriesId, seriesId));
+  return rows.map((r) => r.userId);
+}
+
+export async function followerIds(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ followerId: follows.followerId })
+    .from(follows)
+    .where(eq(follows.followingId, userId));
+  return rows.map((r) => r.followerId);
 }
 
 /** The friendship row between two users, in either direction. */

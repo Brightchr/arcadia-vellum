@@ -52,6 +52,13 @@ export async function PATCH(request: Request) {
   if (typeof body.showSavedOnProfile === "boolean") {
     patch.showSavedOnProfile = body.showSavedOnProfile;
   }
+  if (Array.isArray(body.profileLayout)) {
+    const allowed = new Set(["bio", "featured", "works", "saved"]);
+    const layout = (body.profileLayout as unknown[]).filter(
+      (s): s is string => typeof s === "string" && allowed.has(s)
+    );
+    patch.profileLayout = JSON.stringify([...new Set(layout)]);
+  }
 
   if (Object.keys(patch).length === 0) {
     return jsonError("Nothing to update", 400);

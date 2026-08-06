@@ -48,7 +48,13 @@ export async function listSaved(userId: string) {
     .where(eq(savedItems.userId, userId))
     .orderBy(desc(savedItems.createdAt));
 
-  const out: { kind: WorkKind; id: string; slug: string; title: string }[] = [];
+  const out: {
+    kind: WorkKind;
+    id: string;
+    slug: string;
+    title: string;
+    icon: string | null;
+  }[] = [];
   for (const row of rows) {
     if (row.kind === "series") {
       const s = await db
@@ -61,6 +67,7 @@ export async function listSaved(userId: string) {
           id: row.itemId,
           slug: s[0].slug,
           title: s[0].name,
+          icon: row.icon,
         });
       }
     } else {
@@ -76,6 +83,7 @@ export async function listSaved(userId: string) {
           id: row.itemId,
           slug: j[0].slug,
           title: j[0].title,
+          icon: row.icon,
         });
       }
     }
