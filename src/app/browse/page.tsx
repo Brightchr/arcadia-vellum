@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
-import { listPublicWorks, popularTags } from "@/lib/discovery";
+import {
+  listPublicWorks,
+  popularTags,
+  type SentimentTone,
+  type WorkSort,
+} from "@/lib/discovery";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
@@ -10,10 +15,28 @@ export const metadata: Metadata = {
   title: "Browse — Vellum",
 };
 
+const SENTIMENTS: { value: SentimentTone; label: string }[] = [
+  { value: "positive", label: "Positive" },
+  { value: "mixed", label: "Mixed" },
+  { value: "negative", label: "Negative" },
+];
+
+const SORTS: { value: WorkSort; label: string }[] = [
+  { value: "top", label: "Top rated" },
+  { value: "new", label: "Newest" },
+  { value: "popular", label: "Popular" },
+];
+
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string; tag?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    type?: string;
+    tag?: string;
+    sentiment?: string;
+    sort?: string;
+  }>;
 }) {
   const { navUser, pins, unread } = await shellData();
   const params = await searchParams;
@@ -23,28 +46,50 @@ export default async function BrowsePage({
       ? params.type
       : undefined;
   const tag = (params.tag ?? "").trim() || undefined;
+  const sentiment = SENTIMENTS.some((s) => s.value === params.sentiment)
+    ? (params.sentiment as SentimentTone)
+    : undefined;
+  const sort = SORTS.some((s) => s.value === params.sort)
+    ? (params.sort as WorkSort)
+    : undefined;
 
   const [works, tags] = await Promise.all([
-    listPublicWorks({ q: q || undefined, type, tag }),
+    listPublicWorks({ q: q || undefined, type, tag, sentiment, sort }),
     popularTags(),
   ]);
 
-  const filterHref = (next: { type?: string; tag?: string }) => {
+  const filterHref = (next: {
+    type?: string;
+    tag?: string;
+    sentiment?: string;
+    sort?: string;
+  }) => {
     const sp = new URLSearchParams();
     if (q) sp.set("q", q);
     const t = "type" in next ? next.type : type;
     const g = "tag" in next ? next.tag : tag;
+    const s = "sentiment" in next ? next.sentiment : sentiment;
+    const o = "sort" in next ? next.sort : sort;
     if (t) sp.set("type", t);
     if (g) sp.set("tag", g);
+    if (s) sp.set("sentiment", s);
+    if (o) sp.set("sort", o);
     const qs = sp.toString();
     return `/browse${qs ? `?${qs}` : ""}`;
   };
 
-  const typeTab = (label: string, value?: string) => (
+  const chip = (
+    label: string,
+    href: string,
+    activeChip: boolean,
+    title?: string
+  ) => (
     <Link
-      href={filterHref({ type: value })}
+      key={label}
+      href={href}
+      title={title}
       className={`px-3 py-1.5 rounded-md text-sm font-heading transition-colors ${
-        type === value
+        activeChip
           ? "bg-arcane/15 text-arcane-bright"
           : "text-ink-dim hover:text-ink hover:bg-white/5"
       }`}
@@ -84,15 +129,58 @@ export default async function BrowsePage({
           />
           {type && <input type="hidden" name="type" value={type} />}
           {tag && <input type="hidden" name="tag" value={tag} />}
+          {sentiment && (
+            <input type="hidden" name="sentiment" value={sentiment} />
+          )}
+          {sort && <input type="hidden" name="sort" value={sort} />}
           <button type="submit" className="btn-arcane">
             Search
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-1 mb-4">
-          {typeTab("All", undefined)}
-          {typeTab("Books", "books")}
-          {typeTab("Audiobooks", "audiobooks")}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+          <div className="flex flex-wrap items-center gap-1">
+            {chip("All", filterHref({ type: undefined }), type === undefined)}
+            {chip("Books", filterHref({ type: "books" }), type === "books")}
+            {chip(
+              "Audiobooks",
+              filterHref({ type: "audiobooks" }),
+              type === "audiobooks"
+            )}
+          </div>
+
+          <span className="hidden sm:block h-5 w-px bg-white/10" aria-hidden />
+
+          {/* Steam-style review verdict filter */}
+          <div className="flex flex-wrap items-center gap-1">
+            {chip(
+              "All reviews",
+              filterHref({ sentiment: undefined }),
+              sentiment === undefined
+            )}
+            {SENTIMENTS.map((s) =>
+              chip(
+                s.label,
+                filterHref({
+                  sentiment: sentiment === s.value ? undefined : s.value,
+                }),
+                sentiment === s.value,
+                `Only works with ${s.label.toLowerCase()} reviews`
+              )
+            )}
+          </div>
+
+          <span className="hidden sm:block h-5 w-px bg-white/10" aria-hidden />
+
+          <div className="flex flex-wrap items-center gap-1">
+            {SORTS.map((s) =>
+              chip(
+                s.label,
+                filterHref({ sort: s.value === "top" ? undefined : s.value }),
+                (sort ?? "top") === s.value
+              )
+            )}
+          </div>
         </div>
 
         {tags.length > 0 && (
@@ -116,10 +204,12 @@ export default async function BrowsePage({
         {works.length === 0 ? (
           <div className="panel-arcane p-12 text-center">
             <p className="font-heading text-xl mb-2">
-              {q || tag ? "Nothing matched." : "The archives are empty."}
+              {q || tag || sentiment
+                ? "Nothing matched."
+                : "The archives are empty."}
             </p>
             <p className="text-ink-dim">
-              {q || tag
+              {q || tag || sentiment
                 ? "Try a different search or clear the filters."
                 : "Public tomes will appear here as scribes share them."}
             </p>

@@ -1,7 +1,25 @@
 import Link from "next/link";
 import type { Work } from "@/lib/discovery";
+import { reviewSummary } from "@/lib/sentiment";
 import { Stars } from "./StarRating";
 import { BookOpenIcon, HeadphonesIcon, LockIcon } from "@/components/icons";
+
+const TONE_CLASS = {
+  positive: "text-emerald-400",
+  mixed: "text-amber-400",
+  negative: "text-red-400",
+} as const;
+
+/** Steam-style verdict line, e.g. "Very Positive (12)". */
+export function SentimentLabel({ work }: { work: Work }) {
+  const summary = reviewSummary(work.avgRating, work.ratingCount);
+  if (!summary) return null;
+  return (
+    <span className={`text-[10px] font-heading ${TONE_CLASS[summary.tone]}`}>
+      {summary.label} ({work.ratingCount})
+    </span>
+  );
+}
 
 export function workHref(work: Pick<Work, "kind" | "slug">) {
   return work.kind === "series" ? `/series/${work.slug}` : `/book/${work.slug}`;
@@ -65,10 +83,10 @@ export function WorkCard({ work }: { work: Work }) {
         {work.avgRating !== null && (
           <span className="inline-flex items-center gap-1 ml-auto">
             <Stars value={work.avgRating} size={11} />
-            <span>({work.ratingCount})</span>
           </span>
         )}
       </div>
+      <SentimentLabel work={work} />
       {work.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {work.tags.slice(0, 3).map((t) => (

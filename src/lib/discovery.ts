@@ -5,10 +5,15 @@ import {
   journalTags,
   tags,
   reviews,
+  savedItems,
   user,
 } from "@/db/schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Journal } from "@/lib/journals";
+import { reviewSummary, type SentimentTone } from "@/lib/sentiment";
+
+export { reviewSummary } from "@/lib/sentiment";
+export type { SentimentTone, ReviewSummary } from "@/lib/sentiment";
 
 /**
  * A "work" is what discovery pages deal in: either a standalone journal or a
@@ -35,6 +40,10 @@ export interface Work {
   tags: string[];
   avgRating: number | null;
   ratingCount: number;
+  /** How many shelves this work is saved to (popularity signal). */
+  saveCount: number;
+  /** Newest volume's creation time (epoch ms) — powers "new" sorting. */
+  createdAt: number;
 }
 
 interface RatingAgg {
@@ -64,6 +73,25 @@ async function ratingAggregates(
   return map;
 }
 
+/** Save counts per work key ("kind:itemId"). */
+async function saveAggregates(
+  keys: { kind: "journal" | "series"; itemId: string }[]
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (keys.length === 0) return map;
+  const rows = await db
+    .select({
+      kind: savedItems.kind,
+      itemId: savedItems.itemId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(savedItems)
+    .where(inArray(savedItems.itemId, keys.map((k) => k.itemId)))
+    .groupBy(savedItems.kind, savedItems.itemId);
+  for (const r of rows) map.set(`${r.kind}:${r.itemId}`, r.n);
+  return map;
+}
+
 async function tagsForJournals(
   journalIds: string[]
 ): Promise<Map<string, string[]>> {
@@ -87,14 +115,19 @@ function ownerInfo(
   return owners.get(id) ?? { name: "Unknown", username: null };
 }
 
+export type WorkSort = "top" | "new" | "popular";
+
 /**
- * Assemble every public work, optionally filtered by search text, tag, and
- * type ("books" = has written volumes, "audiobooks" = has audio volumes).
+ * Assemble every public work, optionally filtered by search text, tag,
+ * type ("books" = has written volumes, "audiobooks" = has audio volumes),
+ * and review sentiment; sorted by rating (default), age, or popularity.
  */
 export async function listPublicWorks(filter: {
   q?: string;
   tag?: string;
   type?: "books" | "audiobooks";
+  sentiment?: SentimentTone;
+  sort?: WorkSort;
 } = {}): Promise<Work[]> {
   const publicJournals = await db
     .select()
@@ -155,6 +188,8 @@ export async function listPublicWorks(filter: {
       tags: workTags,
       avgRating: null,
       ratingCount: 0,
+      saveCount: 0,
+      createdAt: Math.max(...volumes.map((v) => v.createdAt.getTime())),
     });
   }
 
@@ -179,18 +214,23 @@ export async function listPublicWorks(filter: {
       tags: tagMap.get(j.id) ?? [],
       avgRating: null,
       ratingCount: 0,
+      saveCount: 0,
+      createdAt: j.createdAt.getTime(),
     });
   }
 
-  const ratings = await ratingAggregates(
-    works.map((w) => ({ kind: w.kind, itemId: w.id }))
-  );
+  const keys = works.map((w) => ({ kind: w.kind, itemId: w.id }));
+  const [ratings, saves] = await Promise.all([
+    ratingAggregates(keys),
+    saveAggregates(keys),
+  ]);
   for (const w of works) {
     const agg = ratings.get(`${w.kind}:${w.id}`);
     if (agg) {
       w.avgRating = agg.avg;
       w.ratingCount = agg.count;
     }
+    w.saveCount = saves.get(`${w.kind}:${w.id}`) ?? 0;
   }
 
   let result = works;
@@ -210,7 +250,22 @@ export async function listPublicWorks(filter: {
         w.tags.some((t) => t.includes(q))
     );
   }
+  if (filter.sentiment) {
+    result = result.filter(
+      (w) => reviewSummary(w.avgRating, w.ratingCount)?.tone === filter.sentiment
+    );
+  }
 
+  if (filter.sort === "new") {
+    return result.sort((a, b) => b.createdAt - a.createdAt);
+  }
+  if (filter.sort === "popular") {
+    // Shelf saves weigh double a review; newest breaks ties.
+    const score = (w: Work) => w.saveCount * 2 + w.ratingCount;
+    return result.sort(
+      (a, b) => score(b) - score(a) || b.createdAt - a.createdAt
+    );
+  }
   // Best-known first: rated works by average then count, then newest-ish.
   return result.sort(
     (a, b) =>
@@ -222,9 +277,10 @@ export async function listPublicWorks(filter: {
 export async function workForJournal(
   journal: Journal
 ): Promise<Work> {
-  const [works, tagMap] = await Promise.all([
+  const [works, tagMap, saves] = await Promise.all([
     ratingAggregates([{ kind: "journal", itemId: journal.id }]),
     tagsForJournals([journal.id]),
+    saveAggregates([{ kind: "journal", itemId: journal.id }]),
   ]);
   const owner = await db
     .select({ name: user.name, username: user.username })
@@ -250,6 +306,8 @@ export async function workForJournal(
     tags: tagMap.get(journal.id) ?? [],
     avgRating: agg?.avg ?? null,
     ratingCount: agg?.count ?? 0,
+    saveCount: saves.get(`journal:${journal.id}`) ?? 0,
+    createdAt: journal.createdAt.getTime(),
   };
 }
 
