@@ -135,6 +135,8 @@ export const journalAudio = pgTable("journal_audio", {
   title: text("title").notNull(),
   sortIndex: integer("sort_index").notNull().default(0),
   segmentIndex: integer("segment_index").notNull().default(0),
+  /** Chapter image (journal_images id), stored on the entry's first segment. */
+  coverImageId: text("cover_image_id"),
   contentType: text("content_type").notNull(),
   data: bytea("data").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

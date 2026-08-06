@@ -52,6 +52,7 @@ export default async function JournalSettingsPage({
             id: t.id,
             title: t.title,
             parts: t.segmentIds.length,
+            coverImageId: t.coverImageId,
           }))}
         />
       </div>

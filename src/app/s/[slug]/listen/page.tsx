@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
-import { listTracks } from "@/lib/audio";
+import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, BookOpenIcon } from "@/components/icons";
@@ -43,12 +43,12 @@ export default async function SeriesListenPage({
     const tracks = await listTracks(v.id);
     const vl = volumeLabel(v);
     const label = vl !== null ? `Vol. ${vl}` : v.title;
-    const coverUrl = v.coverImageId ? `/api/images/${v.coverImageId}` : null;
+    const covers = entryCoverUrls(tracks, v.coverImageId);
     trackList.push(
       ...tracks.map((t, i) => ({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
-        coverUrl,
+        coverUrl: covers[i],
         segmentIds: t.segmentIds,
       }))
     );

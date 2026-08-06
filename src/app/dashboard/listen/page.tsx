@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { listJournalsForOwner } from "@/lib/journals";
-import { listTracks } from "@/lib/audio";
+import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
@@ -28,12 +28,12 @@ export default async function AllAudiobooksListenPage() {
     const tracks = await listTracks(j.id);
     const vl = volumeLabel(j);
     const label = vl !== null ? `${j.title} Vol. ${vl}` : j.title;
-    const coverUrl = j.coverImageId ? `/api/images/${j.coverImageId}` : null;
+    const covers = entryCoverUrls(tracks, j.coverImageId);
     playlist.push(
       ...tracks.map((t, i) => ({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
-        coverUrl,
+        coverUrl: covers[i],
         segmentIds: t.segmentIds,
       }))
     );

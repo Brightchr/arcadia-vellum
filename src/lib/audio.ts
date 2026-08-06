@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { journalAudio, journals } from "@/db/schema";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { journalAudio, journalImages, journals } from "@/db/schema";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
 
 export const AUDIO_TYPES: Record<string, string> = {
@@ -21,6 +21,8 @@ export interface AudioEntry {
   contentType: string;
   /** All segment audio ids in play order (length 1 for single-file entries). */
   segmentIds: string[];
+  /** Chapter image (journal_images id) from the entry's first segment. */
+  coverImageId: string | null;
 }
 
 /**
@@ -35,6 +37,7 @@ export async function listTracks(journalId: string): Promise<AudioEntry[]> {
       sortIndex: journalAudio.sortIndex,
       segmentIndex: journalAudio.segmentIndex,
       contentType: journalAudio.contentType,
+      coverImageId: journalAudio.coverImageId,
     })
     .from(journalAudio)
     .where(eq(journalAudio.journalId, journalId))
@@ -56,10 +59,29 @@ export async function listTracks(journalId: string): Promise<AudioEntry[]> {
         sortIndex: row.sortIndex,
         contentType: row.contentType,
         segmentIds: [row.id],
+        coverImageId: row.coverImageId,
       });
     }
   }
   return entries;
+}
+
+/**
+ * Chapter images in play order. Each entry shows its own image; entries
+ * without one borrow the first set chapter image, then the volume cover.
+ * With nothing set anywhere the whole list is null (no art).
+ */
+export function entryCoverUrls(
+  entries: AudioEntry[],
+  journalCoverImageId: string | null
+): (string | null)[] {
+  const own = entries.map((e) =>
+    e.coverImageId ? `/api/images/${e.coverImageId}` : null
+  );
+  const fallback =
+    own.find((u) => u !== null) ??
+    (journalCoverImageId ? `/api/images/${journalCoverImageId}` : null);
+  return own.map((u) => u ?? fallback);
 }
 
 /** Entry counts per journal for all of an owner's journals (for the dashboard). */
@@ -116,12 +138,19 @@ export async function addEntry(
 export async function deleteEntryByTrackId(id: string) {
   const track = await getTrack(id);
   if (!track) return;
-  await db
+  const removed = await db
     .delete(journalAudio)
     .where(
       and(
         eq(journalAudio.journalId, track.journalId),
         eq(journalAudio.sortIndex, track.sortIndex)
       )
-    );
+    )
+    .returning({ coverImageId: journalAudio.coverImageId });
+  const imageIds = removed
+    .map((r) => r.coverImageId)
+    .filter((x): x is string => x !== null);
+  if (imageIds.length > 0) {
+    await db.delete(journalImages).where(inArray(journalImages.id, imageIds));
+  }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "journal_audio" ADD COLUMN "cover_image_id" text;

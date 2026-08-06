@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getJournalBySlug } from "@/lib/journals";
-import { listTracks } from "@/lib/audio";
+import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
@@ -42,9 +42,9 @@ export default async function ListenPage({
   // dead end.
   if (tracks.length === 0 && !isOwner) notFound();
 
-  const coverUrl = journal.coverImageId
-    ? `/api/images/${journal.coverImageId}`
-    : null;
+  // Chapter images: each entry's own image, falling back to the first set
+  // one, then the volume cover.
+  const covers = entryCoverUrls(tracks, journal.coverImageId);
 
   return (
     <main
@@ -67,7 +67,7 @@ export default async function ListenPage({
               id: t.id,
               // Uploaded filenames make poor chapter names — label by part.
               title: tracks.length === 1 ? journal.title : `Part ${i + 1}`,
-              coverUrl,
+              coverUrl: covers[i],
               segmentIds: t.segmentIds,
             }))}
             title={journal.title}

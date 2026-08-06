@@ -13,6 +13,8 @@ export interface TrackInfo {
   title: string;
   /** Number of files that make up this entry (played back-to-back). */
   parts?: number;
+  /** Chapter image id, shown while this entry plays. */
+  coverImageId?: string | null;
 }
 
 export function SettingsForm({
@@ -177,6 +179,44 @@ export function SettingsForm({
       });
       if (res.ok) router.refresh();
       else setError("Could not remove the track.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function setChapterImage(trackId: string, f: File | null | undefined) {
+    if (!f) return;
+    setBusy("narration");
+    setError(null);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.set("file", f);
+      const res = await fetch(
+        `/api/journals/${journal.id}/audio/${trackId}/cover`,
+        { method: "POST", body: form }
+      );
+      const body = await res.json().catch(() => null);
+      if (!res.ok) setError(body?.error ?? "Upload failed.");
+      else {
+        setNotice("Chapter image set.");
+        router.refresh();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removeChapterImage(trackId: string) {
+    setBusy("narration");
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/journals/${journal.id}/audio/${trackId}/cover`,
+        { method: "DELETE" }
+      );
+      if (res.ok) router.refresh();
+      else setError("Could not remove the chapter image.");
     } finally {
       setBusy(null);
     }
@@ -474,6 +514,41 @@ export function SettingsForm({
                   )}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
+                  {t.coverImageId && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/images/${t.coverImageId}`}
+                      alt=""
+                      className="h-8 w-8 rounded object-cover border border-void-border"
+                    />
+                  )}
+                  <label
+                    className="btn-ghost text-xs px-2 py-1 cursor-pointer"
+                    title="Chapter image — shown while this entry plays"
+                  >
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      className="hidden"
+                      disabled={busy !== null}
+                      onChange={(e) => {
+                        void setChapterImage(t.id, e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                    {t.coverImageId ? "Image" : "+ Image"}
+                  </label>
+                  {t.coverImageId && (
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs px-2 py-1"
+                      title="Remove chapter image"
+                      disabled={busy !== null}
+                      onClick={() => removeChapterImage(t.id)}
+                    >
+                      ⨯ img
+                    </button>
+                  )}
                   <audio
                     src={`/api/audio/${t.id}`}
                     controls
