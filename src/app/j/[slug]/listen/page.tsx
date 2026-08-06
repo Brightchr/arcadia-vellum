@@ -37,11 +37,15 @@ export default async function ListenPage({
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
   if (!isOwner && (await isUserBanned(journal.ownerId))) notFound();
-  if (journal.visibility !== "public" && !isOwner) {
+  if (!isOwner) {
     const allowed = await canAccessJournal(session?.user.id ?? null, journal);
     if (!allowed) {
-      // Gated-but-visible works bounce to their teaser homepage.
-      if (isDiscoverable(journal.visibility) || journal.visibility === "friends") {
+      // Gated-but-visible works bounce to their teaser homepage; unlisted
+      // works without a share link stay invisible.
+      if (
+        journal.listed &&
+        (isDiscoverable(journal.visibility) || journal.visibility === "friends")
+      ) {
         redirect(`/book/${journal.slug}`);
       }
       notFound();

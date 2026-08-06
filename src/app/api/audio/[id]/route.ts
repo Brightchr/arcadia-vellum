@@ -17,7 +17,8 @@ export async function GET(
 
   const journal = await getJournalById(track.journalId);
   if (!journal) return jsonError("Not found", 404);
-  if (journal.visibility !== "public" || (await isUserBanned(journal.ownerId))) {
+  const openToAll = journal.visibility === "public" && journal.listed;
+  if (!openToAll || (await isUserBanned(journal.ownerId))) {
     const session = await sessionFromRequest(request);
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);
@@ -26,10 +27,9 @@ export async function GET(
 
   const data = track.data;
   const total = data.length;
-  const cacheControl =
-    journal.visibility === "public"
-      ? "public, max-age=3600"
-      : "private, max-age=300";
+  const cacheControl = openToAll
+    ? "public, max-age=3600"
+    : "private, max-age=300";
 
   const range = request.headers.get("range");
   const match = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;

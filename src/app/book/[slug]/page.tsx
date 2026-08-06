@@ -48,7 +48,10 @@ export default async function BookHomePage({
   const canAccess = await canAccessJournal(session?.user.id ?? null, journal);
   // Everything except private has a homepage: discoverable works show their
   // teaser to all, friends-only works show a "friends can open this" teaser.
-  if (!canAccess && journal.visibility === "private") notFound();
+  // Unlisted works are invisible without a share link (canAccess covers it).
+  if (!canAccess && (journal.visibility === "private" || !journal.listed)) {
+    notFound();
+  }
   const requestState =
     !canAccess && session
       ? await grantStatus(session.user.id, "journal", journal.id)
