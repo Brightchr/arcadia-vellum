@@ -79,18 +79,27 @@ export function AudiobookPlayer({
   const audioId = segments[Math.min(segIndex, segments.length - 1)];
 
   // Size the album art to the largest 3:4 box that fits the free space —
-  // as wide as the player when the screen is tall enough.
+  // as wide as the player when the screen is tall enough. The art lives in
+  // an absolutely-positioned layer so it never contributes to the page's
+  // intrinsic height: otherwise a large measurement becomes a min-content
+  // floor the layout can't shrink back from, pushing the controls below an
+  // overflow-hidden viewport.
   const artZoneRef = useRef<HTMLDivElement>(null);
   const [artWidth, setArtWidth] = useState<number | null>(null);
   useEffect(() => {
     const el = artZoneRef.current;
     if (!el) return;
-    const update = () => {
-      const r = el.getBoundingClientRect();
-      setArtWidth(Math.max(0, Math.floor(Math.min(r.width, r.height * 0.75))));
-    };
-    update();
-    const ro = new ResizeObserver(update);
+    // Measure the content box (padding excluded) so the art always fits.
+    const fit = (w: number, h: number) =>
+      setArtWidth(Math.max(0, Math.floor(Math.min(w, h * 0.75))));
+    const cs = getComputedStyle(el);
+    fit(
+      el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+      el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+    );
+    const ro = new ResizeObserver(([entry]) =>
+      fit(entry.contentRect.width, entry.contentRect.height)
+    );
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -220,28 +229,30 @@ export function AudiobookPlayer({
   return (
     <div className="flex-1 flex flex-col w-full min-h-0">
       {/* Album art floats over the theme's ambience; swaps per volume. */}
-      <div
-        ref={artZoneRef}
-        className="flex-1 min-h-0 grid place-items-center py-4"
-      >
+      <div className="relative flex-1 min-h-0">
         <div
-          className="aspect-[3/4]"
-          style={
-            artWidth !== null
-              ? ({ width: artWidth, "--art": `${artWidth}px` } as React.CSSProperties)
-              : { width: 208, visibility: "hidden" }
-          }
+          ref={artZoneRef}
+          className="absolute inset-0 py-4 grid place-items-center"
         >
-          {track.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={track.coverUrl}
-              alt=""
-              className="w-full h-full object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
-            />
-          ) : (
-            fallbackArt
-          )}
+          <div
+            className="aspect-[3/4]"
+            style={
+              artWidth !== null
+                ? ({ width: artWidth, "--art": `${artWidth}px` } as React.CSSProperties)
+                : { width: 208, visibility: "hidden" }
+            }
+          >
+            {track.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={track.coverUrl}
+                alt=""
+                className="w-full h-full object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
+              />
+            ) : (
+              fallbackArt
+            )}
+          </div>
         </div>
       </div>
 

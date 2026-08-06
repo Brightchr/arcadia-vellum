@@ -19,7 +19,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const s = await getSeriesBySlug(slug);
   return {
-    title: s ? `${s.name} (Audiobook) — Arcadia Vellum` : "Arcadia Vellum",
+    title: s ? `${s.name} (Audiobook) — Vellum` : "Vellum",
   };
 }
 
@@ -77,7 +77,7 @@ export default async function SeriesListenPage({
           href={isOwner ? "/dashboard" : "/"}
           className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Vellum"}
         </Link>
         <Link
           href={`/s/${s.slug}`}
@@ -87,7 +87,7 @@ export default async function SeriesListenPage({
         </Link>
       </header>
 
-      <div className="relative z-10 flex-1 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
         <AudiobookPlayer
           tracks={trackList}
           title={s.name}

@@ -19,8 +19,8 @@ export async function generateMetadata({
   const journal = await getJournalBySlug(slug);
   return {
     title: journal
-      ? `${journal.title} (Audiobook) — Arcadia Vellum`
-      : "Arcadia Vellum",
+      ? `${journal.title} (Audiobook) — Vellum`
+      : "Vellum",
   };
 }
 
@@ -71,11 +71,11 @@ export default async function ListenPage({
           href={isOwner ? "/dashboard" : "/"}
           className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Vellum"}
         </Link>
       </header>
 
-      <div className="relative z-10 flex-1 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
         {tracks.length > 0 ? (
           <AudiobookPlayer
             tracks={tracks.map((t, i) => ({
