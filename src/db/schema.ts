@@ -387,6 +387,29 @@ export const playlistItems = pgTable(
 );
 
 /**
+ * Named, revocable share links (Google Docs-style). A valid link grants
+ * read/listen access to its journal — or every volume of its series —
+ * whatever the work's visibility. Deleting the row revokes everyone who
+ * came in through it; expiry is optional.
+ */
+export const shareLinks = pgTable("share_links", {
+  id: text("id").primaryKey(),
+  /** High-entropy URL token: /share/<token>. */
+  token: text("token").notNull().unique(),
+  kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+  itemId: text("item_id").notNull(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  /** Author-facing name, e.g. "sent to my table". */
+  label: text("label").notNull(),
+  expiresAt: timestamp("expires_at"),
+  openCount: integer("open_count").notNull().default(0),
+  lastOpenedAt: timestamp("last_opened_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/**
  * Audit trail of moderation actions (bans, unbans). Append-only — rows are
  * never updated or deleted, so there's always a record of who did what.
  */

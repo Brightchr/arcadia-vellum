@@ -3,6 +3,11 @@ import { accessGrants, user } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { newId } from "@/lib/id";
 import { areFriends, bannedUserIds, isUserBanned } from "@/lib/profile";
+import {
+  activeLinksForTokens,
+  shareGrantsJournal,
+  shareTokensFromCookies,
+} from "@/lib/share";
 import type { Journal } from "@/lib/journals";
 
 export type GrantStatus = "none" | "pending" | "granted";
@@ -37,7 +42,11 @@ export async function canAccessJournal(
   if (viewerId === journal.ownerId) return true;
   // A banned owner's works are hidden from everyone but the owner.
   if (await isUserBanned(journal.ownerId)) return false;
-  if (journal.visibility === "public") return true;
+  // Unlisted works need a share link — only listed public works are open.
+  if (journal.visibility === "public" && journal.listed) return true;
+  // A redeemed share link opens the work regardless of its visibility.
+  if (await shareGrantsJournal(journal)) return true;
+  if (journal.visibility === "public") return false;
   if (viewerId === null) return false;
   switch (journal.visibility) {
     case "friends":
@@ -66,14 +75,27 @@ export async function accessibleJournalIds(
 ): Promise<Set<string>> {
   const ok = new Set<string>();
   const friendCache = new Map<string, boolean>();
-  const banned = await bannedUserIds([...new Set(journals.map((j) => j.ownerId))]);
+  const [banned, shareLinks] = await Promise.all([
+    bannedUserIds([...new Set(journals.map((j) => j.ownerId))]),
+    activeLinksForTokens(await shareTokensFromCookies()),
+  ]);
+  const sharedTo = (j: Journal) =>
+    shareLinks.some(
+      (l) =>
+        (l.kind === "journal" && l.itemId === j.id) ||
+        (l.kind === "series" && j.seriesId !== null && l.itemId === j.seriesId)
+    );
   for (const j of journals) {
     if (viewerId === j.ownerId) {
       ok.add(j.id);
       continue;
     }
     if (banned.has(j.ownerId)) continue;
-    if (j.visibility === "public") {
+    if (j.visibility === "public" && j.listed) {
+      ok.add(j.id);
+      continue;
+    }
+    if (sharedTo(j)) {
       ok.add(j.id);
       continue;
     }
