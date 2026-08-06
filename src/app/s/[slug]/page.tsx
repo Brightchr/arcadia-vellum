@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
@@ -48,13 +48,17 @@ export default async function SeriesReaderPage({
   );
   if (volumes.length === 0) notFound();
 
+  // Audiobook volumes have no pages — an all-audio series goes straight to
+  // its playlist, and a mixed series reads in its written volumes' binding.
+  const written = volumes.filter((v) => v.sourceType !== "audio");
+  if (written.length === 0) redirect(`/s/${s.slug}/listen`);
+
   if (isOwner) {
-    for (const v of volumes) await autoSyncIfStale(v);
+    for (const v of written) await autoSyncIfStale(v);
   }
 
   const parts: string[] = [];
-  for (const v of volumes) {
-    if (v.sourceType === "audio") continue; // audiobook volumes have no pages
+  for (const v of written) {
     const content = await getJournalContent(v.id);
     const label = volumeLabel(v);
     const prefix = label !== null ? `Volume ${label} — ` : "";
@@ -65,8 +69,8 @@ export default async function SeriesReaderPage({
     if (content?.html) parts.push(content.html);
   }
 
-  const theme = volumes[0].theme;
-  const author = volumes.find((v) => v.author)?.author ?? null;
+  const theme = written[0].theme;
+  const author = written.find((v) => v.author)?.author ?? null;
 
   // The series has an audiobook side if any audio-only volume has tracks.
   let hasAudio = false;
@@ -100,7 +104,7 @@ export default async function SeriesReaderPage({
             </Link>
           )}
           <span className="text-ink-dim font-heading">
-            {volumes.length} volume{volumes.length === 1 ? "" : "s"}
+            {written.length} volume{written.length === 1 ? "" : "s"}
           </span>
         </div>
       </header>
@@ -110,7 +114,7 @@ export default async function SeriesReaderPage({
           html={parts.join("\n")}
           theme={theme}
           title={s.name}
-          subtitle={`The complete chronicle in ${volumes.length} volume${volumes.length === 1 ? "" : "s"}`}
+          subtitle={`The complete chronicle in ${written.length} volume${written.length === 1 ? "" : "s"}`}
           author={author}
         />
       </div>
