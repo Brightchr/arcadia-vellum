@@ -10,9 +10,10 @@ import {
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { FriendsPanel } from "@/components/social/FriendsPanel";
+import { UserSearch } from "@/components/social/UserSearch";
 
 export const metadata: Metadata = {
-  title: "Friends — Arcadia Vellum",
+  title: "Friends — Vellum",
 };
 
 export default async function FriendsPage() {
@@ -40,6 +41,10 @@ export default async function FriendsPage() {
             Your circle of scribes and listeners.
           </p>
         </header>
+        <section className="panel-arcane p-5 mb-5">
+          <h2 className="font-heading text-lg mb-3">Find Scribes</h2>
+          <UserSearch />
+        </section>
         <FriendsPanel
           incoming={pending.incoming}
           outgoing={pending.outgoing}

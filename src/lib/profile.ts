@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { user, follows, friendships } from "@/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, ilike, isNotNull, ne, or, sql } from "drizzle-orm";
 import { isTextSafe } from "@/lib/safety";
 
 export type PublicUser = typeof user.$inferSelect;
@@ -73,6 +73,69 @@ export async function suggestUsername(name: string): Promise<string> {
     if (!(await isUsernameTaken(candidate))) return candidate;
   }
   return `${base}-${Date.now() % 100000}`;
+}
+
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  username: string;
+  avatarImageId: string | null;
+  bio: string | null;
+}
+
+/**
+ * Discord-style lookup: matches the unique @username or the (non-unique)
+ * display name. Only onboarded users who opted into search appear; exact
+ * username hits rank first, then username prefixes, then name matches.
+ */
+export async function searchUsers(
+  q: string,
+  limit = 20
+): Promise<UserSearchResult[]> {
+  const raw = q.trim().replace(/^@/, "");
+  if (raw.length < 2) return [];
+  // Escape LIKE wildcards so "a_b" searches literally.
+  const term = raw.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const rows = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      avatarImageId: user.avatarImageId,
+      bio: user.bio,
+      visibility: user.profileVisibility,
+    })
+    .from(user)
+    .where(
+      and(
+        isNotNull(user.username),
+        eq(user.searchable, true),
+        ne(user.profileVisibility, "private"),
+        or(ilike(user.username, `%${term}%`), ilike(user.name, `%${term}%`))
+      )
+    )
+    .limit(200);
+  const needle = raw.toLowerCase();
+  const rank = (r: (typeof rows)[number]) => {
+    const uname = (r.username ?? "").toLowerCase();
+    const name = r.name.toLowerCase();
+    if (uname === needle) return 0;
+    if (uname.startsWith(needle)) return 1;
+    if (name === needle) return 2;
+    if (name.startsWith(needle)) return 3;
+    if (uname.includes(needle)) return 4;
+    return 5;
+  };
+  return rows
+    .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+    .slice(0, limit)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      username: r.username as string,
+      avatarImageId: r.avatarImageId,
+      bio: r.bio,
+    }));
 }
 
 // ---------------------------------------------------------------------------
