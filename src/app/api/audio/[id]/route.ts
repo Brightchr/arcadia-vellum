@@ -1,6 +1,7 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getJournalById } from "@/lib/journals";
 import { getTrack } from "@/lib/audio";
+import { canAccessJournal } from "@/lib/access";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,7 @@ export async function GET(
   if (!journal) return jsonError("Not found", 404);
   if (journal.visibility !== "public") {
     const session = await sessionFromRequest(request);
-    if (!session || session.user.id !== journal.ownerId) {
+    if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);
     }
   }

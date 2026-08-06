@@ -1,5 +1,7 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
-import { isWorkPublic } from "@/lib/discovery";
+import { isWorkPublic, seriesVolumes } from "@/lib/discovery";
+import { getJournalById } from "@/lib/journals";
+import { canAccessJournal, accessibleJournalIds } from "@/lib/access";
 import { upsertReview, deleteReview } from "@/lib/reviews";
 import { notify } from "@/lib/notifications";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
@@ -32,6 +34,22 @@ export async function PUT(request: Request) {
   if (!ok) return jsonError("Work not found", 404);
   if (ownerId === session.user.id) {
     return jsonError("You can't review your own work", 400);
+  }
+
+  // You can only review what you can actually open.
+  const allowed =
+    kind === "journal"
+      ? await (async () => {
+          const j = await getJournalById(itemId);
+          return j ? canAccessJournal(session.user.id, j) : false;
+        })()
+      : await (async () => {
+          const vols = await seriesVolumes(itemId, false);
+          const accessible = await accessibleJournalIds(session.user.id, vols);
+          return accessible.size > 0;
+        })();
+  if (!allowed) {
+    return jsonError("Request access before reviewing this work", 403);
   }
 
   await upsertReview(session.user.id, kind, itemId, rating, text || null);

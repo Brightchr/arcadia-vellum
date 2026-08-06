@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { savedItems, journals, series } from "@/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import type { WorkKind } from "@/lib/reviews";
 
 export async function isSaved(userId: string, kind: WorkKind, itemId: string) {
@@ -75,7 +75,10 @@ export async function listSaved(userId: string) {
         .select({ slug: journals.slug, title: journals.title })
         .from(journals)
         .where(
-          and(eq(journals.id, row.itemId), eq(journals.visibility, "public"))
+          and(
+            eq(journals.id, row.itemId),
+            inArray(journals.visibility, ["public", "restricted"])
+          )
         );
       if (j[0]) {
         out.push({

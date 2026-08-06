@@ -26,6 +26,9 @@ export interface Work {
   hasWritten: boolean;
   volumeCount: number;
   coverImageId: string | null;
+  /** True when access must be requested (lock badge on cards). */
+  restricted: boolean;
+  description: string | null;
   ownerId: string;
   ownerName: string;
   ownerUsername: string | null;
@@ -96,7 +99,12 @@ export async function listPublicWorks(filter: {
   const publicJournals = await db
     .select()
     .from(journals)
-    .where(eq(journals.visibility, "public"));
+    .where(
+      and(
+        inArray(journals.visibility, ["public", "restricted"]),
+        eq(journals.listed, true)
+      )
+    );
   if (publicJournals.length === 0) return [];
 
   const seriesIds = [
@@ -139,6 +147,8 @@ export async function listPublicWorks(filter: {
       hasWritten: volumes.some((v) => v.sourceType !== "audio"),
       volumeCount: volumes.length,
       coverImageId: withCover?.coverImageId ?? null,
+      restricted: volumes.every((v) => v.visibility === "restricted"),
+      description: s.description,
       ownerId: s.ownerId,
       ownerName: owner.name,
       ownerUsername: owner.username,
@@ -161,6 +171,8 @@ export async function listPublicWorks(filter: {
       hasWritten: j.sourceType !== "audio",
       volumeCount: 1,
       coverImageId: j.coverImageId,
+      restricted: j.visibility === "restricted",
+      description: j.description,
       ownerId: j.ownerId,
       ownerName: owner.name,
       ownerUsername: owner.username,
@@ -230,6 +242,8 @@ export async function workForJournal(
     hasWritten: journal.sourceType !== "audio",
     volumeCount: 1,
     coverImageId: journal.coverImageId,
+    restricted: journal.visibility === "restricted",
+    description: journal.description,
     ownerId: journal.ownerId,
     ownerName: owner[0]?.name ?? "Unknown",
     ownerUsername: owner[0]?.username ?? null,
@@ -260,7 +274,10 @@ export async function isWorkPublic(
       .select({ ownerId: journals.ownerId })
       .from(journals)
       .where(
-        and(eq(journals.id, itemId), eq(journals.visibility, "public"))
+        and(
+          eq(journals.id, itemId),
+          inArray(journals.visibility, ["public", "restricted"])
+        )
       );
     return { ok: rows.length > 0, ownerId: rows[0]?.ownerId ?? null };
   }
@@ -268,7 +285,12 @@ export async function isWorkPublic(
     .select({ ownerId: series.ownerId })
     .from(series)
     .innerJoin(journals, eq(journals.seriesId, series.id))
-    .where(and(eq(series.id, itemId), eq(journals.visibility, "public")))
+    .where(
+      and(
+        eq(series.id, itemId),
+        inArray(journals.visibility, ["public", "restricted"])
+      )
+    )
     .limit(1);
   return { ok: rows.length > 0, ownerId: rows[0]?.ownerId ?? null };
 }
@@ -297,7 +319,7 @@ export async function seriesVolumes(seriesId: string, isOwner: boolean) {
         ? eq(journals.seriesId, seriesId)
         : and(
             eq(journals.seriesId, seriesId),
-            eq(journals.visibility, "public")
+            inArray(journals.visibility, ["public", "restricted"])
           )
     );
   return rows;

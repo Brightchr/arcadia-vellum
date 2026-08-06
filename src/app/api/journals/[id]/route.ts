@@ -6,6 +6,7 @@ import {
   type Journal,
 } from "@/lib/journals";
 import { isThemeId } from "@/lib/themes";
+import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import {
   findOrCreateSeries,
   deleteSeriesIfEmpty,
@@ -42,6 +43,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       | "partNumber"
       | "theme"
       | "visibility"
+      | "listed"
+      | "description"
       | "featured"
       | "gdocFileId"
     >
@@ -61,13 +64,32 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (!isThemeId(body.theme)) return jsonError("Unknown theme", 400);
     patch.theme = body.theme;
   }
-  if (body.visibility === "public" || body.visibility === "private") {
+  if (
+    body.visibility === "public" ||
+    body.visibility === "friends" ||
+    body.visibility === "restricted" ||
+    body.visibility === "private"
+  ) {
     patch.visibility = body.visibility;
-    if (body.visibility === "private") patch.featured = false;
+    // Featuring only makes sense for works with a public face.
+    if (body.visibility === "friends" || body.visibility === "private") {
+      patch.featured = false;
+    }
+  }
+  if (typeof body.listed === "boolean") {
+    patch.listed = body.listed;
+  }
+  if (typeof body.description === "string") {
+    const description = body.description.trim().slice(0, 2000);
+    if (description && !isTextSafe(description)) {
+      return jsonError(UNSAFE_TEXT_ERROR, 400);
+    }
+    patch.description = description || null;
   }
   if (typeof body.featured === "boolean") {
-    // Featuring is only meaningful for works visible on the profile.
-    patch.featured = body.featured && journal.visibility === "public";
+    const effective = patch.visibility ?? journal.visibility;
+    patch.featured =
+      body.featured && (effective === "public" || effective === "restricted");
   }
   if (
     typeof body.gdocFileId === "string" &&
@@ -122,7 +144,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const updated = await updateJournal(id, patch);
 
   // Publishing moment: tell series followers and the author's followers.
-  if (journal.visibility === "private" && updated?.visibility === "public") {
+  // Unlisted publishes stay quiet on purpose.
+  const wasDiscoverable =
+    journal.visibility === "public" || journal.visibility === "restricted";
+  const isDiscoverableNow =
+    (updated?.visibility === "public" || updated?.visibility === "restricted") &&
+    updated?.listed;
+  if (!wasDiscoverable && isDiscoverableNow) {
     if (updated.seriesId) {
       await notifyMany(await seriesFollowerIds(updated.seriesId), "new_volume", {
         actorId: session.user.id,

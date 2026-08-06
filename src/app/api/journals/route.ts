@@ -2,6 +2,7 @@ import { sessionFromRequest, jsonError } from "@/lib/api";
 import { createJournal, deleteJournal } from "@/lib/journals";
 import { ingestUpload } from "@/lib/content/ingest";
 import { isThemeId } from "@/lib/themes";
+import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import { findOrCreateSeries, nextVolumeNumber } from "@/lib/series";
 
 export const runtime = "nodejs";
@@ -26,6 +27,11 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const title = String(form.get("title") ?? "").trim();
   const subtitle = String(form.get("subtitle") ?? "").trim() || null;
+  const description =
+    String(form.get("description") ?? "").trim().slice(0, 2000) || null;
+  if (description && !isTextSafe(description)) {
+    return jsonError(UNSAFE_TEXT_ERROR, 400);
+  }
   const author = String(form.get("author") ?? "").trim() || null;
   const themeRaw = String(form.get("theme") ?? "");
   const sourceType = String(form.get("sourceType") ?? "");
@@ -71,6 +77,7 @@ export async function POST(request: Request) {
       ownerId: session.user.id,
       title,
       subtitle,
+      description,
       author,
       seriesId,
       volumeNumber,
@@ -95,6 +102,7 @@ export async function POST(request: Request) {
       ownerId: session.user.id,
       title,
       subtitle,
+      description,
       author,
       seriesId,
       volumeNumber,
@@ -114,6 +122,7 @@ export async function POST(request: Request) {
     ownerId: session.user.id,
     title,
     subtitle,
+    description,
     author,
     seriesId,
     volumeNumber,

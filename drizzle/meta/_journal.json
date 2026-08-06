@@ -99,6 +99,27 @@
       "when": 1786031980310,
       "tag": "0013_playlists",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1786034161561,
+      "tag": "0014_access-control",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786034217730,
+      "tag": "0015_work-descriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786034305864,
+      "tag": "0016_unlisted-works",
+      "breakpoints": true
     }
   ]
 }

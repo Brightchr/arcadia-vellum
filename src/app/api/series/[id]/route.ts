@@ -7,6 +7,7 @@ import {
   findSeriesByName,
   renameSeries,
 } from "@/lib/series";
+import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,20 @@ export async function PATCH(
   if (!s) return jsonError("Collection not found", 404);
 
   const body = await request.json().catch(() => null);
+
+  if (typeof body?.description === "string") {
+    const description = body.description.trim().slice(0, 2000);
+    if (description && !isTextSafe(description)) {
+      return jsonError(UNSAFE_TEXT_ERROR, 400);
+    }
+    await db
+      .update(series)
+      .set({ description: description || null })
+      .where(eq(series.id, id));
+    if (typeof body?.name !== "string" && body?.icon === undefined) {
+      return Response.json({ ok: true });
+    }
+  }
 
   if (typeof body?.icon === "string" || body?.icon === null) {
     const icon =

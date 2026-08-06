@@ -9,7 +9,9 @@ export type NotificationType =
   | "new_follower"
   | "review"
   | "new_volume"
-  | "new_work";
+  | "new_work"
+  | "access_request"
+  | "access_granted";
 
 export async function notify(
   userId: string,

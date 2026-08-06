@@ -44,6 +44,7 @@ export async function createJournal(input: {
   ownerId: string;
   title: string;
   subtitle?: string | null;
+  description?: string | null;
   author?: string | null;
   seriesId?: string | null;
   volumeNumber?: number | null;
@@ -61,6 +62,7 @@ export async function createJournal(input: {
       ownerId: input.ownerId,
       title: input.title,
       subtitle: input.subtitle ?? null,
+      description: input.description ?? null,
       author: input.author ?? null,
       seriesId: input.seriesId ?? null,
       volumeNumber: input.volumeNumber ?? null,

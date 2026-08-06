@@ -97,6 +97,8 @@ export const series = pgTable("series", {
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** What the series is about — shown on its homepage. */
+  description: text("description"),
   /** Sidebar icon (an emoji the owner picks, Spotify-playlist style). */
   icon: text("icon"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -115,6 +117,8 @@ export const journals = pgTable("journals", {
   partNumber: integer("part_number"),
   title: text("title").notNull(),
   subtitle: text("subtitle"),
+  /** What the work is about — shown on its homepage and access teasers. */
+  description: text("description"),
   author: text("author"),
   slug: text("slug").notNull().unique(),
   theme: text("theme").notNull().default("witch-grimoire"),
@@ -124,9 +128,13 @@ export const journals = pgTable("journals", {
   gdocFileId: text("gdoc_file_id"),
   /** Optional cover art (journal_images id) — the listening page backdrop. */
   coverImageId: text("cover_image_id"),
-  visibility: text("visibility", { enum: ["public", "private"] })
+  visibility: text("visibility", {
+    enum: ["public", "friends", "restricted", "private"],
+  })
     .notNull()
     .default("private"),
+  /** Unchecked = unlisted: reachable by link but hidden from browse/search. */
+  listed: boolean("listed").notNull().default(true),
   /** Featured works lead the owner's profile page. */
   featured: boolean("featured").notNull().default(false),
   lastSyncedAt: timestamp("last_synced_at"),
@@ -353,4 +361,26 @@ export const playlistItems = pgTable(
     sortIndex: integer("sort_index").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.playlistId, t.journalId] })]
+);
+
+/**
+ * Access grants for works with "restricted" visibility: a pending row is a
+ * request awaiting the owner; granted rows unlock the work. A series-level
+ * grant covers every volume, current and future.
+ */
+export const accessGrants = pgTable(
+  "access_grants",
+  {
+    id: text("id").primaryKey(),
+    kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+    itemId: text("item_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["pending", "granted"] })
+      .notNull()
+      .default("pending"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.kind, t.itemId, t.userId)]
 );

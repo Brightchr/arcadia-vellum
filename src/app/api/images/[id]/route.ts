@@ -3,6 +3,7 @@ import { journalImages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getJournalById } from "@/lib/journals";
+import { canAccessJournal, isDiscoverable } from "@/lib/access";
 
 export const runtime = "nodejs";
 
@@ -21,9 +22,11 @@ export async function GET(
   const journal = await getJournalById(image.journalId);
   if (!journal) return jsonError("Not found", 404);
 
-  if (journal.visibility !== "public") {
+  // Cover images double as browse/teaser art, so anything discoverable can
+  // serve its images; friends/private works keep the full access check.
+  if (!isDiscoverable(journal.visibility)) {
     const session = await sessionFromRequest(request);
-    if (!session || session.user.id !== journal.ownerId) {
+    if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);
     }
   }
