@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { sessionWithNav } from "@/lib/nav";
+import { shellData } from "@/lib/nav";
 import { getSeriesBySlug } from "@/lib/series";
 import { seriesVolumes } from "@/lib/discovery";
 import { listJournalTags } from "@/lib/tags";
 import { listReviews } from "@/lib/reviews";
 import { isSaved } from "@/lib/saves";
 import { getUserById } from "@/lib/profile";
+import { isFollowingSeries } from "@/lib/social";
+import { FollowSeriesButton } from "@/components/social/FollowSeriesButton";
 import { compareVolumes, volumeLabel } from "@/lib/volume";
 import { appThemeClass } from "@/lib/themes";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import { WorkCover } from "@/components/discover/WorkCard";
 import { Stars } from "@/components/discover/StarRating";
 import { SaveButton } from "@/components/discover/SaveButton";
@@ -37,7 +39,7 @@ export default async function SeriesHomePage({
   const s = await getSeriesBySlug(slug);
   if (!s) notFound();
 
-  const { session, navUser } = await sessionWithNav();
+  const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === s.ownerId;
   const volumes = (await seriesVolumes(s.id, isOwner ?? false)).sort(
     compareVolumes
@@ -53,6 +55,9 @@ export default async function SeriesHomePage({
   );
   const allTags = [...new Set(tagLists.flat())].sort();
   const saved = session ? await isSaved(session.user.id, "series", s.id) : false;
+  const followingSeries = session
+    ? await isFollowingSeries(session.user.id, s.id)
+    : false;
 
   const hasWritten = volumes.some((v) => v.sourceType !== "audio");
   const hasAudio = volumes.some((v) => v.sourceType === "audio");
@@ -67,7 +72,7 @@ export default async function SeriesHomePage({
     <main
       className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
-      <AppNav user={navUser} />
+      <AppShell user={navUser} pins={pins} unreadNotifications={unread}>
       <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 space-y-8">
         <div className="grid gap-6 md:grid-cols-[14rem_1fr] items-start">
           <WorkCover
@@ -149,6 +154,13 @@ export default async function SeriesHomePage({
                 saved={saved}
                 signedIn={!!session}
               />
+              {!isOwner && (
+                <FollowSeriesButton
+                  seriesId={s.id}
+                  following={followingSeries}
+                  signedIn={!!session}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -205,6 +217,7 @@ export default async function SeriesHomePage({
           signedIn={!!session}
         />
       </div>
+      </AppShell>
     </main>
   );
 }

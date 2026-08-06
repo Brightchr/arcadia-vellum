@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { sessionWithNav } from "@/lib/nav";
+import { shellData } from "@/lib/nav";
 import { listSaved } from "@/lib/saves";
 import { listPublicWorks } from "@/lib/discovery";
 import { appThemeClass } from "@/lib/themes";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SavedPage() {
-  const { session, navUser } = await sessionWithNav();
+  const { session, navUser, pins, unread } = await shellData();
   if (!session || !navUser) redirect("/login");
 
   const saved = await listSaved(session.user.id);
@@ -33,7 +33,7 @@ export default async function SavedPage() {
     <main
       className={`${appThemeClass(navUser.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
-      <AppNav user={navUser} active="saved" />
+      <AppShell user={navUser} active="saved" pins={pins} unreadNotifications={unread}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
         <header className="mb-8">
           <h1 className="font-display text-2xl text-arcane-bright">
@@ -63,6 +63,7 @@ export default async function SavedPage() {
           </div>
         )}
       </div>
+      </AppShell>
     </main>
   );
 }

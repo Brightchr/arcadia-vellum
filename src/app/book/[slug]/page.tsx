@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { sessionWithNav } from "@/lib/nav";
+import { shellData } from "@/lib/nav";
 import { getJournalBySlug } from "@/lib/journals";
 import { workForJournal } from "@/lib/discovery";
 import { listTracks } from "@/lib/audio";
@@ -9,7 +9,7 @@ import { listReviews } from "@/lib/reviews";
 import { isSaved } from "@/lib/saves";
 import { volumeLabel } from "@/lib/volume";
 import { appThemeClass } from "@/lib/themes";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import { WorkCover } from "@/components/discover/WorkCard";
 import { Stars } from "@/components/discover/StarRating";
 import { SaveButton } from "@/components/discover/SaveButton";
@@ -38,7 +38,7 @@ export default async function BookHomePage({
   const journal = await getJournalBySlug(slug);
   if (!journal) notFound();
 
-  const { session, navUser } = await sessionWithNav();
+  const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === journal.ownerId;
   if (journal.visibility !== "public" && !isOwner) notFound();
 
@@ -56,7 +56,7 @@ export default async function BookHomePage({
     <main
       className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
-      <AppNav user={navUser} />
+      <AppShell user={navUser} pins={pins} unreadNotifications={unread}>
       <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 space-y-8">
         <div className="grid gap-6 md:grid-cols-[14rem_1fr] items-start">
           <WorkCover work={work} className="max-w-56" />
@@ -190,6 +190,7 @@ export default async function BookHomePage({
           signedIn={!!session}
         />
       </div>
+      </AppShell>
     </main>
   );
 }

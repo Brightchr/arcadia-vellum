@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import {
   BookOpenIcon,
   HeadphonesIcon,
@@ -45,7 +45,7 @@ export default async function LandingPage() {
 
   return (
     <main className="arcane-bg min-h-screen">
-      <AppNav user={null} />
+      <AppShell user={null}>
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
@@ -139,6 +139,7 @@ export default async function LandingPage() {
           </p>
         </div>
       </section>
+      </AppShell>
     </main>
   );
 }

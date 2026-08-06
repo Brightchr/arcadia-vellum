@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
+import { recordActivity } from "@/lib/activity";
 import { getJournalBySlug } from "@/lib/journals";
 import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
@@ -37,6 +38,10 @@ export default async function ListenPage({
   // Only audio-only tomes have a listening side.
   if (journal.sourceType !== "audio") notFound();
 
+  if (session) {
+    await recordActivity(session.user.id, "journal", journal.id, "listen");
+  }
+
   const tracks = await listTracks(journal.id);
   // Owners see a hint instead of a 404 so an empty audio-only tome isn't a
   // dead end.
@@ -48,7 +53,7 @@ export default async function ListenPage({
 
   return (
     <main
-      className={`theme-${journal.theme} tome-scene arcane-bg min-h-dvh w-full relative flex flex-col`}
+      className={`theme-${journal.theme} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
     >
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">

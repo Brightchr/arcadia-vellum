@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
+import { recordActivity } from "@/lib/activity";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
@@ -37,6 +38,10 @@ export default async function SeriesListenPage({
   );
   if (volumes.length === 0) notFound();
 
+  if (session) {
+    await recordActivity(session.user.id, "series", s.id, "listen");
+  }
+
   const trackList = [];
   for (const v of volumes) {
     if (v.sourceType !== "audio") continue; // only audiobook volumes play
@@ -60,7 +65,7 @@ export default async function SeriesListenPage({
 
   return (
     <main
-      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative flex flex-col`}
+      className={`theme-${theme} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
     >
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">

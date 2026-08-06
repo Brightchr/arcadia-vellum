@@ -44,7 +44,7 @@ export default async function AllAudiobooksListenPage() {
 
   return (
     <main
-      className={`theme-${theme} tome-scene arcane-bg min-h-dvh w-full relative flex flex-col`}
+      className={`theme-${theme} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
     >
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
+import { recordActivity } from "@/lib/activity";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
 import TomeReader from "@/components/book/TomeReaderClient";
@@ -38,6 +39,10 @@ export default async function ReaderPage({
 
   // Keep the owner's view fresh without blocking readers on Google errors.
   if (isOwner) await autoSyncIfStale(journal);
+
+  if (session) {
+    await recordActivity(session.user.id, "journal", journal.id, "read");
+  }
 
   const content = await getJournalContent(journal.id);
 

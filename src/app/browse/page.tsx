@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { sessionWithNav } from "@/lib/nav";
+import { shellData } from "@/lib/nav";
 import { listPublicWorks, popularTags } from "@/lib/discovery";
 import { appThemeClass } from "@/lib/themes";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function BrowsePage({
 }: {
   searchParams: Promise<{ q?: string; type?: string; tag?: string }>;
 }) {
-  const { navUser } = await sessionWithNav();
+  const { navUser, pins, unread } = await shellData();
   const params = await searchParams;
   const q = (params.q ?? "").trim();
   const type =
@@ -57,8 +57,13 @@ export default async function BrowsePage({
     <main
       className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
-      <AppNav user={navUser} active="browse" />
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
+      <AppShell
+        user={navUser}
+        active="browse"
+        pins={pins}
+        unreadNotifications={unread}
+      >
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
         <header className="mb-6">
           <h1 className="font-display text-2xl text-arcane-bright">
             Browse the Archives
@@ -127,6 +132,7 @@ export default async function BrowsePage({
           </div>
         )}
       </div>
+      </AppShell>
     </main>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
+import { recordActivity } from "@/lib/activity";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
 import { getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
@@ -55,6 +56,10 @@ export default async function SeriesReaderPage({
 
   if (isOwner) {
     for (const v of written) await autoSyncIfStale(v);
+  }
+
+  if (session) {
+    await recordActivity(session.user.id, "series", s.id, "read");
   }
 
   const parts: string[] = [];

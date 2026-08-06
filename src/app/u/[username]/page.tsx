@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { sessionWithNav } from "@/lib/nav";
+import { shellData } from "@/lib/nav";
 import {
   getUserByUsername,
   canViewProfile,
@@ -11,7 +11,7 @@ import { isFollowing, friendshipBetween } from "@/lib/social";
 import { listPublicWorks, featuredWorkKeys } from "@/lib/discovery";
 import { listSaved } from "@/lib/saves";
 import { appThemeClass } from "@/lib/themes";
-import { AppNav } from "@/components/nav/AppNav";
+import { AppShell } from "@/components/nav/AppShell";
 import { Avatar } from "@/components/nav/Avatar";
 import { WorkCard } from "@/components/discover/WorkCard";
 import {
@@ -37,7 +37,7 @@ export default async function ProfilePage({
   const profile = await getUserByUsername(username);
   if (!profile || !profile.username) notFound();
 
-  const { session, navUser } = await sessionWithNav();
+  const { session, navUser, pins, unread } = await shellData();
   const viewerId = session?.user.id ?? null;
   const isSelf = viewerId === profile.id;
   const visible = await canViewProfile(profile, viewerId);
@@ -68,6 +68,16 @@ export default async function ProfilePage({
   const featured = allWorks.filter((w) => featuredIds.has(`${w.kind}:${w.id}`));
   const rest = allWorks.filter((w) => !featuredIds.has(`${w.kind}:${w.id}`));
 
+  const layout: string[] = (() => {
+    try {
+      const parsed = JSON.parse(profile.profileLayout ?? "null");
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      // fall through to default
+    }
+    return ["bio", "featured", "works", "saved"];
+  })();
+
   const savedWorks =
     visible && profile.showSavedOnProfile
       ? await (async () => {
@@ -83,7 +93,7 @@ export default async function ProfilePage({
     <main
       className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
-      <AppNav user={navUser} />
+      <AppShell user={navUser} pins={pins} unreadNotifications={unread}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10 space-y-8">
         <header className="flex flex-wrap items-start gap-5">
           <Avatar
@@ -96,11 +106,6 @@ export default async function ProfilePage({
               {profile.name}
             </h1>
             <p className="text-sm text-ink-dim">@{profile.username}</p>
-            {visible && profile.bio && (
-              <p className="text-sm mt-2 max-w-xl whitespace-pre-wrap">
-                {profile.bio}
-              </p>
-            )}
             <p className="text-xs text-ink-dim mt-2">
               {counts.followers} follower{counts.followers === 1 ? "" : "s"} ·{" "}
               {counts.following} following · {counts.friends} friend
@@ -134,48 +139,65 @@ export default async function ProfilePage({
             </p>
           </div>
         ) : (
-          <>
-            {featured.length > 0 && (
-              <section>
-                <h2 className="font-heading text-lg mb-3">Featured Works</h2>
-                <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {featured.map((w) => (
-                    <WorkCard key={`${w.kind}:${w.id}`} work={w} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <section>
-              <h2 className="font-heading text-lg mb-3">
-                {featured.length > 0 ? "All Works" : "Works"}
-              </h2>
-              {rest.length === 0 && featured.length === 0 ? (
-                <p className="text-sm text-ink-dim italic">
-                  No public works yet.
-                </p>
-              ) : (
-                <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {rest.map((w) => (
-                    <WorkCard key={`${w.kind}:${w.id}`} work={w} />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {savedWorks.length > 0 && (
-              <section>
-                <h2 className="font-heading text-lg mb-3">Saved Shelf</h2>
-                <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {savedWorks.map((w) => (
-                    <WorkCard key={`${w.kind}:${w.id}`} work={w} />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
+          // The writer arranges (and hides) these sections in Settings.
+          layout.map((sectionKey) => {
+            switch (sectionKey) {
+              case "bio":
+                return profile.bio ? (
+                  <section key="bio" className="panel-arcane p-5 max-w-2xl">
+                    <p className="text-sm whitespace-pre-wrap">{profile.bio}</p>
+                  </section>
+                ) : null;
+              case "featured":
+                return featured.length > 0 ? (
+                  <section key="featured">
+                    <h2 className="font-heading text-lg mb-3">
+                      Featured Works
+                    </h2>
+                    <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      {featured.map((w) => (
+                        <WorkCard key={`${w.kind}:${w.id}`} work={w} />
+                      ))}
+                    </div>
+                  </section>
+                ) : null;
+              case "works":
+                return (
+                  <section key="works">
+                    <h2 className="font-heading text-lg mb-3">
+                      {featured.length > 0 ? "All Works" : "Works"}
+                    </h2>
+                    {rest.length === 0 && featured.length === 0 ? (
+                      <p className="text-sm text-ink-dim italic">
+                        No public works yet.
+                      </p>
+                    ) : (
+                      <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {rest.map((w) => (
+                          <WorkCard key={`${w.kind}:${w.id}`} work={w} />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              case "saved":
+                return savedWorks.length > 0 ? (
+                  <section key="saved">
+                    <h2 className="font-heading text-lg mb-3">Saved Shelf</h2>
+                    <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      {savedWorks.map((w) => (
+                        <WorkCard key={`${w.kind}:${w.id}`} work={w} />
+                      ))}
+                    </div>
+                  </section>
+                ) : null;
+              default:
+                return null;
+            }
+          })
         )}
       </div>
+      </AppShell>
     </main>
   );
 }
