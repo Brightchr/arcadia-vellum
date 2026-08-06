@@ -5,6 +5,8 @@ import {
   boolean,
   integer,
   customType,
+  primaryKey,
+  unique,
 } from "drizzle-orm/pg-core";
 
 // ---------------------------------------------------------------------------
@@ -18,6 +20,20 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   dashboardTheme: text("dashboard_theme").notNull().default("witch-grimoire"),
+  /** Public handle for /u/<username>; null until onboarding picks one. */
+  username: text("username").unique(),
+  bio: text("bio"),
+  /** profile_images id for the uploaded avatar. */
+  avatarImageId: text("avatar_image_id"),
+  profileVisibility: text("profile_visibility", {
+    enum: ["public", "friends", "private"],
+  })
+    .notNull()
+    .default("public"),
+  allowFriendRequests: boolean("allow_friend_requests").notNull().default(true),
+  showSavedOnProfile: boolean("show_saved_on_profile")
+    .notNull()
+    .default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -107,6 +123,8 @@ export const journals = pgTable("journals", {
   visibility: text("visibility", { enum: ["public", "private"] })
     .notNull()
     .default("private"),
+  /** Featured works lead the owner's profile page. */
+  featured: boolean("featured").notNull().default(false),
   lastSyncedAt: timestamp("last_synced_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -151,3 +169,106 @@ export const journalImages = pgTable("journal_images", {
   data: bytea("data").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Social platform tables
+// ---------------------------------------------------------------------------
+
+/** Uploaded profile avatars (small images, served via /api/avatars/<id>). */
+export const profileImages = pgTable("profile_images", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  contentType: text("content_type").notNull(),
+  data: bytea("data").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/** One-way follows (Spotify-style). */
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.followerId, t.followingId] })]
+);
+
+/** Mutual friendships: a pending row is a request awaiting the addressee. */
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: text("id").primaryKey(),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    addresseeId: text("addressee_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["pending", "accepted"] })
+      .notNull()
+      .default("pending"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.requesterId, t.addresseeId)]
+);
+
+/** Search tags (lowercase, safety-filtered on write). */
+export const tags = pgTable("tags", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+});
+
+export const journalTags = pgTable(
+  "journal_tags",
+  {
+    journalId: text("journal_id")
+      .notNull()
+      .references(() => journals.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.journalId, t.tagId] })]
+);
+
+/**
+ * Saved works — a user's personal shelf of other people's books and
+ * audiobooks. kind: "journal" (standalone) | "series".
+ */
+export const savedItems = pgTable(
+  "saved_items",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+    itemId: text("item_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
+);
+
+/** 1-5 star reviews with text; one per user per work. */
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+    itemId: text("item_id").notNull(),
+    rating: integer("rating").notNull(),
+    body: text("body"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.kind, t.itemId)]
+);

@@ -78,6 +78,13 @@
       "when": 1786021853260,
       "tag": "0010_chapter-images",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786024280095,
+      "tag": "0011_social-platform",
+      "breakpoints": true
     }
   ]
 }

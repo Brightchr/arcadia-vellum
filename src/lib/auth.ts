@@ -19,6 +19,26 @@ export const auth = betterAuth({
         type: "string",
         defaultValue: "witch-grimoire",
       },
+      // Profile fields are read through the session but only writable via
+      // /api/profile, which owns safety + uniqueness validation.
+      username: { type: "string", required: false, input: false },
+      bio: { type: "string", required: false, input: false },
+      avatarImageId: { type: "string", required: false, input: false },
+      profileVisibility: {
+        type: "string",
+        defaultValue: "public",
+        input: false,
+      },
+      allowFriendRequests: {
+        type: "boolean",
+        defaultValue: true,
+        input: false,
+      },
+      showSavedOnProfile: {
+        type: "boolean",
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   socialProviders: {
