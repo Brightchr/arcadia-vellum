@@ -19,6 +19,7 @@ import {
 import { RequestAccessButton } from "@/components/discover/RequestAccessButton";
 import { AccessManager } from "@/components/discover/AccessManager";
 import { SeriesDescription } from "@/components/discover/SeriesDescription";
+import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
 import { compareVolumes, volumeLabel } from "@/lib/volume";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
@@ -51,8 +52,17 @@ export default async function SeriesHomePage({
   const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === s.ownerId;
   if (!isOwner && (await isUserBanned(s.ownerId))) notFound();
-  const volumes = (await seriesVolumes(s.id, isOwner ?? false)).sort(
+  const allVolumes = (await seriesVolumes(s.id, isOwner ?? false)).sort(
     compareVolumes
+  );
+  const accessible = await accessibleJournalIds(
+    session?.user.id ?? null,
+    allVolumes
+  );
+  // Unlisted volumes stay invisible unless a share link (or ownership)
+  // grants access; listed gated volumes still show as locked teasers.
+  const volumes = allVolumes.filter(
+    (v) => isOwner || v.listed || accessible.has(v.id)
   );
   if (volumes.length === 0) notFound();
 
@@ -65,7 +75,6 @@ export default async function SeriesHomePage({
   );
   const allTags = [...new Set(tagLists.flat())].sort();
   const saved = session ? await isSaved(session.user.id, "series", s.id) : false;
-  const accessible = await accessibleJournalIds(session?.user.id ?? null, volumes);
   const hasLocked = volumes.some((v) => !accessible.has(v.id));
   const requestState =
     hasLocked && session && !isOwner
@@ -251,6 +260,12 @@ export default async function SeriesHomePage({
 
         {isOwner && grants.length >= 0 && volumes.some((v) => v.visibility === "restricted") && (
           <AccessManager kind="series" itemId={s.id} grants={grants} />
+        )}
+
+        {isOwner && (
+          <section className="panel-arcane p-5">
+            <ShareLinksPanel kind="series" itemId={s.id} />
+          </section>
         )}
 
         <ReviewsSection

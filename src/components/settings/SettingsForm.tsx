@@ -7,6 +7,7 @@ import { THEMES, type ThemeId } from "@/lib/themes";
 import { ThemePreview } from "@/components/wizard/ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
+import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
 
 export interface TrackInfo {
   id: string;
@@ -538,8 +539,8 @@ export function SettingsForm({
               : visibility === "friends"
                 ? "Only your accepted friends can open it. It never appears in Browse."
                 : visibility === "private"
-                  ? "Invisible to everyone but you."
-                  : "Anyone with the link can open it."}
+                  ? "Invisible to everyone but you — except people you give a share link below."
+                  : "Anyone can open it while it's shown in Browse. Untick below to make it share-link-only."}
           </p>
         </div>
         {(visibility === "public" || visibility === "restricted") && (
@@ -551,7 +552,7 @@ export function SettingsForm({
             />
             Show in Browse &amp; search
             <span className="text-xs text-ink-dim">
-              (unchecked = unlisted, link-only)
+              (unchecked = unlisted — only share links below open it)
             </span>
           </label>
         )}
@@ -566,28 +567,24 @@ export function SettingsForm({
         >
           {busy === "visibility" ? "Saving..." : "Save Sharing"}
         </button>
-        <div className="flex gap-2">
-          <input
-            className={`input-arcane flex-1 ${
-              journal.visibility === "public" ? "" : "opacity-60"
-            }`}
-            readOnly
-            value={shareUrl}
-          />
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => {
-              navigator.clipboard.writeText(shareUrl);
-              setNotice(
-                journal.visibility === "public"
-                  ? "Link copied."
-                  : "Link copied — remember to make the tome public before sending it."
-              );
-            }}
-          >
-            Copy
-          </button>
+        {journal.visibility === "public" && journal.listed && (
+          <div className="flex gap-2">
+            <input className="input-arcane flex-1" readOnly value={shareUrl} />
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                setNotice("Link copied.");
+              }}
+            >
+              Copy
+            </button>
+          </div>
+        )}
+
+        <div className="border-t border-void-border pt-4">
+          <ShareLinksPanel kind="journal" itemId={journal.id} />
         </div>
       </section>
 
