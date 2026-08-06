@@ -1,62 +1,47 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import Link from "next/link";
+import { sessionWithNav } from "@/lib/nav";
 import { listJournalsForOwner } from "@/lib/journals";
 import { listSeriesForOwner } from "@/lib/series";
 import { trackCountsForOwner } from "@/lib/audio";
 import { appThemeClass } from "@/lib/themes";
+import { AppNav } from "@/components/nav/AppNav";
 import { LibraryShelves } from "@/components/dashboard/LibraryShelves";
-import { SignOutButton } from "@/components/dashboard/SignOutButton";
-import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 
 export default async function DashboardPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
+  const { session, navUser } = await sessionWithNav();
+  if (!session || !navUser) redirect("/login");
+  if (!navUser.username) redirect("/welcome");
 
   const journals = await listJournalsForOwner(session.user.id);
   const seriesList = await listSeriesForOwner(session.user.id);
   const trackCounts = await trackCountsForOwner(session.user.id);
-  const dashboardTheme =
-    (session.user as { dashboardTheme?: string }).dashboardTheme ?? "";
+  const dashboardTheme = navUser.dashboardTheme ?? "";
 
   return (
     <main className={`${appThemeClass(dashboardTheme)} arcane-bg min-h-screen`}>
-      <div className="max-w-5xl mx-auto p-6 md:p-10">
-        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 mb-8">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/mark.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-16 w-16"
-            />
-            <div>
-              <Link href="/" className="font-display text-xl text-arcane-bright">
-                Arcadia Vellum
-              </Link>
-              <p className="text-sm text-ink-dim">
-                {session.user.name}&apos;s library
-              </p>
-            </div>
+      <AppNav user={navUser} active="library" />
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
+        <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="font-display text-2xl text-arcane-bright">
+              Your Library
+            </h1>
+            <p className="text-sm text-ink-dim">
+              {navUser.name}&apos;s tomes, shelves, and audiobooks.
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <DashboardThemePicker
-              current={dashboardTheme || "witch-grimoire"}
-            />
-            <Link href="/journal/new" className="btn-arcane">
-              + New Journal
-            </Link>
-            <SignOutButton />
-          </div>
+          <Link href="/journal/new" className="btn-arcane">
+            + New Journal
+          </Link>
         </header>
 
         {journals.length === 0 ? (
           <div className="panel-arcane p-12 text-center">
             <p className="font-heading text-xl mb-2">The shelves are bare.</p>
             <p className="text-ink-dim mb-6">
-              Bind your first journal from a Google Doc or an uploaded file.
+              Bind your first journal from a Google Doc, an uploaded file, the
+              built-in editor, or audio files.
             </p>
             <Link href="/journal/new" className="btn-arcane">
               Bind a Journal

@@ -23,12 +23,14 @@ export function SettingsForm({
   seriesName: initialSeriesName = "",
   seriesNames = [],
   tracks = [],
+  tagNames = [],
 }: {
   journal: Journal;
   googleEnabled: boolean;
   seriesName?: string;
   seriesNames?: string[];
   tracks?: TrackInfo[];
+  tagNames?: string[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(journal.title);
@@ -43,6 +45,7 @@ export function SettingsForm({
   );
   const [theme, setTheme] = useState(journal.theme as ThemeId);
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
+  const [tagsInput, setTagsInput] = useState(tagNames.join(", "));
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [combineFiles, setCombineFiles] = useState(false);
@@ -179,6 +182,30 @@ export function SettingsForm({
       });
       if (res.ok) router.refresh();
       else setError("Could not remove the track.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function saveTags() {
+    setBusy("tags");
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/journals/${journal.id}/tags`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tags: tagsInput.split(",").map((t) => t.trim()).filter(Boolean),
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) setError(body?.error ?? "Could not save tags.");
+      else {
+        setTagsInput((body.tags as string[]).join(", "));
+        setNotice("Tags saved.");
+        router.refresh();
+      }
     } finally {
       setBusy(null);
     }
@@ -442,6 +469,29 @@ export function SettingsForm({
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Tags */}
+      <section className="panel-arcane p-6 space-y-3">
+        <h2 className="font-heading text-lg">Tags</h2>
+        <p className="text-sm text-ink-dim">
+          Up to 8 comma-separated tags to help readers find this tome on the
+          browse page (kept family-friendly — unsafe words are rejected).
+        </p>
+        <input
+          className="input-arcane"
+          value={tagsInput}
+          placeholder="fantasy, campaign diary, horror"
+          onChange={(e) => setTagsInput(e.target.value)}
+        />
+        <button
+          type="button"
+          className="btn-arcane"
+          disabled={busy !== null}
+          onClick={saveTags}
+        >
+          {busy === "tags" ? "Saving..." : "Save Tags"}
+        </button>
       </section>
 
       {/* Sharing */}

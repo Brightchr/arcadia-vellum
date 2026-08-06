@@ -4,6 +4,7 @@ import { getSession, googleConfigured } from "@/lib/auth";
 import { getOwnedJournal } from "@/lib/journals";
 import { listSeriesForOwner } from "@/lib/series";
 import { listTracks } from "@/lib/audio";
+import { listJournalTags } from "@/lib/tags";
 import { appThemeClass } from "@/lib/themes";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { ArrowLeftIcon } from "@/components/icons";
@@ -25,6 +26,7 @@ export default async function JournalSettingsPage({
   const currentSeries =
     allSeries.find((s) => s.id === journal.seriesId)?.name ?? "";
   const tracks = await listTracks(journal.id);
+  const tagNames = await listJournalTags(journal.id);
 
   return (
     <main className={`${appThemeClass(theme)} arcane-bg min-h-screen`}>
@@ -54,6 +56,7 @@ export default async function JournalSettingsPage({
             parts: t.segmentIds.length,
             coverImageId: t.coverImageId,
           }))}
+          tagNames={tagNames}
         />
       </div>
     </main>

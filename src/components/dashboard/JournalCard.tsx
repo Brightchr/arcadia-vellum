@@ -166,6 +166,23 @@ export function JournalCard({
               >
                 {journal.visibility === "public" ? "Make Private" : "Make Public"}
               </button>
+              {journal.visibility === "public" && (
+                <button
+                  type="button"
+                  className={menuItem}
+                  onClick={() =>
+                    call("update featured", () =>
+                      fetch(`/api/journals/${journal.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ featured: !journal.featured }),
+                      })
+                    )
+                  }
+                >
+                  {journal.featured ? "Unfeature from Profile" : "Feature on Profile"}
+                </button>
+              )}
               <div className="my-1 border-t border-void-border" />
               <button
                 type="button"
