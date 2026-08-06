@@ -18,7 +18,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const journal = await getJournalBySlug(slug);
   return {
-    title: journal ? `${journal.title} — Arcadia Vellum` : "Arcadia Vellum",
+    title: journal ? `${journal.title} — Vellum` : "Vellum",
   };
 }
 
@@ -66,7 +66,7 @@ export default async function ReaderPage({
           href={isOwner ? "/dashboard" : "/"}
           className="inline-flex items-center gap-1.5 text-ink-dim hover:text-arcane-bright transition font-heading"
         >
-          <ArrowLeftIcon /> {isOwner ? "Library" : "Arcadia Vellum"}
+          <ArrowLeftIcon /> {isOwner ? "Library" : "Vellum"}
         </Link>
         <div className="flex items-center gap-4">
           {isOwner && (

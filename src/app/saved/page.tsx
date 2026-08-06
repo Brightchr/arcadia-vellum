@@ -9,7 +9,7 @@ import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
 
 export const metadata: Metadata = {
-  title: "Saved — Arcadia Vellum",
+  title: "Saved — Vellum",
 };
 
 export default async function SavedPage() {
@@ -40,7 +40,7 @@ export default async function SavedPage() {
             Saved Works
           </h1>
           <p className="text-sm text-ink-dim">
-            Books and audiobooks you&apos;ve shelved from around Arcadia Vellum.
+            Books and audiobooks you&apos;ve shelved from around Vellum.
           </p>
         </header>
 

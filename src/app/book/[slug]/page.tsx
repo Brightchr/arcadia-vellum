@@ -27,7 +27,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const journal = await getJournalBySlug(slug);
   return {
-    title: journal ? `${journal.title} — Arcadia Vellum` : "Arcadia Vellum",
+    title: journal ? `${journal.title} — Vellum` : "Vellum",
   };
 }
 

@@ -11,7 +11,7 @@ import {
 } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "Arcadia Vellum — bind your adventures into living tomes",
+  title: "Vellum — bind your adventures into living tomes",
   description:
     "Write, listen, and share TTRPG journals as beautifully bound tomes and audiobooks. Discover community chronicles, follow your favorite scribes, and build your own arcane library.",
 };
@@ -61,7 +61,7 @@ export default async function LandingPage() {
           Your adventures, bound into living tomes
         </h1>
         <p className="text-ink-dim text-lg max-w-2xl mx-auto mt-4">
-          Arcadia Vellum turns campaign journals, session diaries, and epic
+          Vellum turns campaign journals, session diaries, and epic
           chronicles into beautifully bound books and audiobooks — then gives
           them a realm of readers.
         </p>
@@ -135,7 +135,10 @@ export default async function LandingPage() {
             Create Your Library
           </Link>
           <p className="text-xs text-ink-dim mt-10">
-            Arcadia Vellum — write, listen, and share your chronicles.
+            Vellum — write, listen, and share your chronicles.
+          </p>
+          <p className="text-[11px] text-ink-dim/70 mt-1">
+            © {new Date().getFullYear()} Arcadia
           </p>
         </div>
       </section>

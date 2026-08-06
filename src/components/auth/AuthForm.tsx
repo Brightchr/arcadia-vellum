@@ -83,7 +83,7 @@ export function AuthForm({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/logo.png"
-        alt="Arcadia Vellum"
+        alt="Vellum"
         width={112}
         height={112}
         className="mx-auto mb-4 h-28 w-28 rounded-2xl shadow-lg shadow-black/40"

@@ -60,7 +60,7 @@ const pirata = Pirata_One({
 });
 
 export const metadata: Metadata = {
-  title: "Arcadia Vellum — your adventure journal as an ancient tome",
+  title: "Vellum — your adventure journal as an ancient tome",
   description:
     "Turn your TTRPG campaign journal (Google Doc or upload) into a beautiful page-flipping ancient tome you can share with your table.",
 };

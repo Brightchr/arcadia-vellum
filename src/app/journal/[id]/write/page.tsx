@@ -8,7 +8,7 @@ import { WriteEditor } from "@/components/editor/WriteEditor";
 import { ArrowLeftIcon, BookOpenIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "Write — Arcadia Vellum",
+  title: "Write — Vellum",
 };
 
 export default async function WritePage({

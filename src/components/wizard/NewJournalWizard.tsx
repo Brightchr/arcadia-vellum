@@ -387,7 +387,7 @@ export function NewJournalWizard({
                 <PenIcon /> Write it here
               </p>
               <p className="text-sm text-ink-dim">
-                Compose directly in Arcadia Vellum&apos;s editor.
+                Compose directly in Vellum&apos;s editor.
               </p>
             </button>
             <button

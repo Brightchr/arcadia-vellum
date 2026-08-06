@@ -34,7 +34,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const s = await getSeriesBySlug(slug);
-  return { title: s ? `${s.name} — Arcadia Vellum` : "Arcadia Vellum" };
+  return { title: s ? `${s.name} — Vellum` : "Vellum" };
 }
 
 /** Public homepage for a series: all volumes/episodes, tags, reviews. */

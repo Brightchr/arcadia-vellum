@@ -6,7 +6,7 @@ import { appThemeClass } from "@/lib/themes";
 import { WelcomeForm } from "@/components/social/WelcomeForm";
 
 export const metadata: Metadata = {
-  title: "Welcome — Arcadia Vellum",
+  title: "Welcome — Vellum",
 };
 
 export default async function WelcomePage() {

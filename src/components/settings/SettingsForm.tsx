@@ -769,7 +769,7 @@ export function SettingsForm({
         ) : journal.sourceType === "write" ? (
           <>
             <p className="text-sm text-ink-dim">
-              Written in Arcadia Vellum&apos;s editor.
+              Written in Vellum&apos;s editor.
               {journal.lastSyncedAt &&
                 ` Last saved ${new Date(journal.lastSyncedAt).toLocaleString()}.`}
             </p>

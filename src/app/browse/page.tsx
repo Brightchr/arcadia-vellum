@@ -7,7 +7,7 @@ import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
 
 export const metadata: Metadata = {
-  title: "Browse — Arcadia Vellum",
+  title: "Browse — Vellum",
 };
 
 export default async function BrowsePage({
