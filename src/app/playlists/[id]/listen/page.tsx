@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
-import { getOwnedPlaylist, listPlaylistItems } from "@/lib/playlists";
+import { getViewablePlaylist, listPlaylistItems } from "@/lib/playlists";
 import { getJournalById } from "@/lib/journals";
 import { listTracks, entryCoverUrls } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
@@ -10,7 +10,7 @@ import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "Playlist — Arcadia Vellum",
+  title: "Playlist — Vellum",
 };
 
 /** Plays a playlist's audiobooks back-to-back in the user's chosen order. */
@@ -20,13 +20,13 @@ export default async function PlaylistListenPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/login");
+  const viewerId = session?.user.id ?? null;
 
   const { id } = await params;
-  const playlist = await getOwnedPlaylist(id, session.user.id);
+  const playlist = await getViewablePlaylist(id, viewerId);
   if (!playlist) notFound();
 
-  const items = (await listPlaylistItems(id, session.user.id)).filter(
+  const items = (await listPlaylistItems(id, viewerId)).filter(
     (i) => i.playable
   );
   if (items.length === 0) redirect(`/playlists/${id}`);
@@ -67,7 +67,7 @@ export default async function PlaylistListenPage({
         </Link>
       </header>
 
-      <div className="relative z-10 flex-1 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col w-full max-w-xl mx-auto px-4 pb-8 pt-2">
         <AudiobookPlayer
           tracks={trackList}
           title={playlist.name}

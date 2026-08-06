@@ -1,7 +1,8 @@
 import { db } from "@/db";
 import { playlists, playlistItems, journals, savedItems } from "@/db/schema";
-import { and, asc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
+import { areFriends } from "@/lib/profile";
 
 export type Playlist = typeof playlists.$inferSelect;
 
@@ -40,9 +41,64 @@ export async function listPlaylistsForOwner(ownerId: string) {
     .orderBy(asc(playlists.createdAt));
 }
 
+/** The playlist if `viewerId` may open it: owner, public, or friends-only. */
+export async function getViewablePlaylist(
+  id: string,
+  viewerId: string | null
+): Promise<Playlist | null> {
+  const rows = await db.select().from(playlists).where(eq(playlists.id, id));
+  const p = rows[0];
+  if (!p) return null;
+  if (viewerId === p.ownerId || p.visibility === "public") return p;
+  if (p.visibility === "friends" && viewerId) {
+    return (await areFriends(viewerId, p.ownerId)) ? p : null;
+  }
+  return null;
+}
+
+/**
+ * `ownerId`'s shared playlists as `viewerId` sees them (profile page):
+ * public ones for everyone, friends-only ones for friends. The owner sees
+ * everything they've shared.
+ */
+export async function listSharedPlaylists(
+  ownerId: string,
+  viewerId: string | null
+): Promise<Playlist[]> {
+  const all = await listPlaylistsForOwner(ownerId);
+  const shared = all.filter((p) => p.visibility !== "private");
+  if (viewerId === ownerId) return shared;
+  const friend = viewerId ? await areFriends(viewerId, ownerId) : false;
+  return shared.filter(
+    (p) => p.visibility === "public" || (p.visibility === "friends" && friend)
+  );
+}
+
+/** journalId counts per playlist, for shelf/profile listings. */
+export async function playlistItemCounts(
+  playlistIds: string[]
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (playlistIds.length === 0) return map;
+  const rows = await db
+    .select({
+      playlistId: playlistItems.playlistId,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(playlistItems)
+    .where(inArray(playlistItems.playlistId, playlistIds))
+    .groupBy(playlistItems.playlistId);
+  for (const r of rows) map.set(r.playlistId, r.n);
+  return map;
+}
+
 export async function updatePlaylist(
   id: string,
-  patch: { name?: string; icon?: string | null }
+  patch: {
+    name?: string;
+    icon?: string | null;
+    visibility?: "private" | "friends" | "public";
+  }
 ) {
   await db
     .update(playlists)
@@ -51,6 +107,9 @@ export async function updatePlaylist(
         ? { name: patch.name.trim().slice(0, 80) }
         : {}),
       ...(patch.icon !== undefined ? { icon: patch.icon } : {}),
+      ...(patch.visibility !== undefined
+        ? { visibility: patch.visibility }
+        : {}),
     })
     .where(eq(playlists.id, id));
 }
@@ -59,10 +118,10 @@ export async function deletePlaylist(id: string) {
   await db.delete(playlists).where(eq(playlists.id, id));
 }
 
-/** Items in play order, with journal details resolved for the owner. */
+/** Items in play order; `playable` is from the viewer's perspective. */
 export async function listPlaylistItems(
   playlistId: string,
-  ownerId: string
+  viewerId: string | null
 ): Promise<PlaylistItemView[]> {
   const rows = await db
     .select({
@@ -86,7 +145,7 @@ export async function listPlaylistItems(
     slug: r.slug,
     theme: r.theme,
     coverImageId: r.coverImageId,
-    playable: r.visibility === "public" || r.journalOwnerId === ownerId,
+    playable: r.visibility === "public" || r.journalOwnerId === viewerId,
   }));
 }
 

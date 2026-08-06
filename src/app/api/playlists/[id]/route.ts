@@ -50,6 +50,13 @@ export async function PATCH(
           : null,
     });
   }
+  if (
+    body.visibility === "private" ||
+    body.visibility === "friends" ||
+    body.visibility === "public"
+  ) {
+    await updatePlaylist(id, { visibility: body.visibility });
+  }
   if (Array.isArray(body.order)) {
     const order = (body.order as unknown[]).filter(
       (x): x is string => typeof x === "string"
