@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
@@ -34,6 +35,7 @@ export default async function SeriesListenPage({
 
   const session = await getSession();
   const isOwner = session?.user.id === s.ownerId;
+  if (!isOwner && (await isUserBanned(s.ownerId))) notFound();
   const allVolumes = await listVolumes(s.id);
   const accessible = await accessibleJournalIds(
     session?.user.id ?? null,

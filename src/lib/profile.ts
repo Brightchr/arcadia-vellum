@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { user, follows, friendships } from "@/db/schema";
-import { and, eq, ilike, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { isTextSafe } from "@/lib/safety";
 
 export type PublicUser = typeof user.$inferSelect;
@@ -49,6 +49,24 @@ export async function getUserByUsername(username: string) {
 export async function getUserById(id: string) {
   const rows = await db.select().from(user).where(eq(user.id, id));
   return rows[0] ?? null;
+}
+
+export async function isUserBanned(userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ banned: user.banned })
+    .from(user)
+    .where(eq(user.id, userId));
+  return rows[0]?.banned ?? false;
+}
+
+/** Banned owners among the given user ids (batch check for listings). */
+export async function bannedUserIds(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(inArray(user.id, ids), eq(user.banned, true)));
+  return new Set(rows.map((r) => r.id));
 }
 
 export async function isUsernameTaken(username: string, excludeUserId?: string) {
@@ -110,6 +128,7 @@ export async function searchUsers(
       and(
         isNotNull(user.username),
         eq(user.searchable, true),
+        eq(user.banned, false),
         ne(user.profileVisibility, "private"),
         or(ilike(user.username, `%${term}%`), ilike(user.name, `%${term}%`))
       )

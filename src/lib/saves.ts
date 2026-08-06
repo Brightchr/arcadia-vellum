@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { savedItems, journals, series } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { WorkKind } from "@/lib/reviews";
+import { bannedUserIds } from "@/lib/profile";
 
 export async function isSaved(userId: string, kind: WorkKind, itemId: string) {
   const rows = await db
@@ -40,7 +41,10 @@ export async function unsaveItem(
     );
 }
 
-/** The user's saved works, newest first, resolved to slugs/titles. */
+/**
+ * The user's saved works, newest first, resolved to slugs/titles. Works of
+ * banned scribes drop out (savers get a notification when the ban lands).
+ */
 export async function listSaved(userId: string) {
   const rows = await db
     .select()
@@ -54,11 +58,12 @@ export async function listSaved(userId: string) {
     slug: string;
     title: string;
     icon: string | null;
+    ownerId: string;
   }[] = [];
   for (const row of rows) {
     if (row.kind === "series") {
       const s = await db
-        .select({ slug: series.slug, name: series.name })
+        .select({ slug: series.slug, name: series.name, ownerId: series.ownerId })
         .from(series)
         .where(eq(series.id, row.itemId));
       if (s[0]) {
@@ -68,11 +73,16 @@ export async function listSaved(userId: string) {
           slug: s[0].slug,
           title: s[0].name,
           icon: row.icon,
+          ownerId: s[0].ownerId,
         });
       }
     } else {
       const j = await db
-        .select({ slug: journals.slug, title: journals.title })
+        .select({
+          slug: journals.slug,
+          title: journals.title,
+          ownerId: journals.ownerId,
+        })
         .from(journals)
         .where(
           and(
@@ -87,9 +97,11 @@ export async function listSaved(userId: string) {
           slug: j[0].slug,
           title: j[0].title,
           icon: row.icon,
+          ownerId: j[0].ownerId,
         });
       }
     }
   }
-  return out;
+  const banned = await bannedUserIds([...new Set(out.map((o) => o.ownerId))]);
+  return out.filter((o) => !banned.has(o.ownerId));
 }

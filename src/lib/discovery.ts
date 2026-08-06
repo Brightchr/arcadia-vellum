@@ -151,18 +151,31 @@ export async function listPublicWorks(filter: {
       : [];
   const ownerIds = [...new Set(publicJournals.map((j) => j.ownerId))];
   const ownerRows = await db
-    .select({ id: user.id, name: user.name, username: user.username })
+    .select({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      banned: user.banned,
+    })
     .from(user)
     .where(inArray(user.id, ownerIds));
   const owners = new Map(
     ownerRows.map((o) => [o.id, { name: o.name, username: o.username }])
   );
-  const tagMap = await tagsForJournals(publicJournals.map((j) => j.id));
+  // Banned scribes' works vanish from every listing.
+  const bannedOwners = new Set(
+    ownerRows.filter((o) => o.banned).map((o) => o.id)
+  );
+  const visibleJournals = publicJournals.filter(
+    (j) => !bannedOwners.has(j.ownerId)
+  );
+  if (visibleJournals.length === 0) return [];
+  const tagMap = await tagsForJournals(visibleJournals.map((j) => j.id));
 
   const works: Work[] = [];
 
   for (const s of seriesRows) {
-    const volumes = publicJournals.filter((j) => j.seriesId === s.id);
+    const volumes = visibleJournals.filter((j) => j.seriesId === s.id);
     if (volumes.length === 0) continue;
     const workTags = [
       ...new Set(volumes.flatMap((v) => tagMap.get(v.id) ?? [])),
@@ -193,7 +206,7 @@ export async function listPublicWorks(filter: {
     });
   }
 
-  for (const j of publicJournals.filter((j) => !j.seriesId)) {
+  for (const j of visibleJournals.filter((j) => !j.seriesId)) {
     const owner = ownerInfo(owners, j.ownerId);
     works.push({
       kind: "journal",

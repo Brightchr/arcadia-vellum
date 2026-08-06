@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { playlists, playlistItems, journals, savedItems } from "@/db/schema";
 import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
-import { areFriends } from "@/lib/profile";
+import { areFriends, isUserBanned } from "@/lib/profile";
 
 export type Playlist = typeof playlists.$inferSelect;
 
@@ -49,7 +49,9 @@ export async function getViewablePlaylist(
   const rows = await db.select().from(playlists).where(eq(playlists.id, id));
   const p = rows[0];
   if (!p) return null;
-  if (viewerId === p.ownerId || p.visibility === "public") return p;
+  if (viewerId === p.ownerId) return p;
+  if (await isUserBanned(p.ownerId)) return null;
+  if (p.visibility === "public") return p;
   if (p.visibility === "friends" && viewerId) {
     return (await areFriends(viewerId, p.ownerId)) ? p : null;
   }

@@ -2,6 +2,7 @@ import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getJournalById } from "@/lib/journals";
 import { getTrack } from "@/lib/audio";
 import { canAccessJournal } from "@/lib/access";
+import { isUserBanned } from "@/lib/profile";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,7 @@ export async function GET(
 
   const journal = await getJournalById(track.journalId);
   if (!journal) return jsonError("Not found", 404);
-  if (journal.visibility !== "public") {
+  if (journal.visibility !== "public" || (await isUserBanned(journal.ownerId))) {
     const session = await sessionFromRequest(request);
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);

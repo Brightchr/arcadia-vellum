@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { accessGrants, user } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { newId } from "@/lib/id";
-import { areFriends } from "@/lib/profile";
+import { areFriends, bannedUserIds, isUserBanned } from "@/lib/profile";
 import type { Journal } from "@/lib/journals";
 
 export type GrantStatus = "none" | "pending" | "granted";
@@ -34,9 +34,11 @@ export async function canAccessJournal(
   viewerId: string | null,
   journal: Journal
 ): Promise<boolean> {
+  if (viewerId === journal.ownerId) return true;
+  // A banned owner's works are hidden from everyone but the owner.
+  if (await isUserBanned(journal.ownerId)) return false;
   if (journal.visibility === "public") return true;
   if (viewerId === null) return false;
-  if (viewerId === journal.ownerId) return true;
   switch (journal.visibility) {
     case "friends":
       return areFriends(viewerId, journal.ownerId);
@@ -64,8 +66,14 @@ export async function accessibleJournalIds(
 ): Promise<Set<string>> {
   const ok = new Set<string>();
   const friendCache = new Map<string, boolean>();
+  const banned = await bannedUserIds([...new Set(journals.map((j) => j.ownerId))]);
   for (const j of journals) {
-    if (j.visibility === "public" || viewerId === j.ownerId) {
+    if (viewerId === j.ownerId) {
+      ok.add(j.id);
+      continue;
+    }
+    if (banned.has(j.ownerId)) continue;
+    if (j.visibility === "public") {
       ok.add(j.id);
       continue;
     }

@@ -9,6 +9,7 @@ import { listReviews } from "@/lib/reviews";
 import { isSaved } from "@/lib/saves";
 import { volumeLabel } from "@/lib/volume";
 import { canAccessJournal, grantStatus, listGrants } from "@/lib/access";
+import { isUserBanned } from "@/lib/profile";
 import { RequestAccessButton } from "@/components/discover/RequestAccessButton";
 import { AccessManager } from "@/components/discover/AccessManager";
 import { appThemeClass } from "@/lib/themes";
@@ -43,6 +44,7 @@ export default async function BookHomePage({
 
   const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === journal.ownerId;
+  if (!isOwner && (await isUserBanned(journal.ownerId))) notFound();
   const canAccess = await canAccessJournal(session?.user.id ?? null, journal);
   // Everything except private has a homepage: discoverable works show their
   // teaser to all, friends-only works show a "friends can open this" teaser.

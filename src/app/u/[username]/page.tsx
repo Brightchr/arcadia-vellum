@@ -70,6 +70,28 @@ export default async function ProfilePage({
   const isSelf = viewerId === profile.id;
   const visible = await canViewProfile(profile, viewerId);
 
+  // Banned accounts are hidden — visitors just see the notice.
+  if (profile.banned && !isSelf) {
+    return (
+      <main
+        className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
+      >
+        <AppShell user={navUser} pins={pins} unreadNotifications={unread}>
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 md:px-10 md:py-8">
+            <div className="panel-arcane p-12 text-center">
+              <p className="font-heading text-xl mb-2">
+                This account has been banned.
+              </p>
+              <p className="text-ink-dim">
+                Their works and reviews are no longer available on Vellum.
+              </p>
+            </div>
+          </div>
+        </AppShell>
+      </main>
+    );
+  }
+
   const counts = await relationshipCounts(profile.id);
   let following = false;
   let friendState: FriendState = "none";
@@ -170,6 +192,14 @@ export default async function ProfilePage({
             <div className="min-w-0 flex-1 pb-1.5">
               <h1 className="font-display text-2xl sm:text-3xl text-arcane-bright leading-tight">
                 {profile.name}
+                {profile.role === "admin" && (
+                  <span
+                    className="ml-2.5 align-middle inline-flex items-center rounded-full bg-arcane/20 border border-arcane/50 px-2 py-0.5 text-[10px] font-heading uppercase tracking-widest text-arcane-bright"
+                    title="Vellum administrator"
+                  >
+                    Admin
+                  </span>
+                )}
               </h1>
               <p className="text-sm text-ink-dim">
                 @{profile.username}

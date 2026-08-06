@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
@@ -35,6 +36,7 @@ export default async function ListenPage({
 
   const session = await getSession();
   const isOwner = session?.user.id === journal.ownerId;
+  if (!isOwner && (await isUserBanned(journal.ownerId))) notFound();
   if (journal.visibility !== "public" && !isOwner) {
     const allowed = await canAccessJournal(session?.user.id ?? null, journal);
     if (!allowed) {

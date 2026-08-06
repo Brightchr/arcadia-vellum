@@ -14,8 +14,10 @@ export interface ReviewWithAuthor {
   authorName: string;
   authorUsername: string | null;
   authorAvatarId: string | null;
+  authorRole: "user" | "admin";
 }
 
+/** Reviews with authors resolved; banned users' reviews are hidden. */
 export async function listReviews(
   kind: WorkKind,
   itemId: string
@@ -30,10 +32,17 @@ export async function listReviews(
       authorName: user.name,
       authorUsername: user.username,
       authorAvatarId: user.avatarImageId,
+      authorRole: user.role,
     })
     .from(reviews)
     .innerJoin(user, eq(reviews.userId, user.id))
-    .where(and(eq(reviews.kind, kind), eq(reviews.itemId, itemId)))
+    .where(
+      and(
+        eq(reviews.kind, kind),
+        eq(reviews.itemId, itemId),
+        eq(user.banned, false)
+      )
+    )
     .orderBy(desc(reviews.updatedAt));
   return rows;
 }

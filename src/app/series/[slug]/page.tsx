@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
 import { getSeriesBySlug } from "@/lib/series";
@@ -49,6 +50,7 @@ export default async function SeriesHomePage({
 
   const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === s.ownerId;
+  if (!isOwner && (await isUserBanned(s.ownerId))) notFound();
   const volumes = (await seriesVolumes(s.id, isOwner ?? false)).sort(
     compareVolumes
   );
