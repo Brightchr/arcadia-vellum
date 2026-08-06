@@ -14,24 +14,58 @@ export function AuthForm({
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameNote, setUsernameNote] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  async function checkUsername(value: string) {
+    if (!value) return;
+    const res = await fetch(
+      `/api/username-check?u=${encodeURIComponent(value)}`
+    );
+    const body = await res.json().catch(() => null);
+    setUsernameNote(
+      body?.available ? "Available ✓" : (body?.problem ?? "Unavailable")
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setBusy(true);
+    if (mode === "signup") {
+      const candidate = username.trim().toLowerCase();
+      const check = await fetch(
+        `/api/username-check?u=${encodeURIComponent(candidate)}`
+      ).then((r) => r.json()).catch(() => null);
+      if (!check?.available) {
+        setError(check?.problem ?? "Pick a different username.");
+        setBusy(false);
+        return;
+      }
+    }
     const result =
       mode === "signup"
         ? await authClient.signUp.email({ name, email, password })
         : await authClient.signIn.email({ email, password });
-    setBusy(false);
     if (result.error) {
+      setBusy(false);
       setError(result.error.message ?? "Something went wrong.");
       return;
     }
+    if (mode === "signup") {
+      // Claim the username right after the account exists; if a race steals
+      // it, the welcome page will ask again.
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim().toLowerCase() }),
+      }).catch(() => null);
+    }
+    setBusy(false);
     router.push("/dashboard");
     router.refresh();
   }
@@ -77,6 +111,35 @@ export function AuthForm({
               required
               autoComplete="name"
             />
+          </div>
+        )}
+        {mode === "signup" && (
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm mb-1 text-ink-dim"
+            >
+              Username{" "}
+              <span className="opacity-60">(your public handle)</span>
+            </label>
+            <input
+              id="username"
+              className="input-arcane"
+              value={username}
+              maxLength={30}
+              onChange={(e) => {
+                setUsername(e.target.value.toLowerCase());
+                setUsernameNote(null);
+              }}
+              onBlur={(e) =>
+                void checkUsername(e.target.value.trim().toLowerCase())
+              }
+              required
+              autoComplete="username"
+            />
+            {usernameNote && (
+              <p className="text-xs text-ink-dim mt-1">{usernameNote}</p>
+            )}
           </div>
         )}
         <div>
