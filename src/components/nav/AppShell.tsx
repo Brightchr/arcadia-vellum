@@ -29,8 +29,10 @@ export interface SidebarPin {
   label: string;
   href: string;
   icon: string | null;
-  /** "series" pins are the user's own collections; "saved" are saved works. */
-  pinKind: "series" | "saved";
+  /** Rounded cover art for the pin (Spotify-style), when the work has one. */
+  imageUrl?: string | null;
+  /** Own collections, saved works, or the user's playlists. */
+  pinKind: "series" | "saved" | "playlist";
   /** For icon edits. */
   itemKind: "journal" | "series";
   itemId: string;
@@ -65,7 +67,38 @@ export function AppShell({
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem("av-nav-collapsed") === "1");
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      localStorage.setItem("av-nav-collapsed", v ? "0" : "1");
+      return !v;
+    });
+  }
+
+  async function createPlaylist() {
+    const name = window.prompt(
+      "Name your playlist (e.g. Hollowmere, in order):"
+    )?.trim();
+    if (!name) return;
+    const res = await fetch("/api/playlists", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      window.alert(body?.error ?? "Could not create the playlist.");
+      return;
+    }
+    router.push(`/playlists/${body.playlist.id}`);
+    router.refresh();
+  }
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -88,6 +121,12 @@ export function AppShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ icon: icon.trim() || null }),
       });
+    } else if (pin.pinKind === "playlist") {
+      await fetch(`/api/playlists/${pin.itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ icon: icon.trim() || null }),
+      });
     } else {
       await fetch("/api/saves", {
         method: "PATCH",
@@ -102,87 +141,164 @@ export function AppShell({
     router.refresh();
   }
 
+  function pinArt(pin: SidebarPin, size: "sm" | "lg") {
+    const cls =
+      size === "lg"
+        ? "h-9 w-9 rounded-md object-cover shrink-0"
+        : "h-8 w-8 rounded-md object-cover shrink-0";
+    if (pin.imageUrl) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={pin.imageUrl} alt="" className={cls} />;
+    }
+    return (
+      <span
+        className={`${cls} inline-flex items-center justify-center bg-white/5 text-base`}
+        aria-hidden
+      >
+        {pin.icon ??
+          (pin.pinKind === "playlist" ? (
+            <HeadphonesIcon className="h-4 w-4 text-ink-dim" />
+          ) : (
+            <BookOpenIcon className="h-4 w-4 text-ink-dim" />
+          ))}
+      </span>
+    );
+  }
+
   const glass =
     "border-white/10 bg-white/[0.04] backdrop-blur-xl";
 
   return (
     <div className="flex min-h-dvh">
-      {/* Sidenav (desktop, signed in) */}
+      {/* Sidenav (desktop, signed in) — collapses to a Spotify-style rail */}
       {user && (
         <aside
-          className={`hidden md:flex w-60 shrink-0 flex-col border-r ${glass} sticky top-0 h-dvh`}
+          className={`hidden md:flex ${collapsed ? "w-[4.5rem]" : "w-60"} shrink-0 flex-col border-r ${glass} sticky top-0 h-dvh transition-[width] duration-200`}
         >
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-4 h-14 shrink-0"
+          <div
+            className={`flex items-center h-14 shrink-0 ${collapsed ? "justify-center" : "justify-between pr-2"}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/mark.png" alt="" width={32} height={32} className="h-8 w-8" />
-            <span className="font-display text-lg text-arcane-bright">
-              Arcadia Vellum
-            </span>
-          </Link>
+            {!collapsed && (
+              <Link href="/dashboard" className="flex items-center gap-2 px-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/mark.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+                <span className="font-display text-lg text-arcane-bright">
+                  Arcadia Vellum
+                </span>
+              </Link>
+            )}
+            <button
+              type="button"
+              aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+              title={collapsed ? "Expand" : "Collapse"}
+              className="p-2 rounded-md text-ink-dim hover:text-ink hover:bg-white/5 transition-colors"
+              onClick={toggleCollapsed}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={16}
+                height={16}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+                className={collapsed ? "rotate-180" : ""}
+              >
+                <path d="m15 18-6-6 6-6" />
+                <path d="M3 12h.01" />
+              </svg>
+            </button>
+          </div>
 
           <nav className="px-2 space-y-0.5">
             {NAV.map((item) => (
               <Link
                 key={item.key}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-heading transition-colors ${
+                title={item.label}
+                className={`flex items-center ${collapsed ? "justify-center px-0" : "gap-3 px-3"} py-2 rounded-md text-sm font-heading transition-colors ${
                   active === item.key
                     ? "bg-arcane/15 text-arcane-bright"
                     : "text-ink-dim hover:text-ink hover:bg-white/5"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
-                {item.label}
+                {!collapsed && item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="mt-4 px-4 flex items-center justify-between">
-            <p className="text-[11px] font-heading uppercase tracking-widest text-ink-dim">
-              Your Shelves
-            </p>
+          <div
+            className={`mt-4 flex items-center ${collapsed ? "justify-center" : "justify-between px-4"}`}
+          >
+            {!collapsed && (
+              <p className="text-[11px] font-heading uppercase tracking-widest text-ink-dim">
+                Your Shelves
+              </p>
+            )}
+            <button
+              type="button"
+              aria-label="New playlist"
+              title="New playlist — arrange audiobooks in your own order"
+              className="p-1 rounded-md text-ink-dim hover:text-arcane-bright hover:bg-white/5 transition-colors text-base leading-none"
+              onClick={() => void createPlaylist()}
+            >
+              +
+            </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5">
             {pins.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-ink-dim italic">
-                Collections and saved works appear here.
-              </p>
+              !collapsed && (
+                <p className="px-3 py-2 text-xs text-ink-dim italic">
+                  Collections, saved works, and playlists appear here.
+                </p>
+              )
             ) : (
               pins.map((pin) => (
-                <div key={pin.key} className="group flex items-center">
+                <div
+                  key={pin.key}
+                  className={`group flex items-center ${collapsed ? "justify-center" : ""}`}
+                >
                   <Link
                     href={pin.href}
-                    className="flex-1 min-w-0 flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-ink-dim hover:text-ink hover:bg-white/5 transition-colors"
+                    title={pin.label}
+                    className={`min-w-0 flex items-center rounded-md text-sm text-ink-dim hover:text-ink hover:bg-white/5 transition-colors ${
+                      collapsed ? "p-1.5" : "flex-1 gap-2.5 px-2 py-1.5"
+                    }`}
                   >
-                    <span className="w-5 text-center shrink-0">
-                      {pin.icon ??
-                        (pin.pinKind === "series" ? (
-                          <BookOpenIcon className="h-4 w-4 inline" />
-                        ) : (
-                          <HeadphonesIcon className="h-4 w-4 inline" />
-                        ))}
-                    </span>
-                    <span className="truncate">{pin.label}</span>
+                    {pinArt(pin, collapsed ? "lg" : "sm")}
+                    {!collapsed && <span className="truncate">{pin.label}</span>}
                   </Link>
-                  <button
-                    type="button"
-                    aria-label={`Set icon for ${pin.label}`}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 text-ink-dim hover:text-arcane-bright transition"
-                    onClick={() => void setPinIcon(pin)}
-                  >
-                    <PenIcon className="h-3 w-3" />
-                  </button>
+                  {!collapsed && (
+                    <button
+                      type="button"
+                      aria-label={`Set icon for ${pin.label}`}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 text-ink-dim hover:text-arcane-bright transition"
+                      onClick={() => void setPinIcon(pin)}
+                    >
+                      <PenIcon className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               ))
             )}
           </div>
 
-          <div className="p-3 border-t border-white/10">
-            <Link href="/journal/new" className="btn-arcane w-full">
-              + New Journal
+          <div className={collapsed ? "p-2 border-t border-white/10" : "p-3 border-t border-white/10"}>
+            <Link
+              href="/journal/new"
+              title="New Journal"
+              className={collapsed ? "btn-arcane w-full !px-0" : "btn-arcane w-full"}
+            >
+              +{!collapsed && " New Journal"}
             </Link>
           </div>
         </aside>
