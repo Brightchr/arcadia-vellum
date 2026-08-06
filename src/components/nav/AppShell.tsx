@@ -71,9 +71,10 @@ export function AppShell({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // localStorage is the source of truth: the pre-paint script handles the
-    // first frame, but React's hydration can strip the html attribute, so
-    // re-apply it here as well as syncing the inner layout.
+    // The visual layout is CSS-driven via html[data-nav-collapsed] (set by
+    // the pre-paint script), so it never flashes on load or remount. This
+    // state only keeps the toggle button's aria-label/title accurate, and
+    // re-applies the attribute in case hydration stripped it.
     let stored = false;
     try {
       stored = localStorage.getItem("av-nav-collapsed") === "1";
@@ -159,11 +160,8 @@ export function AppShell({
     router.refresh();
   }
 
-  function pinArt(pin: SidebarPin, size: "sm" | "lg") {
-    const cls =
-      size === "lg"
-        ? "h-9 w-9 rounded-md object-cover shrink-0"
-        : "h-8 w-8 rounded-md object-cover shrink-0";
+  function pinArt(pin: SidebarPin) {
+    const cls = "h-8 w-8 navc:h-9 navc:w-9 rounded-md object-cover shrink-0";
     if (pin.imageUrl) {
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={pin.imageUrl} alt="" className={cls} />;
@@ -193,24 +191,28 @@ export function AppShell({
         <aside
           className={`app-sidenav hidden md:flex shrink-0 flex-col overflow-hidden border-r ${glass} sticky top-0 h-dvh transition-[width] duration-200`}
         >
-          <div
-            className={`flex items-center h-14 shrink-0 ${collapsed ? "justify-center" : "justify-between pr-2"}`}
-          >
-            {!collapsed && (
-              <Link href="/dashboard" className="flex items-center gap-2 px-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/mark.png"
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                />
-                <span className="font-display text-lg text-arcane-bright">
-                  Arcadia Vellum
+          <div className="flex items-center h-14 shrink-0 justify-between pr-2 navc:justify-center navc:pr-0">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 px-4 navc:hidden"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/mark.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
+              <span className="flex flex-col">
+                <span className="font-display text-lg leading-tight text-arcane-bright">
+                  Vellum
                 </span>
-              </Link>
-            )}
+                <span className="text-[10px] leading-none uppercase tracking-[0.2em] text-ink-dim">
+                  by Arcadia
+                </span>
+              </span>
+            </Link>
             <button
               type="button"
               aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
@@ -228,7 +230,7 @@ export function AppShell({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden
-                className={collapsed ? "rotate-180" : ""}
+                className="navc:rotate-180"
               >
                 <path d="m15 18-6-6 6-6" />
                 <path d="M3 12h.01" />
@@ -242,26 +244,22 @@ export function AppShell({
                 key={item.key}
                 href={item.href}
                 title={item.label}
-                className={`flex items-center ${collapsed ? "justify-center px-0" : "gap-3 px-3"} py-2 rounded-md text-sm font-heading transition-colors ${
+                className={`flex items-center gap-3 px-3 navc:justify-center navc:px-0 py-2 rounded-md text-sm font-heading transition-colors ${
                   active === item.key
                     ? "bg-arcane/15 text-arcane-bright"
                     : "text-ink-dim hover:text-ink hover:bg-white/5"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
-                {!collapsed && item.label}
+                <span className="navc:hidden">{item.label}</span>
               </Link>
             ))}
           </nav>
 
-          <div
-            className={`mt-4 flex items-center ${collapsed ? "justify-center" : "justify-between px-4"}`}
-          >
-            {!collapsed && (
-              <p className="text-[11px] font-heading uppercase tracking-widest text-ink-dim">
-                Your Shelves
-              </p>
-            )}
+          <div className="mt-4 flex items-center justify-between px-4 navc:justify-center navc:px-0">
+            <p className="navc:hidden text-[11px] font-heading uppercase tracking-widest text-ink-dim">
+              Your Shelves
+            </p>
             <button
               type="button"
               aria-label="New playlist"
@@ -274,49 +272,43 @@ export function AppShell({
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5">
             {pins.length === 0 ? (
-              !collapsed && (
-                <p className="px-3 py-2 text-xs text-ink-dim italic">
-                  Collections, saved works, and playlists appear here.
-                </p>
-              )
+              <p className="navc:hidden px-3 py-2 text-xs text-ink-dim italic">
+                Collections, saved works, and playlists appear here.
+              </p>
             ) : (
               pins.map((pin) => (
                 <div
                   key={pin.key}
-                  className={`group flex items-center ${collapsed ? "justify-center" : ""}`}
+                  className="group flex items-center navc:justify-center"
                 >
                   <Link
                     href={pin.href}
                     title={pin.label}
-                    className={`min-w-0 flex items-center rounded-md text-sm text-ink-dim hover:text-ink hover:bg-white/5 transition-colors ${
-                      collapsed ? "p-1.5" : "flex-1 gap-2.5 px-2 py-1.5"
-                    }`}
+                    className="min-w-0 flex items-center rounded-md text-sm text-ink-dim hover:text-ink hover:bg-white/5 transition-colors flex-1 gap-2.5 px-2 py-1.5 navc:flex-none navc:px-1.5"
                   >
-                    {pinArt(pin, collapsed ? "lg" : "sm")}
-                    {!collapsed && <span className="truncate">{pin.label}</span>}
+                    {pinArt(pin)}
+                    <span className="truncate navc:hidden">{pin.label}</span>
                   </Link>
-                  {!collapsed && (
-                    <button
-                      type="button"
-                      aria-label={`Set icon for ${pin.label}`}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 text-ink-dim hover:text-arcane-bright transition"
-                      onClick={() => void setPinIcon(pin)}
-                    >
-                      <PenIcon className="h-3 w-3" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    aria-label={`Set icon for ${pin.label}`}
+                    className="navc:hidden opacity-0 group-hover:opacity-100 p-1.5 text-ink-dim hover:text-arcane-bright transition"
+                    onClick={() => void setPinIcon(pin)}
+                  >
+                    <PenIcon className="h-3 w-3" />
+                  </button>
                 </div>
               ))
             )}
           </div>
 
-          <div className={collapsed ? "p-2 border-t border-white/10" : "p-3 border-t border-white/10"}>
+          <div className="p-3 navc:p-2 border-t border-white/10">
             <Link
               href="/journal/new"
               title="New Journal"
-              className={collapsed ? "btn-arcane w-full !px-0" : "btn-arcane w-full"}
+              className="btn-arcane w-full navc:px-0!"
             >
-              +{!collapsed && " New Journal"}
+              +<span className="navc:hidden">&nbsp;New Journal</span>
             </Link>
           </div>
         </aside>
@@ -335,7 +327,7 @@ export function AppShell({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/mark.png" alt="" width={30} height={30} className="h-7.5 w-7.5" />
             <span className="font-display text-base text-arcane-bright hidden sm:inline">
-              Arcadia Vellum
+              Vellum
             </span>
           </Link>
           <div

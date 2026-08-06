@@ -45,6 +45,11 @@
   --font-pirata: var(--font-pirata);
 }
 
+/* `navc:` utilities apply while the sidenav is collapsed. Keyed off the
+   pre-paint <html> attribute (not React state) so a fresh page load or a
+   client-nav remount can never flash the expanded layout. */
+@custom-variant navc (&:where(html[data-nav-collapsed="1"] *));
+
 /* Larger type on desktop — every rem-based size (Tailwind included) scales. */
 html {
   font-size: 16px;
@@ -275,8 +280,8 @@ body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
-/* Sidenav width is driven by a pre-paint <html> attribute so the collapsed
-   state paints correctly on load; React syncs the inner layout after mount. */
+/* Sidenav width is driven by the same pre-paint <html> attribute as the
+   `navc:` variant, so the collapsed state paints correctly on load. */
 .app-sidenav {
   width: 15rem;
 }
