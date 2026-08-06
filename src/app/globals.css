@@ -275,6 +275,16 @@ body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
+/* Sidenav width is driven by a pre-paint <html> attribute so the collapsed
+   state paints correctly on load; React syncs the inner layout after mount. */
+.app-sidenav {
+  width: 15rem;
+}
+
+html[data-nav-collapsed="1"] .app-sidenav {
+  width: 4.5rem;
+}
+
 /* Markdown preview in the write editor */
 .editor-preview {
   line-height: 1.65;

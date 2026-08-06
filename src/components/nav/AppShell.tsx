@@ -71,13 +71,22 @@ export function AppShell({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setCollapsed(localStorage.getItem("av-nav-collapsed") === "1");
+    // The pre-paint script in the root layout already set the width via the
+    // html attribute; this syncs the inner layout (labels vs icon rail).
+    setCollapsed(document.documentElement.dataset.navCollapsed === "1");
   }, []);
 
   function toggleCollapsed() {
     setCollapsed((v) => {
-      localStorage.setItem("av-nav-collapsed", v ? "0" : "1");
-      return !v;
+      const next = !v;
+      try {
+        localStorage.setItem("av-nav-collapsed", next ? "1" : "0");
+      } catch {
+        // Storage blocked — the toggle still works for this page.
+      }
+      if (next) document.documentElement.dataset.navCollapsed = "1";
+      else delete document.documentElement.dataset.navCollapsed;
+      return next;
     });
   }
 
@@ -173,7 +182,7 @@ export function AppShell({
       {/* Sidenav (desktop, signed in) — collapses to a Spotify-style rail */}
       {user && (
         <aside
-          className={`hidden md:flex ${collapsed ? "w-[4.5rem]" : "w-60"} shrink-0 flex-col border-r ${glass} sticky top-0 h-dvh transition-[width] duration-200`}
+          className={`app-sidenav hidden md:flex shrink-0 flex-col overflow-hidden border-r ${glass} sticky top-0 h-dvh transition-[width] duration-200`}
         >
           <div
             className={`flex items-center h-14 shrink-0 ${collapsed ? "justify-center" : "justify-between pr-2"}`}

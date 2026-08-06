@@ -71,7 +71,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Applies the stored sidenav state before first paint so the bar
+            doesn't flash open and snap shut on navigation. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("av-nav-collapsed")==="1")document.documentElement.dataset.navCollapsed="1"}catch(e){}`,
+          }}
+        />
+      </head>
       <body
         className={`${fell.variable} ${caveat.variable} ${unifraktur.variable} ${cinzel.variable} ${cinzelDecorative.variable} ${cormorant.variable} ${garamond.variable} ${pirata.variable} antialiased`}
       >
