@@ -1,0 +1,195 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { sessionWithNav } from "@/lib/nav";
+import { getJournalBySlug } from "@/lib/journals";
+import { workForJournal } from "@/lib/discovery";
+import { listTracks } from "@/lib/audio";
+import { listReviews } from "@/lib/reviews";
+import { isSaved } from "@/lib/saves";
+import { volumeLabel } from "@/lib/volume";
+import { appThemeClass } from "@/lib/themes";
+import { AppNav } from "@/components/nav/AppNav";
+import { WorkCover } from "@/components/discover/WorkCard";
+import { Stars } from "@/components/discover/StarRating";
+import { SaveButton } from "@/components/discover/SaveButton";
+import { ReviewsSection } from "@/components/discover/ReviewsSection";
+import { BookOpenIcon, HeadphonesIcon, PenIcon } from "@/components/icons";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const journal = await getJournalBySlug(slug);
+  return {
+    title: journal ? `${journal.title} — Arcadia Vellum` : "Arcadia Vellum",
+  };
+}
+
+/** Public homepage for a standalone book or audiobook. */
+export default async function BookHomePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const journal = await getJournalBySlug(slug);
+  if (!journal) notFound();
+
+  const { session, navUser } = await sessionWithNav();
+  const isOwner = session?.user.id === journal.ownerId;
+  if (journal.visibility !== "public" && !isOwner) notFound();
+
+  const [work, reviews, tracks] = await Promise.all([
+    workForJournal(journal),
+    listReviews("journal", journal.id),
+    journal.sourceType === "audio" ? listTracks(journal.id) : Promise.resolve([]),
+  ]);
+  const saved = session
+    ? await isSaved(session.user.id, "journal", journal.id)
+    : false;
+  const vol = volumeLabel(journal);
+
+  return (
+    <main
+      className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
+    >
+      <AppNav user={navUser} />
+      <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 space-y-8">
+        <div className="grid gap-6 md:grid-cols-[14rem_1fr] items-start">
+          <WorkCover work={work} className="max-w-56" />
+          <div className="space-y-3">
+            <div>
+              <h1 className="font-display text-3xl text-arcane-bright">
+                {journal.title}
+              </h1>
+              {journal.subtitle && (
+                <p className="text-ink-dim mt-1">{journal.subtitle}</p>
+              )}
+              <p className="text-sm text-ink-dim mt-1">
+                {journal.author && <>by {journal.author} · </>}
+                bound by{" "}
+                {work.ownerUsername ? (
+                  <Link
+                    href={`/u/${work.ownerUsername}`}
+                    className="text-arcane-bright hover:underline"
+                  >
+                    @{work.ownerUsername}
+                  </Link>
+                ) : (
+                  work.ownerName
+                )}
+                {vol && <> · Vol. {vol}</>}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-ink-dim">
+              {work.avgRating !== null ? (
+                <>
+                  <Stars value={work.avgRating} />
+                  <span>
+                    {work.avgRating.toFixed(1)} · {work.ratingCount} review
+                    {work.ratingCount === 1 ? "" : "s"}
+                  </span>
+                </>
+              ) : (
+                <span>No ratings yet</span>
+              )}
+              {journal.visibility !== "public" && (
+                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider">
+                  private preview
+                </span>
+              )}
+            </div>
+
+            {work.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {work.tags.map((t) => (
+                  <Link
+                    key={t}
+                    href={`/browse?tag=${encodeURIComponent(t)}`}
+                    className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-heading uppercase tracking-wider text-ink-dim hover:text-ink"
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {work.hasAudio ? (
+                <Link href={`/j/${journal.slug}/listen`} className="btn-arcane">
+                  <HeadphonesIcon /> Listen
+                </Link>
+              ) : (
+                <Link href={`/j/${journal.slug}`} className="btn-arcane">
+                  <BookOpenIcon /> Read
+                </Link>
+              )}
+              <SaveButton
+                kind="journal"
+                itemId={journal.id}
+                saved={saved}
+                signedIn={!!session}
+              />
+              {isOwner && (
+                <Link
+                  href={`/journal/${journal.id}/settings`}
+                  className="btn-ghost"
+                >
+                  <PenIcon /> Manage
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {tracks.length > 0 && (
+          <section className="panel-arcane p-5 sm:p-6">
+            <h2 className="font-heading text-lg mb-3">Episodes</h2>
+            <ol className="space-y-1">
+              {tracks.map((t, i) => (
+                <li
+                  key={t.id}
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/5 text-sm"
+                >
+                  <span className="font-heading text-xs text-ink-dim w-5">
+                    {i + 1}.
+                  </span>
+                  <span className="truncate">
+                    {tracks.length === 1 ? journal.title : `Part ${i + 1}`}
+                  </span>
+                  {t.segmentIds.length > 1 && (
+                    <span className="text-xs text-ink-dim">
+                      {t.segmentIds.length} files
+                    </span>
+                  )}
+                  <Link
+                    href={`/j/${journal.slug}/listen`}
+                    className="ml-auto text-xs font-heading text-arcane-bright hover:underline shrink-0"
+                  >
+                    Play
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <ReviewsSection
+          kind="journal"
+          itemId={journal.id}
+          reviews={reviews.map((r) => ({
+            ...r,
+            updatedAt: r.updatedAt.toISOString(),
+          }))}
+          viewerId={session?.user.id ?? null}
+          isOwner={isOwner ?? false}
+          signedIn={!!session}
+        />
+      </div>
+    </main>
+  );
+}
