@@ -254,7 +254,11 @@ export function LibraryShelves({
           </div>
           <div className="space-y-6">
             {audioBySeries.map(({ series: s, volumes }) => (
-              <div key={s.id}>
+              <div
+                key={s.id}
+                className={shelfClass(`audio-${s.id}`)}
+                {...dropHandlers(`audio-${s.id}`, s.name)}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                   <h3 className="font-heading text-base text-arcane-bright inline-flex items-center gap-1.5">
                     {s.name}{" "}
@@ -275,7 +279,11 @@ export function LibraryShelves({
                 </div>
                 <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {volumes.map((j) => (
-                    <div key={j.id}>
+                    <div
+                      key={j.id}
+                      {...draggable(j)}
+                      className="cursor-grab active:cursor-grabbing"
+                    >
                       <JournalCard
                         journal={j}
                         trackCount={trackCounts[j.id] ?? 0}
@@ -287,16 +295,25 @@ export function LibraryShelves({
               </div>
             ))}
 
-            {looseAudio.length > 0 && (
-              <div>
-                {audioBySeries.length > 0 && (
-                  <h3 className="font-heading text-base text-ink-dim mb-3">
-                    Unshelved
-                  </h3>
-                )}
+            <div
+              className={shelfClass("audio-loose")}
+              {...dropHandlers("audio-loose", "")}
+            >
+              <h3 className="font-heading text-base text-ink-dim mb-3">
+                Unshelved
+              </h3>
+              {looseAudio.length === 0 ? (
+                <p className="text-sm text-ink-dim italic">
+                  Drop an audiobook here to unshelve it.
+                </p>
+              ) : (
                 <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {looseAudio.map((j) => (
-                    <div key={j.id}>
+                    <div
+                      key={j.id}
+                      {...draggable(j)}
+                      className="cursor-grab active:cursor-grabbing"
+                    >
                       <JournalCard
                         journal={j}
                         trackCount={trackCounts[j.id] ?? 0}
@@ -305,8 +322,8 @@ export function LibraryShelves({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </section>
       )}
