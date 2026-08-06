@@ -23,6 +23,8 @@ export interface NavUser {
   username: string | null;
   avatarImageId: string | null;
   dashboardTheme?: string;
+  /** Shows the Admin Dashboard link in the account menu. */
+  isAdmin?: boolean;
 }
 
 export interface SidebarPin {
@@ -403,6 +405,15 @@ export function AppShell({
                       >
                         Settings
                       </Link>
+                      {user.isAdmin && (
+                        <Link
+                          href="/admin"
+                          className="block px-3 py-2 text-sm text-arcane-bright hover:bg-arcane/10"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <div className="my-1 border-t border-void-border" />
                       <button
                         type="button"

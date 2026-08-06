@@ -77,6 +77,8 @@ interface SessionProfileFields {
   profileVisibility?: string;
   allowFriendRequests?: boolean;
   showSavedOnProfile?: boolean;
+  role?: string;
+  banned?: boolean;
 }
 
 /** Session plus the NavUser shape the top navigation needs. */
@@ -89,6 +91,7 @@ export async function sessionWithNav() {
     username: u.username ?? null,
     avatarImageId: u.avatarImageId ?? null,
     dashboardTheme: u.dashboardTheme,
+    isAdmin: u.role === "admin",
   };
   return { session, navUser };
 }

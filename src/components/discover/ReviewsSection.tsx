@@ -16,6 +16,7 @@ export interface ReviewView {
   authorName: string;
   authorUsername: string | null;
   authorAvatarId: string | null;
+  authorRole?: string;
 }
 
 export function ReviewsSection({
@@ -162,6 +163,11 @@ export function ReviewsSection({
                     </Link>
                   ) : (
                     <span className="text-sm font-heading">{r.authorName}</span>
+                  )}
+                  {r.authorRole === "admin" && (
+                    <span className="inline-flex items-center rounded-full bg-arcane/20 border border-arcane/50 px-1.5 py-0.5 text-[9px] font-heading uppercase tracking-widest text-arcane-bright">
+                      Admin
+                    </span>
                   )}
                   <Stars value={r.rating} size={12} />
                   <span className="text-xs text-ink-dim">
