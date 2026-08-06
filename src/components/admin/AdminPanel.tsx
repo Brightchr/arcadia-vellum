@@ -172,7 +172,13 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
                       <span className="text-xs text-ink-dim">Active</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                    <Link
+                      href={`/admin/users/${u.id}`}
+                      className="btn-ghost !px-3 !py-1 text-xs mr-1.5"
+                    >
+                      Inspect
+                    </Link>
                     {u.role !== "admin" &&
                       (u.banned ? (
                         <button

@@ -65,6 +65,10 @@ function crumbsFor(path: string, signedIn: boolean): Crumb[] {
       if (b) out.push({ label: "Playlist", href: `/playlists/${b}` });
       if (c === "listen") out.push({ label: "Listen", href: path });
       break;
+    case "admin":
+      out.push({ label: "Admin", href: "/admin" });
+      if (b === "users" && c) out.push({ label: "Account", href: path });
+      break;
     case "journal":
       if (b === "new") {
         out.push({ label: "New Journal", href: "/journal/new" });

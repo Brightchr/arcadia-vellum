@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Admin — Vellum",
 };
 
+// Moderation data must never be cached or statically rendered.
+export const dynamic = "force-dynamic";
+
 /** Moderation dashboard — admins only; 404 for everyone else. */
 export default async function AdminPage() {
   const { session, navUser, pins, unread } = await shellData();
