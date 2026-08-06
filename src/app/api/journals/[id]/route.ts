@@ -40,6 +40,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       | "partNumber"
       | "theme"
       | "visibility"
+      | "featured"
       | "gdocFileId"
     >
   > = {};
@@ -60,6 +61,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
   if (body.visibility === "public" || body.visibility === "private") {
     patch.visibility = body.visibility;
+    if (body.visibility === "private") patch.featured = false;
+  }
+  if (typeof body.featured === "boolean") {
+    // Featuring is only meaningful for works visible on the profile.
+    patch.featured = body.featured && journal.visibility === "public";
   }
   if (
     typeof body.gdocFileId === "string" &&
