@@ -122,7 +122,11 @@ export const journalContent = pgTable("journal_content", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-/** Owner-uploaded narration tracks (e.g. ElevenLabs renders), in play order. */
+/**
+ * Owner-uploaded narration audio, in play order. Rows sharing a sortIndex
+ * form one ENTRY (a single chapter in the player) whose files play
+ * back-to-back in segmentIndex order.
+ */
 export const journalAudio = pgTable("journal_audio", {
   id: text("id").primaryKey(),
   journalId: text("journal_id")
@@ -130,6 +134,7 @@ export const journalAudio = pgTable("journal_audio", {
     .references(() => journals.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sortIndex: integer("sort_index").notNull().default(0),
+  segmentIndex: integer("segment_index").notNull().default(0),
   contentType: text("content_type").notNull(),
   data: bytea("data").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

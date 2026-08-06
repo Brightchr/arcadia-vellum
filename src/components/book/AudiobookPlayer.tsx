@@ -25,6 +25,8 @@ export interface NarrationTrack {
   title: string;
   /** Backdrop for while this track plays (the volume's cover image). */
   coverUrl?: string | null;
+  /** Audio ids played back-to-back as this one entry (defaults to [id]). */
+  segmentIds?: string[];
 }
 
 function fmt(t: number): string {
@@ -67,8 +69,14 @@ export function AudiobookPlayer({
   // onEnded closures need the current mode without re-mounting the audio tag.
   const repeatRef = useRef<RepeatMode>("off");
   repeatRef.current = repeat;
+  // Which file of a multi-file entry is playing.
+  const [segIndex, setSegIndex] = useState(0);
+  const segRef = useRef(0);
+  segRef.current = segIndex;
 
   const track = tracks[Math.min(index, tracks.length - 1)];
+  const segments = track?.segmentIds?.length ? track.segmentIds : track ? [track.id] : [];
+  const audioId = segments[Math.min(segIndex, segments.length - 1)];
 
   // Restore last listening position.
   useEffect(() => {
@@ -76,6 +84,8 @@ export function AudiobookPlayer({
       const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
       if (saved && typeof saved.i === "number" && saved.i < tracks.length) {
         setIndex(saved.i);
+        const segs = tracks[saved.i]?.segmentIds?.length ?? 1;
+        if (typeof saved.g === "number" && saved.g < segs) setSegIndex(saved.g);
         pendingSeek.current = typeof saved.t === "number" ? saved.t : 0;
       }
       if (saved && SPEEDS.includes(saved.s)) setSpeed(saved.s);
@@ -93,7 +103,7 @@ export function AudiobookPlayer({
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ i, t, s, r: repeatRef.current })
+        JSON.stringify({ i, t, s, r: repeatRef.current, g: segRef.current })
       );
     } catch {
       // Storage full/blocked — position memory is best-effort.
@@ -134,9 +144,11 @@ export function AudiobookPlayer({
 
   function go(next: number, autoplay = true) {
     const clamped = Math.max(0, Math.min(tracks.length - 1, next));
-    if (clamped === index) return;
+    if (clamped === index && segRef.current === 0) return;
     pendingSeek.current = 0;
     setIndex(clamped);
+    setSegIndex(0);
+    segRef.current = 0;
     setTime(0);
     persist(clamped, 0, speed);
     if (autoplay) {
@@ -144,6 +156,16 @@ export function AudiobookPlayer({
         void audioRef.current?.play().catch(() => {})
       );
     }
+  }
+
+  /** Advance to the next file of the same entry, keeping playback rolling. */
+  function nextSegment() {
+    setSegIndex((s) => {
+      segRef.current = s + 1;
+      return s + 1;
+    });
+    setTime(0);
+    requestAnimationFrame(() => void audioRef.current?.play().catch(() => {}));
   }
 
   function toggle() {
@@ -197,8 +219,8 @@ export function AudiobookPlayer({
       <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-5 w-full space-y-3">
       <audio
         ref={audioRef}
-        key={track.id}
-        src={`/api/audio/${track.id}`}
+        key={audioId}
+        src={`/api/audio/${audioId}`}
         preload="metadata"
         onLoadedMetadata={(e) => {
           const el = e.currentTarget;
@@ -220,15 +242,36 @@ export function AudiobookPlayer({
         onEnded={(e) => {
           const el = e.currentTarget;
           const mode = repeatRef.current;
+          // A multi-file entry keeps rolling through its segments first.
+          if (segRef.current < segments.length - 1) {
+            nextSegment();
+            return;
+          }
           if (mode === "one") {
-            el.currentTime = 0;
-            void el.play().catch(() => {});
+            if (segments.length > 1) {
+              setSegIndex(0);
+              segRef.current = 0;
+              setTime(0);
+              requestAnimationFrame(() =>
+                void audioRef.current?.play().catch(() => {})
+              );
+            } else {
+              el.currentTime = 0;
+              void el.play().catch(() => {});
+            }
           } else if (index < tracks.length - 1) {
             go(index + 1);
           } else if (mode === "all") {
-            if (tracks.length === 1) {
+            if (tracks.length === 1 && segments.length === 1) {
               el.currentTime = 0;
               void el.play().catch(() => {});
+            } else if (tracks.length === 1) {
+              setSegIndex(0);
+              segRef.current = 0;
+              setTime(0);
+              requestAnimationFrame(() =>
+                void audioRef.current?.play().catch(() => {})
+              );
             } else {
               go(0);
             }
@@ -240,9 +283,14 @@ export function AudiobookPlayer({
       />
 
       {/* Now playing */}
-      {tracks.length > 1 && (
+      {(tracks.length > 1 || segments.length > 1) && (
         <p className="text-center font-heading text-sm text-arcane-bright truncate">
           {track.title}
+          {segments.length > 1 && (
+            <span className="text-ink-dim text-xs ml-2">
+              part {segIndex + 1}/{segments.length}
+            </span>
+          )}
         </p>
       )}
 

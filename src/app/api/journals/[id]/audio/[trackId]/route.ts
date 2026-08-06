@@ -1,6 +1,6 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
-import { getTrack, deleteTrack } from "@/lib/audio";
+import { getTrack, deleteEntryByTrackId } from "@/lib/audio";
 
 export const runtime = "nodejs";
 
@@ -16,6 +16,6 @@ export async function DELETE(
   const track = await getTrack(trackId);
   if (!track || track.journalId !== id) return jsonError("Track not found", 404);
 
-  await deleteTrack(trackId);
+  await deleteEntryByTrackId(trackId);
   return Response.json({ ok: true });
 }

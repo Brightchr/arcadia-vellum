@@ -1,0 +1,1 @@
+ALTER TABLE "journal_audio" ADD COLUMN "segment_index" integer DEFAULT 0 NOT NULL;

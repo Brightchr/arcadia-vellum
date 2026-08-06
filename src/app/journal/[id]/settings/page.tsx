@@ -48,7 +48,11 @@ export default async function JournalSettingsPage({
           googleEnabled={googleConfigured}
           seriesName={currentSeries}
           seriesNames={allSeries.map((s) => s.name)}
-          tracks={tracks.map((t) => ({ id: t.id, title: t.title }))}
+          tracks={tracks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            parts: t.segmentIds.length,
+          }))}
         />
       </div>
     </main>

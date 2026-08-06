@@ -11,6 +11,8 @@ import { FormattingGuide } from "@/components/help/FormattingGuide";
 export interface TrackInfo {
   id: string;
   title: string;
+  /** Number of files that make up this entry (played back-to-back). */
+  parts?: number;
 }
 
 export function SettingsForm({
@@ -41,6 +43,7 @@ export function SettingsForm({
   const [pickedDoc, setPickedDoc] = useState<PickedDoc | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [combineFiles, setCombineFiles] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -137,6 +140,15 @@ export function SettingsForm({
     try {
       const form = new FormData();
       for (const f of Array.from(files)) form.append("files", f);
+      if (combineFiles && files.length > 1) {
+        form.set("combine", "true");
+        const name = window.prompt(
+          "Title for this entry (its files will play as one chapter):",
+          files[0].name.replace(/\.[^.]+$/, "")
+        );
+        if (name === null) return;
+        if (name.trim()) form.set("entryTitle", name.trim());
+      }
       const res = await fetch(`/api/journals/${journal.id}/audio`, {
         method: "POST",
         body: form,
@@ -145,7 +157,9 @@ export function SettingsForm({
       if (!res.ok) setError(body?.error ?? "Upload failed.");
       else {
         setNotice(
-          `Added ${body.tracks.length} track${body.tracks.length === 1 ? "" : "s"}.`
+          combineFiles && files.length > 1
+            ? `Added 1 entry with ${files.length} parts.`
+            : `Added ${body.tracks.length} track${body.tracks.length === 1 ? "" : "s"}.`
         );
         router.refresh();
       }
@@ -453,6 +467,11 @@ export function SettingsForm({
                     {i + 1}.
                   </span>
                   {t.title}
+                  {(t.parts ?? 1) > 1 && (
+                    <span className="text-ink-dim text-xs ml-2">
+                      ({t.parts} parts)
+                    </span>
+                  )}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
                   <audio
@@ -492,6 +511,17 @@ export function SettingsForm({
               ? "Uploading..."
               : "Click to add narration audio (max 100 MB per file)"}
           </span>
+        </label>
+
+        <label className="flex items-center gap-2 text-sm text-ink-dim cursor-pointer">
+          <input
+            type="checkbox"
+            className="accent-[var(--arcane)]"
+            checked={combineFiles}
+            onChange={(e) => setCombineFiles(e.target.checked)}
+          />
+          Combine selected files into a single entry (they play back-to-back
+          as one chapter — handy when a long reading comes as several files)
         </label>
       </section>
       )}

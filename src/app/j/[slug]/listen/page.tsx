@@ -68,6 +68,7 @@ export default async function ListenPage({
               // Uploaded filenames make poor chapter names — label by part.
               title: tracks.length === 1 ? journal.title : `Part ${i + 1}`,
               coverUrl,
+              segmentIds: t.segmentIds,
             }))}
             title={journal.title}
             author={journal.author}

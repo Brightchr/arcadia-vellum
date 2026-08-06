@@ -49,6 +49,7 @@ export default async function SeriesListenPage({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
         coverUrl,
+        segmentIds: t.segmentIds,
       }))
     );
   }
