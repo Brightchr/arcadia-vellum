@@ -5,11 +5,17 @@ import { canAccessJournal, accessibleJournalIds } from "@/lib/access";
 import { upsertReview, deleteReview } from "@/lib/reviews";
 import { notify } from "@/lib/notifications";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 /** Create or update the caller's review. JSON: {kind, itemId, rating, body} */
 export async function PUT(request: Request) {
+  const limited = rateLimit(request, "reviews", {
+    limit: 15,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
   const body = (await request.json().catch(() => null)) as {

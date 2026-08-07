@@ -11,6 +11,7 @@ import {
   SHARE_COOKIE_OPTIONS,
 } from "@/lib/share";
 import { isUserBanned } from "@/lib/profile";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -20,9 +21,15 @@ export const runtime = "nodejs";
  * a friendly explainer instead.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  // Tokens are 192-bit random — unguessable — but stall enumeration anyway.
+  const limited = rateLimit(request, "share-redeem", {
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
   const { token } = await params;
   const link = await resolveShareToken(token);
   if (!link || (await isUserBanned(link.ownerId))) redirect("/link-expired");

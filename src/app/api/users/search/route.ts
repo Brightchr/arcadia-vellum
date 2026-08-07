@@ -1,4 +1,5 @@
 import { searchUsers } from "@/lib/profile";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -7,6 +8,11 @@ export const runtime = "nodejs";
  * only searchable, non-private profiles with a username are returned.
  */
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "user-search", {
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
   const q = new URL(request.url).searchParams.get("q") ?? "";
   const users = await searchUsers(q);
   return Response.json({
