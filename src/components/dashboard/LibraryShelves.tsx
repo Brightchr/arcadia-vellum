@@ -124,12 +124,12 @@ export function LibraryShelves({
     const currentName =
       seriesList.find((s) => s.id === journal.seriesId)?.name ?? "";
     return (
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2 min-w-0">
         <span className="text-xs text-ink-dim shrink-0 font-heading">
           Shelf
         </span>
         <select
-          className="input-arcane flex-1 !py-1 !px-2 text-xs"
+          className="input-arcane flex-1 min-w-0 !py-1 !px-2 text-xs"
           value={currentName}
           aria-label={`Collection for ${journal.title}`}
           onChange={(e) => {
@@ -224,7 +224,7 @@ export function LibraryShelves({
               </Link>
             </div>
           </div>
-          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {volumes.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
                 <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
@@ -277,7 +277,7 @@ export function LibraryShelves({
                     </Link>
                   )}
                 </div>
-                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {volumes.map((j) => (
                     <div
                       key={j.id}
@@ -307,7 +307,7 @@ export function LibraryShelves({
                   Drop an audiobook here to unshelve it.
                 </p>
               ) : (
-                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {looseAudio.map((j) => (
                     <div
                       key={j.id}
@@ -339,7 +339,7 @@ export function LibraryShelves({
         {loose.length === 0 ? (
           <p className="text-sm text-ink-dim italic">Every tome is shelved.</p>
         ) : (
-          <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {loose.map((j) => (
               <div key={j.id} {...draggable(j)} className="cursor-grab active:cursor-grabbing">
                 <JournalCard journal={j} trackCount={trackCounts[j.id] ?? 0} />
