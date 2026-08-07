@@ -339,25 +339,24 @@ export function AppShell({
               Vellum
             </span>
           </Link>
-          <div
-            className={`flex items-center gap-1 min-w-0 overflow-x-auto ${
-              user ? "md:hidden" : ""
-            }`}
-          >
-            {(user ? NAV : NAV.filter((t) => t.key === "browse")).map((t) => (
-              <Link
-                key={t.key}
-                href={t.href}
-                className={`px-2.5 py-1.5 rounded-md text-sm font-heading whitespace-nowrap transition-colors ${
-                  active === t.key
-                    ? "bg-arcane/15 text-arcane-bright"
-                    : "text-ink-dim hover:text-ink hover:bg-white/5"
-                }`}
-              >
-                {t.label}
-              </Link>
-            ))}
-          </div>
+          {/* Signed-in mobile uses the bottom tab bar instead of topbar tabs */}
+          {!user && (
+            <div className="flex items-center gap-1 min-w-0">
+              {NAV.filter((t) => t.key === "browse").map((t) => (
+                <Link
+                  key={t.key}
+                  href={t.href}
+                  className={`px-2.5 py-1.5 rounded-md text-sm font-heading whitespace-nowrap transition-colors ${
+                    active === t.key
+                      ? "bg-arcane/15 text-arcane-bright"
+                      : "text-ink-dim hover:text-ink hover:bg-white/5"
+                  }`}
+                >
+                  {t.label}
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
             {user ? (
@@ -446,8 +445,33 @@ export function AppShell({
           </div>
         </header>
 
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className={`flex-1 min-w-0 ${user ? "pb-20 md:pb-0" : ""}`}>
+          {children}
+        </div>
       </div>
+
+      {/* Mobile bottom tab bar (signed in) — replaces topbar tabs on phones */}
+      {user && (
+        <nav
+          aria-label="Primary"
+          className="md:hidden fixed bottom-0 inset-x-0 z-50 flex border-t border-white/10 bg-void-raised/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
+        >
+          {NAV.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`flex-1 flex flex-col items-center gap-1 pt-2 pb-1.5 text-[10px] font-heading uppercase tracking-wider transition-colors ${
+                active === item.key
+                  ? "text-arcane-bright"
+                  : "text-ink-dim hover:text-ink"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </div>
   );
 }
