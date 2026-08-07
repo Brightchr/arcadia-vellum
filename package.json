@@ -16,6 +16,8 @@
     "railway:start": "node scripts/migrate.mjs && next start"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "better-auth": "^1.6.25",
     "cheerio": "^1.2.0",
     "drizzle-orm": "^0.45.1",
@@ -29,6 +31,7 @@
     "sanitize-html": "^2.14.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",

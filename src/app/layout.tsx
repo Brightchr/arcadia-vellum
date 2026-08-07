@@ -64,6 +64,11 @@ export const metadata: Metadata = {
   title: "Vellum — your adventure journal as an ancient tome",
   description:
     "Turn your TTRPG campaign journal (Google Doc or upload) into a beautiful page-flipping ancient tome you can share with your table.",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport = {
+  themeColor: "#100d16",
 };
 
 export default async function RootLayout({

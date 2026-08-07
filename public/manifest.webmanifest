@@ -1,0 +1,24 @@
+{
+  "name": "Vellum",
+  "short_name": "Vellum",
+  "description": "Write, listen, and share TTRPG journals as beautifully bound tomes and audiobooks.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#100d16",
+  "theme_color": "#100d16",
+  "icons": [
+    {
+      "src": "/mark.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
