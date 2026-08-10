@@ -654,6 +654,79 @@
   opacity: 0.9;
 }
 
+/* --------------------------------------------------------------------------
+   Mini covers on cards and shelves (.work-cover wraps a .tome-cover):
+   every piece of cover furniture scales with the card via cqw so nothing
+   overflows or crowds the title out at thumbnail sizes.
+-------------------------------------------------------------------------- */
+
+.work-cover {
+  container-type: inline-size;
+}
+
+.work-cover .tome-cover {
+  padding: 8% 10%;
+}
+
+.work-cover .tome-cover .tome-cover-ornament {
+  font-size: clamp(0.55rem, 9cqw, 1.3rem);
+  margin-bottom: clamp(0.2rem, 4cqw, 0.9rem);
+}
+
+.work-cover .tome-cover .tome-cover-title {
+  font-size: clamp(0.62rem, 10cqw, 1.05rem);
+  margin: 0;
+  text-shadow: none;
+}
+
+.work-cover .tome-cover .tome-cover-rule {
+  margin: clamp(0.25rem, 4.5cqw, 0.8rem) auto;
+}
+
+.work-cover .tome-cover .tome-cover-author {
+  bottom: 10cqw;
+  font-size: clamp(0.45rem, 6cqw, 0.75rem);
+  padding: 0 8%;
+}
+
+.work-cover .tome-cover .tome-cover-runes {
+  bottom: 3.5cqw;
+  font-size: clamp(0.4rem, 5.5cqw, 0.7rem);
+  letter-spacing: 0.4em;
+}
+
+@container (max-width: 130px) {
+  /* Specificity matches the per-theme display:block rules so tiny cards
+     actually drop the runes. */
+  .work-cover .tome-cover .tome-cover-runes {
+    display: none;
+  }
+}
+
+/* Theme-builder live preview: a full-size page and cover so the type and
+   texture read properly on desktop. */
+.builder-preview .tome-preview-page {
+  height: clamp(220px, 42vh, 400px);
+  font-size: 0.86em;
+}
+
+.builder-preview .builder-cover {
+  container-type: inline-size;
+}
+
+.builder-preview .builder-cover .tome-cover-title {
+  font-size: clamp(1rem, 11cqw, 2rem);
+}
+
+.builder-preview .builder-cover .tome-cover-author {
+  bottom: 9cqw;
+  font-size: clamp(0.65rem, 5cqw, 0.95rem);
+}
+
+.builder-preview .builder-cover .tome-cover .tome-cover-runes {
+  bottom: 3.5cqw;
+}
+
 /* A cover leaf carrying art drops the themed padding/frame — the image is
    the whole cover. */
 .tome-cover--art {

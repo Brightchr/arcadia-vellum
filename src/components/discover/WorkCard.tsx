@@ -44,15 +44,15 @@ export function WorkCover({
     );
   }
   return (
-    <div className={`theme-${work.theme} aspect-[3/4] w-full ${className}`}>
+    <div
+      className={`theme-${work.theme} work-cover aspect-[3/4] w-full ${className}`}
+    >
       <div className="tome-cover rounded-lg overflow-hidden h-full">
         <div className="tome-cover-ornament tome-cover-ornament--front" />
-        <h3 className="tome-cover-title !text-sm line-clamp-3">{work.title}</h3>
+        <h3 className="tome-cover-title line-clamp-3">{work.title}</h3>
         <hr className="tome-cover-rule" />
         {work.author && (
-          <p className="tome-cover-author !bottom-3 !text-[10px] truncate">
-            {work.author}
-          </p>
+          <p className="tome-cover-author truncate">{work.author}</p>
         )}
       </div>
     </div>
