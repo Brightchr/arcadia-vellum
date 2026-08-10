@@ -407,6 +407,16 @@ export function AppShell({
                       >
                         Settings
                       </Link>
+                      {/* The topbar picker is hidden on phones — offer the
+                          theme switch here so mobile isn't locked out. */}
+                      <div className="sm:hidden px-3 py-2 border-t border-void-border">
+                        <p className="text-xs text-ink-dim mb-1.5">
+                          Dashboard theme
+                        </p>
+                        <DashboardThemePicker
+                          current={user.dashboardTheme || "witch-grimoire"}
+                        />
+                      </div>
                       {user.isAdmin && (
                         <Link
                           href="/admin"
