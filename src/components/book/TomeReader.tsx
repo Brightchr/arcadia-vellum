@@ -18,9 +18,12 @@ interface Dims {
 function computeDims(containerW: number, containerH: number): Dims {
   const portrait = containerW < 700;
   const availH = Math.max(320, containerH - 28);
-  let pageW = portrait
-    ? Math.min(containerW - 16, 520)
-    : Math.min((containerW - 96) / 2, 640);
+  // Floor at a small positive size: a hidden/unpainted container measures
+  // 0×0, and a non-positive page size crashes the flip library.
+  let pageW = Math.max(
+    180,
+    portrait ? Math.min(containerW - 16, 520) : Math.min((containerW - 96) / 2, 640)
+  );
   let pageH = Math.round(pageW / 0.7);
   if (pageH > availH) {
     pageH = availH;
