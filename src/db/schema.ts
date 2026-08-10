@@ -145,6 +145,12 @@ export const journals = pgTable("journals", {
   gdocFileId: text("gdoc_file_id"),
   /** Optional cover art (journal_images id) — the listening page backdrop. */
   coverImageId: text("cover_image_id"),
+  /**
+   * JSON layout for the text over the cover art: whether the title/author
+   * show at all and where each block sits (percent coordinates). Null means
+   * the default layout.
+   */
+  coverLayout: text("cover_layout"),
   visibility: text("visibility", {
     enum: ["public", "friends", "restricted", "private"],
   })
