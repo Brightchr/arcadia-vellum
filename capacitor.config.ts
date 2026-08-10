@@ -1,4 +1,4 @@
-import type { CapacitorConfig } from "@capacitor/cli";
+﻿import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
  * Thin-shell setup: the Android app is a native wrapper around the live
@@ -11,8 +11,7 @@ const config: CapacitorConfig = {
   // Unused while server.url points at the live site, but must exist.
   webDir: "public",
   server: {
-    // TODO: replace with your Railway production URL before `npx cap sync`.
-    url: "https://REPLACE-WITH-YOUR-DOMAIN",
+    url: "https://vellum-books.org",
     cleartext: false,
   },
   android: {
