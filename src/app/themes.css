@@ -586,6 +586,76 @@
   opacity: 0.75;
 }
 
+/* --------------------------------------------------------------------------
+   Uploaded cover art with owner-positioned text overlay (.cover-art fills
+   its parent; cqw units keep the type scaling from card thumbs to the full
+   reader cover)
+-------------------------------------------------------------------------- */
+
+.cover-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  container-type: size;
+}
+
+.cover-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-art-block {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 86%;
+  text-align: center;
+  color: #f4efe6;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 18px rgba(0, 0, 0, 0.55);
+}
+
+.cover-art-title {
+  font-family: var(--tome-cover-font, serif);
+  font-size: clamp(0.7rem, 10cqw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+.cover-art-subtitle {
+  font-family: var(--tome-cover-font, serif);
+  font-size: clamp(0.5rem, 4.4cqw, 1.15rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.92;
+  margin-top: 0.4em;
+}
+
+.cover-art-author {
+  font-family: var(--tome-cover-font, serif);
+  font-size: clamp(0.5rem, 4.6cqw, 1.2rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* A cover leaf carrying art drops the themed padding/frame — the image is
+   the whole cover. */
+.tome-cover--art {
+  padding: 0;
+}
+
+.tome-cover--art::before {
+  display: none;
+}
+
 /* Endpapers — the dark sheets glued inside a real binding's covers */
 .tome-endpaper {
   position: relative;
