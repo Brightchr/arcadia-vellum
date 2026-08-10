@@ -5,8 +5,8 @@ import {
   deleteJournal,
   type Journal,
 } from "@/lib/journals";
-import { isThemeId } from "@/lib/themes";
 import { parseCoverLayout } from "@/lib/cover-layout";
+import { isValidThemeForUser } from "@/lib/custom-themes";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import {
   findOrCreateSeries,
@@ -63,7 +63,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     patch.author = body.author.trim().slice(0, 80) || null;
   }
   if (typeof body.theme === "string") {
-    if (!isThemeId(body.theme)) return jsonError("Unknown theme", 400);
+    if (!(await isValidThemeForUser(body.theme, session.user.id))) {
+      return jsonError("Unknown theme", 400);
+    }
     patch.theme = body.theme;
   }
   if (
