@@ -1,3 +1,5 @@
+import { isFontId, isHexColor, isTextureId } from "@/lib/theme-assets";
+
 /**
  * Layout of the text overlaid on uploaded cover art. Coordinates are the
  * CENTER of each text block, as percentages of the cover's width/height, so
@@ -8,6 +10,17 @@ export interface CoverPoint {
   y: number;
 }
 
+/**
+ * Backdrop drawn behind the art — matters for images with a transparent
+ * background (banners, seals, die-cut art), invisible under opaque ones.
+ */
+export interface CoverBackground {
+  /** Base color under the art. */
+  color?: string;
+  /** Texture overlay id (see THEME_TEXTURES). */
+  texture?: string;
+}
+
 export interface CoverLayout {
   /** True = the art speaks for itself; no title/author text is drawn. */
   hideText?: boolean;
@@ -15,6 +28,11 @@ export interface CoverLayout {
   title?: CoverPoint;
   /** Center of the author line. */
   author?: CoverPoint;
+  /** Cover-only font override (THEME_FONTS id); the theme picks otherwise. */
+  font?: string;
+  /** Cover-only text color override. */
+  color?: string;
+  bg?: CoverBackground;
 }
 
 export const DEFAULT_TITLE_POS: CoverPoint = { x: 50, y: 24 };
@@ -56,5 +74,16 @@ export function parseCoverLayout(raw: unknown): CoverLayout {
   if (title) parsed.title = title;
   const author = parsePoint(layout.author);
   if (author) parsed.author = author;
+  if (isFontId(layout.font)) parsed.font = layout.font;
+  if (isHexColor(layout.color)) parsed.color = layout.color;
+  if (typeof layout.bg === "object" && layout.bg !== null) {
+    const bg = layout.bg as Record<string, unknown>;
+    const parsedBg: CoverBackground = {};
+    if (isHexColor(bg.color)) parsedBg.color = bg.color;
+    if (isTextureId(bg.texture) && bg.texture !== "none") {
+      parsedBg.texture = bg.texture;
+    }
+    if (Object.keys(parsedBg).length > 0) parsed.bg = parsedBg;
+  }
   return parsed;
 }
