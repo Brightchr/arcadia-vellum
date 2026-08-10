@@ -1,16 +1,15 @@
 "use client";
 
-import type { ThemeId } from "@/lib/themes";
-
 /**
  * Miniature open-book preview rendered with the real theme CSS
- * (theme classes + .tome-page styles live in themes.css).
+ * (theme classes + .tome-page styles live in themes.css). Also renders
+ * custom themes ("custom-<id>") when their generated CSS is on the page.
  */
 export function ThemePreview({
   themeId,
   sampleName,
 }: {
-  themeId: ThemeId;
+  themeId: string;
   sampleName?: string | null;
 }) {
   return (
