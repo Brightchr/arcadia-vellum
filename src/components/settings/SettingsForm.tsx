@@ -8,6 +8,7 @@ import { ThemePreview } from "@/components/wizard/ThemePreview";
 import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourcePanel";
 import { FormattingGuide } from "@/components/help/FormattingGuide";
 import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
+import { CoverLayoutEditor } from "@/components/settings/CoverLayoutEditor";
 
 export interface TrackInfo {
   id: string;
@@ -704,53 +705,57 @@ export function SettingsForm({
       </section>
       )}
 
-      {/* Cover image — the listening page backdrop */}
-      {journal.sourceType === "audio" && (
-        <section className="panel-arcane p-6 space-y-4">
-          <h2 className="font-heading text-lg">Cover Image</h2>
-          <p className="text-sm text-ink-dim">
-            Shown as the full-screen backdrop while this volume plays —
-            including in series and listen-to-all playlists.
-          </p>
-          {journal.coverImageId && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`/api/images/${journal.coverImageId}`}
-              alt="Current cover"
-              className="h-40 rounded-lg object-cover border border-void-border"
+      {/* Cover art — replaces the themed cover; text placement is editable */}
+      <section className="panel-arcane p-6 space-y-4">
+        <h2 className="font-heading text-lg">Cover Art</h2>
+        <p className="text-sm text-ink-dim">
+          {journal.sourceType === "audio"
+            ? "Album art while this volume plays — in series and playlists too — and the cover on Browse cards."
+            : "Artwork for the front cover of the tome, also shown on Browse cards. Without art the cover keeps its themed look."}
+        </p>
+        {journal.coverImageId && (
+          <CoverLayoutEditor
+            key={journal.coverImageId}
+            coverUrl={`/api/images/${journal.coverImageId}`}
+            title={title}
+            subtitle={subtitle || null}
+            author={author || null}
+            layout={journal.coverLayout}
+            aspect={journal.sourceType === "audio" ? "audio" : "book"}
+            disabled={busy !== null}
+            onSave={(layout) => patch({ coverLayout: layout }, "coverLayout")}
+          />
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="btn-arcane cursor-pointer">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              className="hidden"
+              disabled={busy !== null}
+              onChange={(e) => {
+                void uploadCover(e.target.files?.[0]);
+                e.target.value = "";
+              }}
             />
+            {busy === "cover"
+              ? "Working..."
+              : journal.coverImageId
+                ? "Replace Cover Art"
+                : "Upload Cover Art"}
+          </label>
+          {journal.coverImageId && (
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={busy !== null}
+              onClick={removeCover}
+            >
+              Remove
+            </button>
           )}
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="btn-arcane cursor-pointer">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                className="hidden"
-                disabled={busy !== null}
-                onChange={(e) => {
-                  void uploadCover(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
-              {busy === "cover"
-                ? "Working..."
-                : journal.coverImageId
-                  ? "Replace Cover"
-                  : "Upload Cover"}
-            </label>
-            {journal.coverImageId && (
-              <button
-                type="button"
-                className="btn-ghost"
-                disabled={busy !== null}
-                onClick={removeCover}
-              >
-                Remove
-              </button>
-            )}
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Source */}
       <section className="panel-arcane p-6 space-y-4">
