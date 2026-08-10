@@ -205,6 +205,22 @@ export const journalImages = pgTable("journal_images", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * User-built themes from the theme builder. config is validated JSON
+ * (colors, fonts, textures, ambience — all from fixed whitelists). Journals
+ * reference one as theme = "custom-<id>".
+ */
+export const userThemes = pgTable("user_themes", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  config: text("config").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // ---------------------------------------------------------------------------
 // Social platform tables
 // ---------------------------------------------------------------------------
