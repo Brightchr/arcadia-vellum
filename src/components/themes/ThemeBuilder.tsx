@@ -304,21 +304,23 @@ export function ThemeBuilder({ initialThemes }: { initialThemes: ThemeRow[] }) {
       <div className="order-1 lg:order-2 lg:sticky lg:top-6 self-start min-w-0">
         <style dangerouslySetInnerHTML={{ __html: css }} />
         <div
-          className={`${PREVIEW_CLASS} tome-scene relative overflow-hidden rounded-xl border border-void-border p-4 sm:p-6`}
+          className={`${PREVIEW_CLASS} tome-scene builder-preview relative overflow-hidden rounded-xl border border-void-border p-4 sm:p-8`}
         >
           <TomeAmbience />
-          <div className="relative z-10 grid gap-4 sm:grid-cols-[minmax(0,11rem)_1fr] items-center">
-            <div className="aspect-[7/10] w-full max-w-44 mx-auto sm:mx-0">
-              <div className="tome-cover rounded-md overflow-hidden">
-                <div className="tome-cover-ornament tome-cover-ornament--front" />
-                <h1 className="tome-cover-title !text-xl">{name || "Your Theme"}</h1>
-                <hr className="tome-cover-rule" />
-                <p className="tome-cover-subtitle !text-[0.65rem]">
-                  A living preview
-                </p>
-                <p className="tome-cover-author !bottom-8 !text-[0.65rem]">
-                  Eveline Veyr
-                </p>
+          <div className="relative z-10 grid gap-5 md:grid-cols-[minmax(0,17rem)_1fr] items-center">
+            <div className="aspect-[7/10] w-full max-w-52 md:max-w-none mx-auto md:mx-0">
+              <div className="builder-cover h-full">
+                <div className="tome-cover rounded-md overflow-hidden h-full">
+                  <div className="tome-cover-ornament tome-cover-ornament--front" />
+                  <h1 className="tome-cover-title line-clamp-3">
+                    {name || "Your Theme"}
+                  </h1>
+                  <hr className="tome-cover-rule" />
+                  <p className="tome-cover-subtitle !text-[0.7rem]">
+                    A living preview
+                  </p>
+                  <p className="tome-cover-author">Eveline Veyr</p>
+                </div>
               </div>
             </div>
             <ThemePreview themeId="live-preview" sampleName="Eveline" />

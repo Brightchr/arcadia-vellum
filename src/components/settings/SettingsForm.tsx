@@ -10,6 +10,7 @@ import { GdocSourcePanel, type PickedDoc } from "@/components/google/GdocSourceP
 import { FormattingGuide } from "@/components/help/FormattingGuide";
 import { ShareLinksPanel } from "@/components/share/ShareLinksPanel";
 import { CoverLayoutEditor } from "@/components/settings/CoverLayoutEditor";
+import { PaletteIcon } from "@/components/icons";
 
 export interface TrackInfo {
   id: string;
@@ -610,8 +611,11 @@ export function SettingsForm({
             <p className="text-sm text-ink-dim">
               The binding, paper, inks, and ambience of this tome.
             </p>
-            <Link href="/themes" className="btn-ghost text-sm">
-              ✨ Open the Theme Builder
+            <Link
+              href="/themes"
+              className="btn-ghost text-sm inline-flex items-center gap-1.5"
+            >
+              <PaletteIcon className="h-4 w-4" /> Open the Theme Builder
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
