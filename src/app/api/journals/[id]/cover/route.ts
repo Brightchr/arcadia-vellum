@@ -23,11 +23,6 @@ export async function POST(
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);
-  // Covers back the listening pages; content ingestion for written tomes
-  // clears journal_images wholesale, so only audiobooks carry one.
-  if (journal.sourceType !== "audio") {
-    return jsonError("Only audiobooks carry a cover image", 400);
-  }
 
   const form = await request.formData();
   const file = form.get("file");

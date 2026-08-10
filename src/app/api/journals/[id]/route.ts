@@ -6,6 +6,7 @@ import {
   type Journal,
 } from "@/lib/journals";
 import { isThemeId } from "@/lib/themes";
+import { parseCoverLayout } from "@/lib/cover-layout";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import {
   findOrCreateSeries,
@@ -47,6 +48,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       | "description"
       | "featured"
       | "gdocFileId"
+      | "coverLayout"
     >
   > = {};
 
@@ -97,6 +99,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     journal.sourceType === "gdoc"
   ) {
     patch.gdocFileId = body.gdocFileId.trim();
+  }
+
+  // Cover text layout: an object stores (validated/clamped), null resets to
+  // the default layout.
+  if (body.coverLayout === null) {
+    patch.coverLayout = null;
+  } else if (typeof body.coverLayout === "object" && body.coverLayout) {
+    patch.coverLayout = JSON.stringify(parseCoverLayout(body.coverLayout));
   }
 
   // Series membership: a name assigns (find-or-create), empty string removes.

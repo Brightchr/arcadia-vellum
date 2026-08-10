@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { journalImages } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { journalImages, journals } from "@/db/schema";
+import { and, eq, ne } from "drizzle-orm";
 import { newId } from "@/lib/id";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -30,8 +30,23 @@ export async function storeImage(
   return `/api/images/${id}`;
 }
 
+/**
+ * Clears a journal's stored content images (before a re-sync/re-upload
+ * stores fresh ones). The cover art is NOT content — it survives.
+ */
 export async function deleteImagesForJournal(journalId: string) {
-  await db.delete(journalImages).where(eq(journalImages.journalId, journalId));
+  const [journal] = await db
+    .select({ coverImageId: journals.coverImageId })
+    .from(journals)
+    .where(eq(journals.id, journalId));
+  const keep = journal?.coverImageId;
+  await db
+    .delete(journalImages)
+    .where(
+      keep
+        ? and(eq(journalImages.journalId, journalId), ne(journalImages.id, keep))
+        : eq(journalImages.journalId, journalId)
+    );
 }
 
 /**
