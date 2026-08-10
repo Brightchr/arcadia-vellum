@@ -11,6 +11,8 @@ import { AppShell } from "@/components/nav/AppShell";
 import { LibraryShelves } from "@/components/dashboard/LibraryShelves";
 import { WorkCover } from "@/components/discover/WorkCard";
 import { WorkRow } from "@/components/discover/WorkRow";
+import { customThemeCssFor } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 
 export default async function DashboardPage() {
   const { session, navUser, pins, unread } = await shellData();
@@ -26,8 +28,25 @@ export default async function DashboardPage() {
   ]);
   const dashboardTheme = navUser.dashboardTheme ?? "";
 
+  // Custom-themed covers on this page need their generated CSS present.
+  const customCss = await customThemeCssFor([
+    ...recent.map((a) => a.theme),
+    ...journals.map((j) => j.theme),
+    ...[
+      feed.followedNew,
+      feed.friendsRecommend,
+      feed.bestReviewed,
+      feed.newAndNoteworthy,
+      feed.popular,
+    ]
+      .flat()
+      .map((w) => w.theme),
+    ...feed.tagRows.flatMap((r) => r.works.map((w) => w.theme)),
+  ]);
+
   return (
     <main className={`${appThemeClass(dashboardTheme)} arcane-bg min-h-screen`}>
+      <ThemeStyle css={customCss} />
       <AppShell
         user={navUser}
         active="library"

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { journals, userThemes } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { newId } from "@/lib/id";
 import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 import {
@@ -98,6 +98,37 @@ export async function isValidThemeForUser(
   const id = customThemeIdFromValue(value);
   if (!id) return false;
   return (await getOwnedTheme(id, userId)) !== null;
+}
+
+/**
+ * Combined CSS for every custom theme referenced in a list of journal theme
+ * values — lets card grids (dashboard, browse, shelves) render custom-themed
+ * covers correctly. Returns null when none are custom.
+ */
+export async function customThemeCssFor(
+  themeValues: (string | null | undefined)[]
+): Promise<string | null> {
+  const ids = [
+    ...new Set(
+      themeValues
+        .filter((v): v is string => typeof v === "string")
+        .map(customThemeIdFromValue)
+        .filter((v): v is string => v !== null)
+    ),
+  ];
+  if (ids.length === 0) return null;
+  const rows = await db
+    .select()
+    .from(userThemes)
+    .where(inArray(userThemes.id, ids));
+  const css = rows
+    .map((r) => {
+      const config = parseThemeConfig(r.config);
+      return config ? customThemeCss(`theme-custom-${r.id}`, config) : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+  return css || null;
 }
 
 export interface ResolvedTheme {

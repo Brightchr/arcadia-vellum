@@ -10,6 +10,8 @@ import {
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
+import { customThemeCssFor } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 
 export const metadata: Metadata = {
   title: "Browse — Vellum",
@@ -98,10 +100,13 @@ export default async function BrowsePage({
     </Link>
   );
 
+  const customCss = await customThemeCssFor(works.map((w) => w.theme));
+
   return (
     <main
       className={`${appThemeClass(navUser?.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
+      <ThemeStyle css={customCss} />
       <AppShell
         user={navUser}
         active="browse"

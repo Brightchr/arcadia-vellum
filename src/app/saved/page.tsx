@@ -7,6 +7,8 @@ import { listPublicWorks } from "@/lib/discovery";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { WorkCard } from "@/components/discover/WorkCard";
+import { customThemeCssFor } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 
 export const metadata: Metadata = {
   title: "Saved — Vellum",
@@ -29,10 +31,13 @@ export default async function SavedPage() {
       (order.get(`${b.kind}:${b.id}`) ?? 0)
   );
 
+  const customCss = await customThemeCssFor(works.map((w) => w.theme));
+
   return (
     <main
       className={`${appThemeClass(navUser.dashboardTheme ?? "")} arcane-bg min-h-screen`}
     >
+      <ThemeStyle css={customCss} />
       <AppShell user={navUser} active="saved" pins={pins} unreadNotifications={unread}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
         <header className="mb-8">
