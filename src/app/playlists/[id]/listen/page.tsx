@@ -8,6 +8,8 @@ import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon } from "@/components/icons";
+import { resolveTheme } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 
 export const metadata: Metadata = {
   title: "Playlist — Vellum",
@@ -32,11 +34,11 @@ export default async function PlaylistListenPage({
   if (items.length === 0) redirect(`/playlists/${id}`);
 
   const trackList = [];
-  let theme = "witch-grimoire";
+  let themeValue = "witch-grimoire";
   for (const [idx, item] of items.entries()) {
     const journal = await getJournalById(item.journalId);
     if (!journal) continue;
-    if (idx === 0) theme = journal.theme;
+    if (idx === 0) themeValue = journal.theme;
     const tracks = await listTracks(journal.id);
     const covers = entryCoverUrls(tracks, journal.coverImageId);
     const volCoverUrl = journal.coverImageId
@@ -58,10 +60,13 @@ export default async function PlaylistListenPage({
   }
   if (trackList.length === 0) redirect(`/playlists/${id}`);
 
+  const theme = await resolveTheme(themeValue);
+
   return (
     <main
-      className={`theme-${theme} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
+      className={`${theme.className} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
     >
+      <ThemeStyle css={theme.css} />
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link

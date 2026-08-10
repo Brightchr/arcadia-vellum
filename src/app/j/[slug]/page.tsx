@@ -9,6 +9,8 @@ import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
 import TomeReader from "@/components/book/TomeReaderClient";
 import { parseCoverLayout } from "@/lib/cover-layout";
+import { resolveTheme } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { ArrowLeftIcon } from "@/components/icons";
 
@@ -62,11 +64,13 @@ export default async function ReaderPage({
   }
 
   const content = await getJournalContent(journal.id);
+  const theme = await resolveTheme(journal.theme);
 
   return (
     <main
-      className={`theme-${journal.theme} tome-scene arcane-bg h-dvh w-full overflow-hidden relative`}
+      className={`${theme.className} tome-scene arcane-bg h-dvh w-full overflow-hidden relative`}
     >
+      <ThemeStyle css={theme.css} />
       <TomeAmbience />
       <header className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
@@ -90,7 +94,7 @@ export default async function ReaderPage({
       <div className="h-full w-full pt-10 pb-2 relative z-10">
         <TomeReader
           html={content?.html ?? ""}
-          theme={journal.theme}
+          theme={theme.className.replace(/^theme-/, "")}
           title={journal.title}
           subtitle={journal.subtitle}
           author={journal.author}

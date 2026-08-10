@@ -10,6 +10,8 @@ import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
+import { resolveTheme } from "@/lib/custom-themes";
+import { ThemeStyle } from "@/components/book/ThemeStyle";
 
 export async function generateMetadata({
   params,
@@ -71,10 +73,13 @@ export default async function ListenPage({
     : null;
   const coverText = volumeCoverText(journal);
 
+  const theme = await resolveTheme(journal.theme);
+
   return (
     <main
-      className={`theme-${journal.theme} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
+      className={`${theme.className} tome-scene arcane-bg h-dvh overflow-hidden w-full relative flex flex-col`}
     >
+      <ThemeStyle css={theme.css} />
       <TomeAmbience />
       <header className="relative z-40 flex items-center justify-between px-4 py-2 text-sm">
         <Link
