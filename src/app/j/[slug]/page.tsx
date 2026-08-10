@@ -8,6 +8,7 @@ import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
 import TomeReader from "@/components/book/TomeReaderClient";
+import { parseCoverLayout } from "@/lib/cover-layout";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { ArrowLeftIcon } from "@/components/icons";
 
@@ -93,6 +94,10 @@ export default async function ReaderPage({
           title={journal.title}
           subtitle={journal.subtitle}
           author={journal.author}
+          coverUrl={
+            journal.coverImageId ? `/api/images/${journal.coverImageId}` : null
+          }
+          coverLayout={parseCoverLayout(journal.coverLayout)}
         />
       </div>
     </main>

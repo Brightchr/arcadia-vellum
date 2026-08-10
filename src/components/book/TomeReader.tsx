@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip-enhanced";
 import { paginateHtml, preloadImages } from "./paginate";
 import { ThemedArrow, JumpIcon } from "./NavIcons";
+import { CoverArt } from "./CoverArt";
+import type { CoverLayout } from "@/lib/cover-layout";
 
 interface Dims {
   pageW: number;
@@ -33,12 +35,17 @@ export default function TomeReader({
   title,
   subtitle,
   author,
+  coverUrl,
+  coverLayout,
 }: {
   html: string;
   theme: string;
   title: string;
   subtitle?: string | null;
   author?: string | null;
+  /** Uploaded cover art — replaces the themed front cover when set. */
+  coverUrl?: string | null;
+  coverLayout?: CoverLayout;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const measurerRef = useRef<HTMLDivElement>(null);
@@ -170,20 +177,29 @@ export default function TomeReader({
   const leaves: React.ReactElement[] = useMemo(() => {
     const items: React.ReactElement[] = [
       // data-density="hard" makes covers flip as stiff boards, not paper.
-      <div key="cover" className="tome-cover" data-density="hard">
-        <div className="tome-cover-ornament tome-cover-ornament--front" />
-        <h1 className="tome-cover-title">{title}</h1>
-        {subtitle ? (
-          <>
+      coverUrl ? (
+        <div key="cover" className="tome-cover tome-cover--art" data-density="hard">
+          <CoverArt
+            url={coverUrl}
+            text={{ title, subtitle, author, layout: coverLayout }}
+          />
+        </div>
+      ) : (
+        <div key="cover" className="tome-cover" data-density="hard">
+          <div className="tome-cover-ornament tome-cover-ornament--front" />
+          <h1 className="tome-cover-title">{title}</h1>
+          {subtitle ? (
+            <>
+              <hr className="tome-cover-rule" />
+              <p className="tome-cover-subtitle">{subtitle}</p>
+            </>
+          ) : (
             <hr className="tome-cover-rule" />
-            <p className="tome-cover-subtitle">{subtitle}</p>
-          </>
-        ) : (
-          <hr className="tome-cover-rule" />
-        )}
-        {author && <p className="tome-cover-author">{author}</p>}
-        <div className="tome-cover-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ</div>
-      </div>,
+          )}
+          {author && <p className="tome-cover-author">{author}</p>}
+          <div className="tome-cover-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ</div>
+        </div>
+      ),
       // Endpaper glued inside the front cover, like a real binding.
       <div key="endpaper-front" className="tome-endpaper" data-density="hard">
         <span>✦</span>
@@ -224,7 +240,7 @@ export default function TomeReader({
     );
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentPages, needsFiller, title, subtitle, author]);
+  }, [contentPages, needsFiller, title, subtitle, author, coverUrl, coverLayout]);
 
   // Text and padding scale with page size so bigger screens get bigger type.
   const pageScale = dims
