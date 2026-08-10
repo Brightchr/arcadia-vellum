@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
 import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug } from "@/lib/journals";
-import { listTracks, entryCoverUrls } from "@/lib/audio";
+import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, HeadphonesIcon } from "@/components/icons";
@@ -66,6 +66,10 @@ export default async function ListenPage({
   // Chapter images: each entry's own image, falling back to the first set
   // one, then the volume cover.
   const covers = entryCoverUrls(tracks, journal.coverImageId);
+  const volCoverUrl = journal.coverImageId
+    ? `/api/images/${journal.coverImageId}`
+    : null;
+  const coverText = volumeCoverText(journal);
 
   return (
     <main
@@ -89,6 +93,8 @@ export default async function ListenPage({
               // Uploaded filenames make poor chapter names — label by part.
               title: tracks.length === 1 ? journal.title : `Part ${i + 1}`,
               coverUrl: covers[i],
+              coverText:
+                volCoverUrl && covers[i] === volCoverUrl ? coverText : null,
               segmentIds: t.segmentIds,
             }))}
             title={journal.title}

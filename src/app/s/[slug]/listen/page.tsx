@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
 import { accessibleJournalIds } from "@/lib/access";
 import { getSeriesBySlug, listVolumes } from "@/lib/series";
-import { listTracks, entryCoverUrls } from "@/lib/audio";
+import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon, BookOpenIcon } from "@/components/icons";
@@ -55,11 +55,14 @@ export default async function SeriesListenPage({
     const vl = volumeLabel(v);
     const label = vl !== null ? `Vol. ${vl}` : v.title;
     const covers = entryCoverUrls(tracks, v.coverImageId);
+    const volCoverUrl = v.coverImageId ? `/api/images/${v.coverImageId}` : null;
+    const coverText = volumeCoverText(v);
     trackList.push(
       ...tracks.map((t, i) => ({
         id: t.id,
         title: tracks.length === 1 ? label : `${label} · Part ${i + 1}`,
         coverUrl: covers[i],
+        coverText: volCoverUrl && covers[i] === volCoverUrl ? coverText : null,
         segmentIds: t.segmentIds,
       }))
     );

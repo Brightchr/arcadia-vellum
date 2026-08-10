@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CoverArt, type CoverText } from "./CoverArt";
 import {
   ChevronDownIcon,
   PauseIcon,
@@ -25,6 +26,11 @@ export interface NarrationTrack {
   title: string;
   /** Backdrop for while this track plays (the volume's cover image). */
   coverUrl?: string | null;
+  /**
+   * Set when coverUrl is the volume's cover art (not a chapter image):
+   * the title/author overlay that makes it read as a book cover.
+   */
+  coverText?: CoverText | null;
   /** Audio ids played back-to-back as this one entry (defaults to [id]). */
   segmentIds?: string[];
 }
@@ -243,11 +249,10 @@ export function AudiobookPlayer({
             }
           >
             {track.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.coverUrl}
-                alt=""
-                className="w-full h-full object-cover rounded-xl border border-white/15 shadow-2xl shadow-black/60"
+              <CoverArt
+                url={track.coverUrl}
+                text={track.coverText}
+                className="rounded-xl border border-white/15 shadow-2xl shadow-black/60"
               />
             ) : (
               fallbackArt

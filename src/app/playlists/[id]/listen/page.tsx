@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { getViewablePlaylist, listPlaylistItems } from "@/lib/playlists";
 import { getJournalById } from "@/lib/journals";
-import { listTracks, entryCoverUrls } from "@/lib/audio";
+import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
 import { TomeAmbience } from "@/components/book/TomeAmbience";
 import { AudiobookPlayer } from "@/components/book/AudiobookPlayer";
 import { ArrowLeftIcon } from "@/components/icons";
@@ -39,6 +39,10 @@ export default async function PlaylistListenPage({
     if (idx === 0) theme = journal.theme;
     const tracks = await listTracks(journal.id);
     const covers = entryCoverUrls(tracks, journal.coverImageId);
+    const volCoverUrl = journal.coverImageId
+      ? `/api/images/${journal.coverImageId}`
+      : null;
+    const coverText = volumeCoverText(journal);
     trackList.push(
       ...tracks.map((t, i) => ({
         id: t.id,
@@ -47,6 +51,7 @@ export default async function PlaylistListenPage({
             ? journal.title
             : `${journal.title} · Part ${i + 1}`,
         coverUrl: covers[i],
+        coverText: volCoverUrl && covers[i] === volCoverUrl ? coverText : null,
         segmentIds: t.segmentIds,
       }))
     );

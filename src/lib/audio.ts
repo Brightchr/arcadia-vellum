@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { journalAudio, journalImages, journals } from "@/db/schema";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
+import { parseCoverLayout } from "@/lib/cover-layout";
 
 export const AUDIO_TYPES: Record<string, string> = {
   ".mp3": "audio/mpeg",
@@ -82,6 +83,25 @@ export function entryCoverUrls(
     own.find((u) => u !== null) ??
     (journalCoverImageId ? `/api/images/${journalCoverImageId}` : null);
   return own.map((u) => u ?? fallback);
+}
+
+/**
+ * The title/author overlay that makes a volume's cover art read as a book
+ * cover in the player. Attach it only to entries whose art IS the volume
+ * cover — chapter images stay untitled.
+ */
+export function volumeCoverText(journal: {
+  title: string;
+  subtitle: string | null;
+  author: string | null;
+  coverLayout: string | null;
+}) {
+  return {
+    title: journal.title,
+    subtitle: journal.subtitle,
+    author: journal.author,
+    layout: parseCoverLayout(journal.coverLayout),
+  };
 }
 
 /** Entry counts per journal for all of an owner's journals (for the dashboard). */
