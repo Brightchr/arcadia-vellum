@@ -35,6 +35,14 @@ function message(n: NotificationItem): string {
       return `${who} requested access to ${n.itemTitle ?? "your work"}`;
     case "access_granted":
       return `${who} granted you access to ${n.itemTitle ?? "a work"}`;
+    case "group_invite":
+      return `${who} invited you to ${n.itemTitle ?? "a group"}`;
+    case "report_opened":
+      return "Your account was reported and is temporarily restricted while moderators review it";
+    case "report_dismissed":
+      return "The report against your account was dismissed — restrictions lifted";
+    case "report_upheld":
+      return "A report against your account was upheld by moderators";
     case "user_banned":
       return `${who} was banned — works you saved from them are no longer available`;
     default:
@@ -50,6 +58,7 @@ function href(n: NotificationItem): string {
     return n.actorUsername ? `/u/${n.actorUsername}` : "/friends";
   }
   if (n.type === "user_banned") return "/saved";
+  if (n.type.startsWith("report_")) return "/dashboard";
   return n.itemHref ?? "/browse";
 }
 
@@ -93,7 +102,7 @@ export function NotificationsBell({ initialUnread }: { initialUnread: number }) 
         type="button"
         aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ""}`}
         aria-expanded={open}
-        className="relative rounded-md p-2 text-ink-dim hover:text-ink hover:bg-white/5 transition-colors"
+        className="relative rounded-md p-2 text-ink-dim hover:text-ink hover:bg-overlay transition-colors"
         onClick={() => void toggle()}
       >
         <svg
@@ -116,7 +125,7 @@ export function NotificationsBell({ initialUnread }: { initialUnread: number }) 
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-80 max-w-[90vw] py-1 rounded-lg border border-white/10 bg-void-raised/95 backdrop-blur-xl shadow-xl shadow-black/50">
+        <div className="app-menu absolute right-0 top-full mt-2 z-50 w-80 max-w-[90vw] py-1 rounded-lg shadow-xl shadow-black/30">
           <p className="px-3 py-2 font-heading text-sm border-b border-void-border">
             Notifications
           </p>

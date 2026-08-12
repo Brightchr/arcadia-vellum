@@ -79,13 +79,15 @@ export default async function RootLayout({
   // The sidenav's collapsed state is mirrored into a cookie so the server
   // renders html[data-nav-collapsed] itself — hydration then matches exactly
   // and a hard refresh can't flash or animate the rail.
-  const navCollapsed =
-    (await cookies()).get("av-nav-collapsed")?.value === "1";
+  const cookieJar = await cookies();
+  const navCollapsed = cookieJar.get("av-nav-collapsed")?.value === "1";
+  const railCollapsed = cookieJar.get("av-rail-collapsed")?.value === "1";
   return (
     <html
       lang="en"
       suppressHydrationWarning
       data-nav-collapsed={navCollapsed ? "1" : undefined}
+      data-rail-collapsed={railCollapsed ? "1" : undefined}
     >
       <head>
         {/* Fallback for visitors whose preference predates the cookie: apply
@@ -93,7 +95,7 @@ export default async function RootLayout({
             so the server gets it right from the next load on. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var v=localStorage.getItem("av-nav-collapsed");if(v==="1")document.documentElement.dataset.navCollapsed="1";else if(v==="0")delete document.documentElement.dataset.navCollapsed;if(v!==null)document.cookie="av-nav-collapsed="+(v==="1"?"1":"0")+";path=/;max-age=31536000;samesite=lax"}catch(e){}`,
+            __html: `try{var v=localStorage.getItem("av-nav-collapsed");if(v==="1")document.documentElement.dataset.navCollapsed="1";else if(v==="0")delete document.documentElement.dataset.navCollapsed;if(v!==null)document.cookie="av-nav-collapsed="+(v==="1"?"1":"0")+";path=/;max-age=31536000;samesite=lax";var r=localStorage.getItem("av-rail-collapsed");if(r==="1")document.documentElement.dataset.railCollapsed="1";else if(r==="0")delete document.documentElement.dataset.railCollapsed;if(r!==null)document.cookie="av-rail-collapsed="+(r==="1"?"1":"0")+";path=/;max-age=31536000;samesite=lax"}catch(e){}`,
           }}
         />
       </head>

@@ -111,7 +111,8 @@ export async function shellData() {
     listSeriesForOwner(session.user.id),
     listSaved(session.user.id),
     listPlaylistsForOwner(session.user.id),
-    unreadCount(session.user.id),
+    // The bell counts system notifications; social ones badge the rail.
+    unreadCount(session.user.id, "system"),
   ]);
   const savedSeriesIds = saved
     .filter((s) => s.kind === "series")
