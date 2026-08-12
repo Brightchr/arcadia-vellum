@@ -8,6 +8,8 @@ import { Avatar } from "./Avatar";
 import { NotificationsBell } from "./NotificationsBell";
 import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { PresenceBeacon } from "./PresenceBeacon";
+import { SocialRail } from "./SocialRail";
 import {
   BookOpenIcon,
   HeadphonesIcon,
@@ -16,6 +18,8 @@ import {
   CompassIcon,
   BookmarkIcon,
   LibraryIcon,
+  MessageSquareIcon,
+  SearchIcon,
 } from "@/components/icons";
 
 export interface NavUser {
@@ -46,6 +50,7 @@ const NAV = [
   { key: "browse", label: "Browse", href: "/browse", icon: CompassIcon },
   { key: "saved", label: "Saved", href: "/saved", icon: BookmarkIcon },
   { key: "friends", label: "Friends", href: "/friends", icon: UsersIcon },
+  { key: "groups", label: "Groups", href: "/groups", icon: MessageSquareIcon },
 ] as const;
 
 export type NavTab = (typeof NAV)[number]["key"];
@@ -174,7 +179,7 @@ export function AppShell({
     }
     return (
       <span
-        className={`${cls} inline-flex items-center justify-center bg-white/5 text-base`}
+        className={`${cls} inline-flex items-center justify-center bg-overlay text-base`}
         aria-hidden
       >
         {pin.icon ??
@@ -187,16 +192,12 @@ export function AppShell({
     );
   }
 
-  const glass =
-    "border-white/10 bg-white/[0.04] backdrop-blur-xl";
-
   return (
     <div className="flex min-h-dvh">
+      {user && <PresenceBeacon />}
       {/* Sidenav (desktop, signed in) — collapses to a Spotify-style rail */}
       {user && (
-        <aside
-          className={`app-sidenav hidden md:flex shrink-0 flex-col overflow-hidden border-r ${glass} sticky top-0 h-dvh transition-[width] duration-200`}
-        >
+        <aside className="app-sidenav hidden md:flex shrink-0 flex-col overflow-hidden border-r sticky top-0 h-dvh transition-[width] duration-200">
           <div className="flex items-center h-14 shrink-0 justify-between pr-2 navc:justify-center navc:pr-0">
             <Link
               href="/dashboard"
@@ -223,7 +224,7 @@ export function AppShell({
               type="button"
               aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
               title={collapsed ? "Expand" : "Collapse"}
-              className="p-2 rounded-md text-ink-dim hover:text-ink hover:bg-white/5 transition-colors"
+              className="p-2 rounded-md text-ink-dim hover:text-ink hover:bg-overlay transition-colors"
               onClick={toggleCollapsed}
             >
               <svg
@@ -244,16 +245,19 @@ export function AppShell({
             </button>
           </div>
 
+          <p className="navc:hidden px-4 pt-2 pb-1 text-[10px] font-heading uppercase tracking-[0.2em] text-ink-dim/80">
+            Menu
+          </p>
           <nav className="px-2 space-y-0.5">
             {NAV.map((item) => (
               <Link
                 key={item.key}
                 href={item.href}
                 title={item.label}
-                className={`flex items-center gap-3 px-3 navc:justify-center navc:px-0 py-2 rounded-md text-sm font-heading transition-colors ${
+                className={`relative flex items-center gap-3 px-3 navc:justify-center navc:px-0 py-2 rounded-md text-sm font-heading transition-colors ${
                   active === item.key
-                    ? "bg-arcane/15 text-arcane-bright"
-                    : "text-ink-dim hover:text-ink hover:bg-white/5"
+                    ? "bg-arcane/15 text-arcane-bright before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-arcane navc:before:hidden"
+                    : "text-ink-dim hover:text-ink hover:bg-overlay"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -270,7 +274,7 @@ export function AppShell({
               type="button"
               aria-label="New playlist"
               title="New playlist — arrange audiobooks in your own order"
-              className="p-1 rounded-md text-ink-dim hover:text-arcane-bright hover:bg-white/5 transition-colors text-base leading-none"
+              className="p-1 rounded-md text-ink-dim hover:text-arcane-bright hover:bg-overlay transition-colors text-base leading-none"
               onClick={() => void createPlaylist()}
             >
               +
@@ -290,7 +294,7 @@ export function AppShell({
                   <Link
                     href={pin.href}
                     title={pin.label}
-                    className="min-w-0 flex items-center rounded-md text-sm text-ink-dim hover:text-ink hover:bg-white/5 transition-colors flex-1 gap-2.5 px-2 py-1.5 navc:flex-none navc:px-1.5"
+                    className="min-w-0 flex items-center rounded-md text-sm text-ink-dim hover:text-ink hover:bg-overlay transition-colors flex-1 gap-2.5 px-2 py-1.5 navc:flex-none navc:px-1.5"
                   >
                     {pinArt(pin)}
                     <span className="truncate navc:hidden">{pin.label}</span>
@@ -308,7 +312,7 @@ export function AppShell({
             )}
           </div>
 
-          <div className="p-3 navc:p-2 border-t border-white/10">
+          <div className="p-3 navc:p-2 border-t border-edge">
             <Link
               href="/journal/new"
               title="New Journal"
@@ -322,9 +326,7 @@ export function AppShell({
 
       {/* Main column */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header
-          className={`sticky top-0 z-50 h-14 shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 border-b ${glass}`}
-        >
+        <header className="app-topbar sticky top-0 z-50 h-14 shrink-0 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 border-b">
           {/* Breadcrumb trail — pages like Settings stay one click from Home */}
           <Breadcrumbs signedIn={!!user} />
 
@@ -349,13 +351,34 @@ export function AppShell({
                   className={`px-2.5 py-1.5 rounded-md text-sm font-heading whitespace-nowrap transition-colors ${
                     active === t.key
                       ? "bg-arcane/15 text-arcane-bright"
-                      : "text-ink-dim hover:text-ink hover:bg-white/5"
+                      : "text-ink-dim hover:text-ink hover:bg-overlay"
                   }`}
                 >
                   {t.label}
                 </Link>
               ))}
             </div>
+          )}
+
+          {/* Global search — lands on the Browse page with the query applied */}
+          {user && (
+            <form
+              action="/browse"
+              method="get"
+              className="hidden lg:block flex-1 max-w-sm ml-2"
+              role="search"
+            >
+              <div className="relative">
+                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-dim" />
+                <input
+                  type="search"
+                  name="q"
+                  placeholder="Search books, audiobooks, tags…"
+                  aria-label="Search the archives"
+                  className="input-arcane !py-1.5 !pl-9 text-sm"
+                />
+              </div>
+            </form>
           )}
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
@@ -382,7 +405,7 @@ export function AppShell({
                     />
                   </button>
                   {menuOpen && (
-                    <div className="absolute right-0 top-full mt-2 z-50 w-52 py-1 rounded-lg border border-white/10 bg-void-raised/95 backdrop-blur-xl shadow-xl shadow-black/50">
+                    <div className="app-menu absolute right-0 top-full mt-2 z-50 w-52 py-1 rounded-lg shadow-xl shadow-black/30">
                       <div className="px-3 py-2 border-b border-void-border">
                         <p className="text-sm truncate">{user.name}</p>
                         {user.username && (
@@ -460,11 +483,14 @@ export function AppShell({
         </div>
       </div>
 
+      {/* Social rail (desktop, signed in): friends, groups, social alerts */}
+      {user && <SocialRail />}
+
       {/* Mobile bottom tab bar (signed in) — replaces topbar tabs on phones */}
       {user && (
         <nav
           aria-label="Primary"
-          className="md:hidden fixed bottom-0 inset-x-0 z-50 flex border-t border-white/10 bg-void-raised/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-50 flex border-t border-edge bg-(--menu-bg) backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
         >
           {NAV.map((item) => (
             <Link

@@ -239,6 +239,34 @@ export function PenIcon({ className }: IconProps) {
   );
 }
 
+export function MessageSquareIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </Icon>
+  );
+}
+
+export function HashIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <line x1="4" y1="9" x2="20" y2="9" />
+      <line x1="4" y1="15" x2="20" y2="15" />
+      <line x1="10" y1="3" x2="8" y2="21" />
+      <line x1="16" y1="3" x2="14" y2="21" />
+    </Icon>
+  );
+}
+
+export function SendIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+      <path d="m21.854 2.147-10.94 10.939" />
+    </Icon>
+  );
+}
+
 export function SkipForwardIcon({ className }: IconProps) {
   return (
     <Icon className={className}>

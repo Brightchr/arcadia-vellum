@@ -39,6 +39,10 @@ function crumbsFor(path: string, signedIn: boolean): Crumb[] {
     case "friends":
       out.push({ label: "Friends", href: "/friends" });
       break;
+    case "groups":
+      out.push({ label: "Groups", href: "/groups" });
+      if (b) out.push({ label: "Group", href: `/groups/${b}` });
+      break;
     case "settings":
       out.push({ label: "Settings", href: "/settings" });
       break;
