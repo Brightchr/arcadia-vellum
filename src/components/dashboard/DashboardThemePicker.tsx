@@ -31,11 +31,20 @@ export function DashboardThemePicker({ current }: { current: string }) {
       disabled={busy}
       onChange={(e) => void pick(e.target.value)}
     >
-      {THEMES.map((t) => (
-        <option key={t.id} value={t.id}>
-          {t.name}
-        </option>
-      ))}
+      <optgroup label="Standard">
+        {THEMES.filter((t) => t.kind === "standard").map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.name}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Fantasy">
+        {THEMES.filter((t) => t.kind === "fantasy").map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.name}
+          </option>
+        ))}
+      </optgroup>
     </select>
   );
 }
