@@ -6,6 +6,7 @@ import { upsertReview, deleteReview } from "@/lib/reviews";
 import { notify } from "@/lib/notifications";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import { rateLimit } from "@/lib/rate-limit";
+import { isUserMuted, MUTED_ERROR } from "@/lib/reports";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,9 @@ export async function PUT(request: Request) {
   if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  if (await isUserMuted(session.user.id)) {
+    return jsonError(MUTED_ERROR, 403);
+  }
   const body = (await request.json().catch(() => null)) as {
     kind?: unknown;
     itemId?: unknown;

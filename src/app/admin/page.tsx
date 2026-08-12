@@ -2,9 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
 import { isAdmin, adminStats, listUsersForAdmin } from "@/lib/admin";
+import { listReports, openReportCount } from "@/lib/reports";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { AdminPanel } from "@/components/admin/AdminPanel";
+import { ReportsQueue } from "@/components/admin/ReportsQueue";
 
 export const metadata: Metadata = {
   title: "Admin — Vellum",
@@ -19,9 +21,11 @@ export default async function AdminPage() {
   if (!session || !navUser) redirect("/login");
   if (!(await isAdmin(session.user.id))) notFound();
 
-  const [stats, users] = await Promise.all([
+  const [stats, users, reports, openReports] = await Promise.all([
     adminStats(),
     listUsersForAdmin(),
+    listReports(),
+    openReportCount(),
   ]);
 
   const stat = (label: string, value: number) => (
@@ -50,12 +54,27 @@ export default async function AdminPage() {
             </p>
           </header>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {stat("Scribes", stats.users)}
             {stat("Banned", stats.banned)}
             {stat("Works", stats.works)}
             {stat("Reviews", stats.reviews)}
+            {stat("Open Reports", openReports)}
           </div>
+
+          <section className="panel-arcane p-5">
+            <h2 className="font-heading text-lg mb-1">Reports</h2>
+            <p className="text-sm text-ink-dim mb-4">
+              Escalated from group bans. Reported users are muted platform-wide
+              (no chats, no reviews) until you resolve their report.
+            </p>
+            <ReportsQueue
+              reports={reports.map((r) => ({
+                ...r,
+                createdAt: r.createdAt.toISOString(),
+              }))}
+            />
+          </section>
 
           <AdminPanel
             initialUsers={users.map((u) => ({
