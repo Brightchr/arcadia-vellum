@@ -366,6 +366,23 @@ export async function isWorkPublic(
   return { ok: rows.length > 0, ownerId: rows[0]?.ownerId ?? null };
 }
 
+/**
+ * Curated genre shelf for the store. Genres are just well-known tags —
+ * authors tag their works normally, and these chips filter by tag.
+ */
+export const GENRES = [
+  "fantasy",
+  "sci-fi",
+  "horror",
+  "mystery",
+  "adventure",
+  "romance",
+  "comedy",
+  "drama",
+  "historical",
+  "campaign journal",
+] as const;
+
 /** All tag names in use on public journals (for browse chips). */
 export async function popularTags(limit = 24): Promise<string[]> {
   const rows = await db

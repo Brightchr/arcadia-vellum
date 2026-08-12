@@ -1,6 +1,11 @@
 import { db } from "@/db";
-import { reviews, savedItems } from "@/db/schema";
-import { and, eq, gte, inArray } from "drizzle-orm";
+import {
+  readingActivity,
+  reviews,
+  savedItems,
+  userDislikes,
+} from "@/db/schema";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { listPublicWorks, type Work } from "@/lib/discovery";
 import { listFollowing, listFriends, listFollowedSeriesIds } from "@/lib/social";
 
@@ -17,6 +22,97 @@ export interface HomeFeed {
 }
 
 const key = (kind: string, id: string) => `${kind}:${id}`;
+
+// ---------------------------------------------------------------------------
+// Taste profile — a per-user tag-affinity map built from how they actually
+// use the platform. It shapes the store's default ordering ("For you") and
+// keeps disliked works out of every discovery surface.
+// ---------------------------------------------------------------------------
+
+export interface TasteProfile {
+  /** tag → signed weight. Positive = into it, negative = shown distaste. */
+  affinity: Map<string, number>;
+  /** "kind:id" keys the user marked Not Interested — never show these. */
+  disliked: Set<string>;
+  /** False for brand-new accounts: fall back to the simple default order. */
+  hasSignals: boolean;
+}
+
+/** Work keys ("kind:id") the user marked Not Interested. */
+export async function dislikedKeys(userId: string): Promise<Set<string>> {
+  const rows = await db
+    .select({ kind: userDislikes.kind, itemId: userDislikes.itemId })
+    .from(userDislikes)
+    .where(eq(userDislikes.userId, userId));
+  return new Set(rows.map((r) => key(r.kind, r.itemId)));
+}
+
+/**
+ * Build the profile against a pool of works (the store's current listing).
+ * Signal weights: save +3, loved review (4-5★) +3, opened to read/listen +2,
+ * panned review (1-2★) -2, Not Interested -3.
+ */
+export async function tasteProfile(
+  userId: string,
+  pool: Work[]
+): Promise<TasteProfile> {
+  const [saves, loved, panned, opened, disliked] = await Promise.all([
+    db
+      .select({ kind: savedItems.kind, itemId: savedItems.itemId })
+      .from(savedItems)
+      .where(eq(savedItems.userId, userId)),
+    db
+      .select({ kind: reviews.kind, itemId: reviews.itemId })
+      .from(reviews)
+      .where(and(eq(reviews.userId, userId), gte(reviews.rating, 4))),
+    db
+      .select({ kind: reviews.kind, itemId: reviews.itemId })
+      .from(reviews)
+      .where(and(eq(reviews.userId, userId), lte(reviews.rating, 2))),
+    db
+      .select({ kind: readingActivity.kind, itemId: readingActivity.itemId })
+      .from(readingActivity)
+      .where(eq(readingActivity.userId, userId)),
+    dislikedKeys(userId),
+  ]);
+
+  const tagsByKey = new Map(pool.map((w) => [key(w.kind, w.id), w.tags]));
+  const affinity = new Map<string, number>();
+  let signals = 0;
+  const add = (
+    rows: { kind: string; itemId: string }[] | string[],
+    weight: number
+  ) => {
+    for (const r of rows) {
+      const k = typeof r === "string" ? r : key(r.kind, r.itemId);
+      const workTags = tagsByKey.get(k);
+      if (!workTags) continue;
+      signals++;
+      for (const t of workTags) {
+        affinity.set(t, (affinity.get(t) ?? 0) + weight);
+      }
+    }
+  };
+  add(saves, 3);
+  add(loved, 3);
+  add(opened, 2);
+  add(panned, -2);
+  add([...disliked], -3);
+
+  return { affinity, disliked, hasSignals: signals > 0 };
+}
+
+/**
+ * "For you" score: tag affinity carries the order; a light quality/popularity
+ * term breaks ties so empty-tag works still rank sensibly.
+ */
+export function personalScore(w: Work, profile: TasteProfile): number {
+  let tagScore = 0;
+  for (const t of w.tags) tagScore += profile.affinity.get(t) ?? 0;
+  const quality = (w.avgRating ?? 0) * Math.min(w.ratingCount, 10);
+  const popularity = Math.min(w.saveCount, 20);
+  return tagScore * 10 + quality + popularity;
+}
 
 /** Work keys the user saved, plus keys they rated 4+ (their "likes"). */
 async function likedKeys(userId: string): Promise<Set<string>> {
@@ -39,14 +135,18 @@ async function likedKeys(userId: string): Promise<Set<string>> {
  * out of the recommendation rows (but still count for the highlight rows).
  */
 export async function homeFeed(userId: string): Promise<HomeFeed> {
-  const [all, following, friends, followedSeries, liked] = await Promise.all([
-    listPublicWorks(),
-    listFollowing(userId),
-    listFriends(userId),
-    listFollowedSeriesIds(userId),
-    likedKeys(userId),
-  ]);
+  const [pool, following, friends, followedSeries, liked, disliked] =
+    await Promise.all([
+      listPublicWorks(),
+      listFollowing(userId),
+      listFriends(userId),
+      listFollowedSeriesIds(userId),
+      likedKeys(userId),
+      dislikedKeys(userId),
+    ]);
 
+  // Not Interested removes a work from every discovery row.
+  const all = pool.filter((w) => !disliked.has(key(w.kind, w.id)));
   const followingIds = new Set(following.map((u) => u.id));
   const followedSeriesIds = new Set(followedSeries);
   const notMine = all.filter((w) => w.ownerId !== userId);

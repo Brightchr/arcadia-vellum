@@ -12,12 +12,15 @@ export function WorkRow({
   works,
   showAllHref,
   limit = 10,
+  dismissable = false,
 }: {
   title: string;
   subtitle?: string;
   works: Work[];
   showAllHref?: string;
   limit?: number;
+  /** Let signed-in readers hide works with "Not interested". */
+  dismissable?: boolean;
 }) {
   if (works.length === 0) return null;
   return (
@@ -39,7 +42,7 @@ export function WorkRow({
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
         {works.slice(0, limit).map((w) => (
           <div key={`${w.kind}:${w.id}`} className="w-40 sm:w-44 shrink-0">
-            <WorkCard work={w} />
+            <WorkCard work={w} dismissable={dismissable} />
           </div>
         ))}
       </div>

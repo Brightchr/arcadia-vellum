@@ -3,6 +3,7 @@ import type { Work } from "@/lib/discovery";
 import { reviewSummary } from "@/lib/sentiment";
 import { Stars } from "./StarRating";
 import { BookOpenIcon, HeadphonesIcon, LockIcon } from "@/components/icons";
+import { NotInterestedButton } from "./NotInterestedButton";
 
 const TONE_CLASS = {
   positive: "text-emerald-400",
@@ -39,7 +40,7 @@ export function WorkCover({
       <img
         src={`/api/images/${work.coverImageId}`}
         alt=""
-        className={`aspect-[3/4] w-full object-cover rounded-lg border border-white/10 ${className}`}
+        className={`aspect-[3/4] w-full object-cover rounded-lg border border-edge ${className}`}
       />
     );
   }
@@ -60,12 +61,22 @@ export function WorkCover({
 }
 
 /** Browse/saved-shelf card for a public work. */
-export function WorkCard({ work }: { work: Work }) {
+export function WorkCard({
+  work,
+  dismissable = false,
+}: {
+  work: Work;
+  /** Show the "Not interested" ✕ (signed-in discovery surfaces only). */
+  dismissable?: boolean;
+}) {
   return (
     <Link
       href={workHref(work)}
-      className="group block panel-arcane p-3 hover:border-arcane/60 transition-colors"
+      className="group relative block panel-arcane p-3 hover:border-arcane/60 transition-colors"
     >
+      {dismissable && (
+        <NotInterestedButton kind={work.kind} itemId={work.id} />
+      )}
       <WorkCover work={work} className="mb-3 group-hover:opacity-95" />
       <h3 className="font-heading text-sm leading-snug truncate" title={work.title}>
         {work.title}
@@ -92,7 +103,7 @@ export function WorkCard({ work }: { work: Work }) {
           {work.tags.slice(0, 3).map((t) => (
             <span
               key={t}
-              className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider text-ink-dim"
+              className="rounded bg-overlay px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider text-ink-dim"
             >
               {t}
             </span>
