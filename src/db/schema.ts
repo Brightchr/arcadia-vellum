@@ -53,6 +53,10 @@ export const user = pgTable("user", {
   bannedAt: timestamp("banned_at"),
   /** JSON array ordering the profile sections, e.g. ["bio","featured","works","saved"]. */
   profileLayout: text("profile_layout"),
+  /** Last presence heartbeat — "online" means within the last few minutes. */
+  lastSeenAt: timestamp("last_seen_at"),
+  /** Let friends see what you're currently reading/listening to. */
+  showReadingActivity: boolean("show_reading_activity").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -447,6 +451,242 @@ export const adminActions = pgTable("admin_actions", {
   details: text("details"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Groups — Discord-style text communities (no voice)
+// ---------------------------------------------------------------------------
+
+/**
+ * A group: a shared space with text channels where members chat and link
+ * works. Public groups appear in the directory and anyone can join; private
+ * ones are joinable only through a friend invite.
+ */
+export const groups = pgTable("groups", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  /** Tile icon (an emoji the owner picks). */
+  icon: text("icon"),
+  visibility: text("visibility", { enum: ["public", "private"] })
+    .notNull()
+    .default("public"),
+  /** Shown as a banner at the top of the default channel (Discord-style). */
+  welcomeMessage: text("welcome_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/**
+ * Custom ranks: a colored label per member (one rank each) that also gates
+ * posting in rank-restricted channels. Moderation power stays with the
+ * owner/admin roles — ranks are identity + channel access.
+ */
+export const groupRanks = pgTable("group_ranks", {
+  id: text("id").primaryKey(),
+  groupId: text("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  /** Hex color for the member's name, e.g. "#e0be6a". */
+  color: text("color").notNull(),
+  sortIndex: integer("sort_index").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const groupMembers = pgTable(
+  "group_members",
+  {
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** Admins can kick/ban members and manage channels; owners also promote. */
+    role: text("role", { enum: ["owner", "admin", "member"] })
+      .notNull()
+      .default("member"),
+    /** Cosmetic/access rank (group_ranks id); cleared if the rank is deleted. */
+    rankId: text("rank_id"),
+    /** Pinned groups lead the member's social rail. */
+    pinned: boolean("pinned").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId] })]
+);
+
+/** Users banned from a group — they can't rejoin or be re-invited. */
+export const groupBans = pgTable(
+  "group_bans",
+  {
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    bannedBy: text("banned_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId] })]
+);
+
+/**
+ * Reports escalated to Vellum moderators (from group bans, for now). While a
+ * user has an OPEN report they are muted platform-wide: no group messages, no
+ * reviews. Admins resolve to "dismissed" (mute lifts) or "upheld" (usually
+ * paired with a platform ban).
+ */
+export const userReports = pgTable("user_reports", {
+  id: text("id").primaryKey(),
+  /** The reported user. */
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  reportedBy: text("reported_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  /** Where it happened, when group-related. */
+  groupId: text("group_id").references(() => groups.id, {
+    onDelete: "set null",
+  }),
+  reason: text("reason", {
+    enum: ["spam", "harassment", "inappropriate", "other"],
+  }).notNull(),
+  details: text("details"),
+  status: text("status", { enum: ["open", "dismissed", "upheld"] })
+    .notNull()
+    .default("open"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: text("resolved_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+});
+
+/** Text channels within a group, in sortIndex order. */
+export const groupChannels = pgTable("group_channels", {
+  id: text("id").primaryKey(),
+  groupId: text("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  sortIndex: integer("sort_index").notNull().default(0),
+  /** Age/content gate: readers confirm before the channel renders. */
+  nsfw: boolean("nsfw").notNull().default(false),
+  /** Who may post: everyone, mods (owner+admins), or listed ranks (+mods). */
+  postMode: text("post_mode", { enum: ["everyone", "mods", "ranks"] })
+    .notNull()
+    .default("everyone"),
+  /** JSON array of group_ranks ids allowed to post when postMode="ranks". */
+  postRanks: text("post_ranks"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/**
+ * Standing invites into a group. Any member can invite a friend; the invite
+ * lets that user join a private group (and shows a notification either way).
+ */
+export const groupInvites = pgTable(
+  "group_invites",
+  {
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    invitedBy: text("invited_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId] })]
+);
+
+/**
+ * Chat messages. Vellum links pasted in the body (/book/<slug>,
+ * /series/<slug>, playlists) render as embedded work cards client-side.
+ */
+export const groupMessages = pgTable("group_messages", {
+  id: text("id").primaryKey(),
+  channelId: text("channel_id")
+    .notNull()
+    .references(() => groupChannels.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  /** Sender-set content warning: hidden until the reader clicks through. */
+  flag: text("flag", { enum: ["spoiler", "nsfw"] }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/** Last time each member looked at a channel — powers unread dots. */
+export const channelReads = pgTable(
+  "channel_reads",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => groupChannels.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.channelId] })]
+);
+
+/** Muted groups: no unread emphasis anywhere for this member. */
+export const groupMutes = pgTable(
+  "group_mutes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.groupId] })]
+);
+
+/** Muted single channels. */
+export const channelMutes = pgTable(
+  "channel_mutes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => groupChannels.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.channelId] })]
+);
+
+/**
+ * "Not interested" marks — hides a work from the user's store and home feed
+ * and counts against its tags in their taste profile.
+ */
+export const userDislikes = pgTable(
+  "user_dislikes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["journal", "series"] }).notNull(),
+    itemId: text("item_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
+);
 
 /**
  * Access grants for works with "restricted" visibility: a pending row is a

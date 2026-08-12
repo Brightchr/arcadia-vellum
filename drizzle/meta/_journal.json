@@ -162,6 +162,27 @@
       "when": 1786389372670,
       "tag": "0022_user-themes",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786558702346,
+      "tag": "0023_groups-presence",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786561723642,
+      "tag": "0024_moderation-personalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786563582468,
+      "tag": "0025_group-settings",
+      "breakpoints": true
     }
   ]
 }
