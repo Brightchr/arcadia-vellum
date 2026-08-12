@@ -61,6 +61,9 @@ export async function PATCH(request: Request) {
   if (typeof body.searchable === "boolean") {
     patch.searchable = body.searchable;
   }
+  if (typeof body.showReadingActivity === "boolean") {
+    patch.showReadingActivity = body.showReadingActivity;
+  }
   if (Array.isArray(body.profileLayout)) {
     const allowed = new Set(["bio", "featured", "works", "saved", "playlists"]);
     const layout = (body.profileLayout as unknown[]).filter(

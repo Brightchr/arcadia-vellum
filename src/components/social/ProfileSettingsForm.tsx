@@ -17,6 +17,7 @@ export interface ProfileSettings {
   showPlaylistsOnProfile: boolean;
   showCountsOnProfile: boolean;
   searchable: boolean;
+  showReadingActivity: boolean;
   profileLayout: string[] | null;
 }
 
@@ -45,6 +46,9 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
   );
   const [showCounts, setShowCounts] = useState(profile.showCountsOnProfile);
   const [searchable, setSearchable] = useState(profile.searchable);
+  const [showActivity, setShowActivity] = useState(
+    profile.showReadingActivity
+  );
   const [layout, setLayout] = useState<string[]>(
     profile.profileLayout && profile.profileLayout.length > 0
       ? profile.profileLayout
@@ -108,6 +112,7 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
           showPlaylistsOnProfile: showPlaylists,
           showCountsOnProfile: showCounts,
           searchable,
+          showReadingActivity: showActivity,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -205,7 +210,7 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
             <img
               src={`/api/avatars/${profile.bannerImageId}`}
               alt=""
-              className="w-full aspect-[4/1] object-cover rounded-xl border border-white/10"
+              className="w-full aspect-[4/1] object-cover rounded-xl border border-edge"
             />
           ) : (
             <div
@@ -459,6 +464,21 @@ export function ProfileSettingsForm({ profile }: { profile: ProfileSettings }) {
           />
           Let others find me in user search
         </label>
+        <div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showActivity}
+              onChange={(e) => setShowActivity(e.target.checked)}
+            />
+            Show friends what I&apos;m reading
+          </label>
+          <p className="text-xs text-ink-dim mt-1 ml-6">
+            When you&apos;re online, friends and group members can see the
+            public work you have open (&quot;Reading …&quot;). Private and
+            unlisted works are never shown.
+          </p>
+        </div>
         <button
           type="button"
           className="btn-arcane"

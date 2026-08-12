@@ -41,6 +41,7 @@ export default async function SettingsPage() {
             showPlaylistsOnProfile: me.showPlaylistsOnProfile,
             showCountsOnProfile: me.showCountsOnProfile,
             searchable: me.searchable,
+            showReadingActivity: me.showReadingActivity,
             profileLayout: (() => {
               try {
                 const parsed = JSON.parse(me.profileLayout ?? "null");
