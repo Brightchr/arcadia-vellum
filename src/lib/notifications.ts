@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { notifications, user, journals, series } from "@/db/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { notifications, user, journals, series, groups } from "@/db/schema";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
 
 export type NotificationType =
@@ -12,12 +12,49 @@ export type NotificationType =
   | "new_work"
   | "access_request"
   | "access_granted"
+  | "group_invite"
+  | "report_opened"
+  | "report_dismissed"
+  | "report_upheld"
   | "user_banned";
+
+/**
+ * Social notifications live in the social rail (friends & groups); everything
+ * else — reviews, releases, access, moderation — stays in the system bell.
+ */
+export const SOCIAL_TYPES: NotificationType[] = [
+  "friend_request",
+  "friend_accept",
+  "new_follower",
+  "group_invite",
+];
+
+export type NotificationScope = "social" | "system";
+
+function scopeCondition(userId: string, scope?: NotificationScope) {
+  if (scope === "social") {
+    return and(
+      eq(notifications.userId, userId),
+      inArray(notifications.type, SOCIAL_TYPES)
+    );
+  }
+  if (scope === "system") {
+    return and(
+      eq(notifications.userId, userId),
+      notInArray(notifications.type, SOCIAL_TYPES)
+    );
+  }
+  return eq(notifications.userId, userId);
+}
 
 export async function notify(
   userId: string,
   type: NotificationType,
-  opts: { actorId?: string; kind?: "journal" | "series"; itemId?: string } = {}
+  opts: {
+    actorId?: string;
+    kind?: "journal" | "series" | "group";
+    itemId?: string;
+  } = {}
 ) {
   if (opts.actorId === userId) return; // never notify yourself
   await db.insert(notifications).values({
@@ -33,7 +70,11 @@ export async function notify(
 export async function notifyMany(
   userIds: string[],
   type: NotificationType,
-  opts: { actorId?: string; kind?: "journal" | "series"; itemId?: string } = {}
+  opts: {
+    actorId?: string;
+    kind?: "journal" | "series" | "group";
+    itemId?: string;
+  } = {}
 ) {
   for (const id of new Set(userIds)) {
     await notify(id, type, opts);
@@ -55,7 +96,8 @@ export interface NotificationView {
 /** Latest notifications with actor + work context resolved for display. */
 export async function listNotifications(
   userId: string,
-  limit = 15
+  limit = 15,
+  scope?: NotificationScope
 ): Promise<NotificationView[]> {
   const rows = await db
     .select({
@@ -71,7 +113,7 @@ export async function listNotifications(
     })
     .from(notifications)
     .leftJoin(user, eq(notifications.actorId, user.id))
-    .where(eq(notifications.userId, userId))
+    .where(scopeCondition(userId, scope))
     .orderBy(desc(notifications.createdAt))
     .limit(limit);
 
@@ -97,6 +139,15 @@ export async function listNotifications(
         itemTitle = s[0].name;
         itemHref = `/series/${s[0].slug}`;
       }
+    } else if (r.kind === "group" && r.itemId) {
+      const g = await db
+        .select({ name: groups.name })
+        .from(groups)
+        .where(eq(groups.id, r.itemId));
+      if (g[0]) {
+        itemTitle = g[0].name;
+        itemHref = `/groups/${r.itemId}`;
+      }
     }
     out.push({
       id: r.id,
@@ -113,17 +164,20 @@ export async function listNotifications(
   return out;
 }
 
-export async function unreadCount(userId: string): Promise<number> {
+export async function unreadCount(
+  userId: string,
+  scope?: NotificationScope
+): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(notifications)
-    .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    .where(and(scopeCondition(userId, scope), eq(notifications.read, false)));
   return row?.n ?? 0;
 }
 
-export async function markAllRead(userId: string) {
+export async function markAllRead(userId: string, scope?: NotificationScope) {
   await db
     .update(notifications)
     .set({ read: true })
-    .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    .where(and(scopeCondition(userId, scope), eq(notifications.read, false)));
 }

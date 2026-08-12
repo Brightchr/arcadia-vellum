@@ -29,16 +29,10 @@ function sweep(windowMs: number) {
   }
 }
 
-/**
- * Allow `limit` requests per `windowMs` per IP for this endpoint name.
- * Returns null when allowed, or a ready-to-return 429 response.
- */
-export function rateLimit(
-  request: Request,
-  name: string,
+function takeToken(
+  key: string,
   { limit, windowMs }: { limit: number; windowMs: number }
 ): Response | null {
-  const key = `${name}:${clientIp(request)}`;
   const now = Date.now();
   const refillPerMs = limit / windowMs;
 
@@ -67,4 +61,28 @@ export function rateLimit(
       },
     }
   );
+}
+
+/**
+ * Allow `limit` requests per `windowMs` per IP for this endpoint name.
+ * Returns null when allowed, or a ready-to-return 429 response.
+ */
+export function rateLimit(
+  request: Request,
+  name: string,
+  opts: { limit: number; windowMs: number }
+): Response | null {
+  return takeToken(`${name}:${clientIp(request)}`, opts);
+}
+
+/**
+ * Same bucket, keyed per signed-in user instead of per IP — for abuse that
+ * an account (not a network) commits: chat floods, join sprees, invites.
+ */
+export function rateLimitUser(
+  userId: string,
+  name: string,
+  opts: { limit: number; windowMs: number }
+): Response | null {
+  return takeToken(`${name}:u:${userId}`, opts);
 }
