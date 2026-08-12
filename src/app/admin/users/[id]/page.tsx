@@ -40,7 +40,7 @@ function UserChips({ users, empty }: { users: RelatedUser[]; empty: string }) {
         <li key={u.id}>
           <Link
             href={u.username ? `/u/${u.username}` : "#"}
-            className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 pl-1 pr-3 py-1 text-xs hover:border-arcane/50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-overlay border border-edge pl-1 pr-3 py-1 text-xs hover:border-arcane/50 transition-colors"
           >
             <Avatar name={u.name} avatarImageId={u.avatarImageId} size={22} />
             <span className="font-heading">{u.name}</span>
@@ -267,7 +267,7 @@ export default async function AdminUserPage({
                       src={`/api/images/${img.id}`}
                       alt=""
                       loading="lazy"
-                      className="aspect-square w-full object-cover rounded-md border border-white/10 hover:border-arcane/60 transition-colors"
+                      className="aspect-square w-full object-cover rounded-md border border-edge hover:border-arcane/60 transition-colors"
                     />
                   </a>
                 ))}

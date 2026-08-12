@@ -20,7 +20,7 @@ function Chip({
   const tones = {
     arcane: "bg-arcane/15 text-arcane-bright",
     ember: "bg-ember/15 text-ember",
-    dim: "bg-white/5 text-ink-dim",
+    dim: "bg-overlay text-ink-dim",
   };
   return (
     <span
@@ -129,7 +129,7 @@ export function JournalCard({
             className={`rounded-md px-2 py-0.5 text-lg leading-none transition-colors ${
               menuOpen
                 ? "bg-arcane/15 text-arcane-bright"
-                : "text-ink-dim hover:text-ink hover:bg-white/5"
+                : "text-ink-dim hover:text-ink hover:bg-overlay"
             }`}
           >
             &#8943;

@@ -36,7 +36,7 @@ export function AccessManager({
   }
 
   const row = (g: GrantView, actions: React.ReactNode) => (
-    <li key={g.userId} className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/5">
+    <li key={g.userId} className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-overlay">
       <Avatar name={g.name} avatarImageId={g.avatarImageId} size={32} />
       <span className="min-w-0 flex-1 text-sm truncate">
         {g.name}

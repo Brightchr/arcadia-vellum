@@ -80,7 +80,7 @@ export function UserSearch() {
             <li key={u.username}>
               <Link
                 href={`/u/${u.username}`}
-                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-overlay transition-colors"
               >
                 <Avatar name={u.name} avatarImageId={u.avatarImageId} size={36} />
                 <span className="min-w-0 flex-1">

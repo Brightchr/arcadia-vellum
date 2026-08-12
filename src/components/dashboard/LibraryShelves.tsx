@@ -73,7 +73,7 @@ export function LibraryShelves({
         title="Rename collection"
         disabled={busy}
         onClick={() => void rename(s)}
-        className="rounded-md p-1.5 text-ink-dim hover:text-arcane-bright hover:bg-white/5 transition-colors shrink-0"
+        className="rounded-md p-1.5 text-ink-dim hover:text-arcane-bright hover:bg-overlay transition-colors shrink-0"
       >
         <PenIcon className="h-3.5 w-3.5" />
       </button>

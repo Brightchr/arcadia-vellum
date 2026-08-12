@@ -129,19 +129,19 @@ export default async function LandingPage() {
               return (
                 <div
                   key={f.title}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur overflow-hidden hover:border-arcane/60 hover:-translate-y-1 transition-all duration-200 shadow-lg shadow-black/30"
+                  className="group rounded-2xl border border-edge bg-overlay backdrop-blur overflow-hidden hover:border-arcane/60 hover:-translate-y-1 transition-all duration-200 shadow-lg shadow-black/30"
                 >
                   {img ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={img}
                       alt=""
-                      className="aspect-video w-full object-cover border-b border-white/10"
+                      className="aspect-video w-full object-cover border-b border-edge"
                     />
                   ) : (
                     <div
                       aria-hidden
-                      className="aspect-video w-full border-b border-white/10 bg-gradient-to-br from-arcane/25 via-void-raised to-ember/10 grid place-items-center text-arcane-bright/70 group-hover:text-arcane-bright transition-colors"
+                      className="aspect-video w-full border-b border-edge bg-gradient-to-br from-arcane/25 via-void-raised to-ember/10 grid place-items-center text-arcane-bright/70 group-hover:text-arcane-bright transition-colors"
                     >
                       <span className="[&>svg]:h-9 [&>svg]:w-9">{f.icon}</span>
                     </div>
@@ -168,7 +168,7 @@ export default async function LandingPage() {
             <img
               src={showcase}
               alt="Vellum in action"
-              className="w-full rounded-2xl border border-white/10 shadow-2xl shadow-black/50"
+              className="w-full rounded-2xl border border-edge shadow-2xl shadow-black/50"
             />
           </section>
         )}
@@ -182,7 +182,7 @@ export default async function LandingPage() {
             {STEPS.map((s) => (
               <li
                 key={s.step}
-                className="relative rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-6 text-center"
+                className="relative rounded-2xl border border-edge bg-overlay backdrop-blur p-6 text-center"
               >
                 <p className="font-display text-4xl text-arcane/60 mb-3">
                   {s.step}
@@ -197,7 +197,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Closing CTA */}
-        <section className="border-t border-white/10">
+        <section className="border-t border-edge">
           <div className="max-w-5xl mx-auto px-6 py-16 text-center">
             <h2 className="font-display text-2xl sm:text-3xl text-arcane-bright mb-3">
               The shelves are waiting.

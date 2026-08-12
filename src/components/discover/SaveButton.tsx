@@ -57,7 +57,7 @@ export function SaveButton({
           ? `rounded-md p-1.5 transition-colors ${
               saved
                 ? "text-arcane-bright"
-                : "text-ink-dim hover:text-ink hover:bg-white/5"
+                : "text-ink-dim hover:text-ink hover:bg-overlay"
             }`
           : saved
             ? "btn-arcane"

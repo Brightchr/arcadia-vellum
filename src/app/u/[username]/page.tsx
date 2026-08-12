@@ -167,12 +167,12 @@ export default async function ProfilePage({
               <img
                 src={`/api/avatars/${profile.bannerImageId}`}
                 alt=""
-                className="w-full aspect-[4/1] min-h-28 max-h-64 object-cover rounded-2xl border border-white/10 shadow-xl shadow-black/30"
+                className="w-full aspect-[4/1] min-h-28 max-h-64 object-cover rounded-2xl border border-edge shadow-xl shadow-black/30"
               />
             ) : (
               <div
                 aria-hidden
-                className="w-full aspect-[5/1] min-h-24 max-h-56 rounded-2xl border border-white/10 bg-gradient-to-r from-arcane/25 via-void-raised to-ember/15"
+                className="w-full aspect-[5/1] min-h-24 max-h-56 rounded-2xl border border-edge bg-gradient-to-r from-arcane/25 via-void-raised to-ember/15"
               />
             ))}
 

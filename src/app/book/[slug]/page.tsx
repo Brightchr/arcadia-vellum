@@ -128,7 +128,7 @@ export default async function BookHomePage({
                 <span>No ratings yet</span>
               )}
               {journal.visibility !== "public" && (
-                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider">
+                <span className="rounded bg-overlay px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider">
                   private preview
                 </span>
               )}
@@ -140,7 +140,7 @@ export default async function BookHomePage({
                   <Link
                     key={t}
                     href={`/browse?tag=${encodeURIComponent(t)}`}
-                    className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-heading uppercase tracking-wider text-ink-dim hover:text-ink"
+                    className="rounded-full bg-overlay px-2.5 py-1 text-xs font-heading uppercase tracking-wider text-ink-dim hover:text-ink"
                   >
                     {t}
                   </Link>
@@ -196,7 +196,7 @@ export default async function BookHomePage({
               {tracks.map((t, i) => (
                 <li
                   key={t.id}
-                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/5 text-sm"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-overlay text-sm"
                 >
                   <span className="font-heading text-xs text-ink-dim w-5">
                     {i + 1}.

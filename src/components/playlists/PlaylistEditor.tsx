@@ -89,7 +89,7 @@ export function PlaylistEditor({
               className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-grab active:cursor-grabbing transition-colors ${
                 overIndex === i && dragIndex !== null && dragIndex !== i
                   ? "border-arcane bg-arcane/10"
-                  : "border-void-border bg-white/[0.03]"
+                  : "border-void-border bg-overlay"
               } ${dragIndex === i ? "opacity-50" : ""}`}
             >
               <span className="font-heading text-xs text-ink-dim w-5 shrink-0">

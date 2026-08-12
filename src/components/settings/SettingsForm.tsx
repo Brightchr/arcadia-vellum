@@ -369,7 +369,7 @@ export function SettingsForm({
             className={`shrink-0 px-3.5 py-2 rounded-t-lg text-sm font-heading whitespace-nowrap transition-colors border-b-2 ${
               tab === t.id
                 ? "border-arcane text-arcane-bright bg-arcane/10"
-                : `border-transparent hover:bg-white/5 ${
+                : `border-transparent hover:bg-overlay ${
                     t.id === "pyre"
                       ? "text-red-400/70 hover:text-red-400"
                       : "text-ink-dim hover:text-ink"

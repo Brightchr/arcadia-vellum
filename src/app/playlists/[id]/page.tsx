@@ -132,10 +132,10 @@ export default async function PlaylistPage({
                       <img
                         src={`/api/images/${item.coverImageId}`}
                         alt=""
-                        className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0"
+                        className="h-10 w-10 rounded-md object-cover border border-edge shrink-0"
                       />
                     ) : (
-                      <span className="h-10 w-10 rounded-md bg-white/5 inline-flex items-center justify-center shrink-0">
+                      <span className="h-10 w-10 rounded-md bg-overlay inline-flex items-center justify-center shrink-0">
                         <HeadphonesIcon className="h-4 w-4 text-ink-dim" />
                       </span>
                     )}

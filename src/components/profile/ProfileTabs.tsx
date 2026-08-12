@@ -104,7 +104,7 @@ export function ProfileTabs({
       <div
         role="tablist"
         aria-label="Profile sections"
-        className="flex items-center gap-1 border-b border-white/10 overflow-x-auto"
+        className="flex items-center gap-1 border-b border-edge overflow-x-auto"
       >
         {tabs.map((key) => (
           <button
@@ -144,7 +144,7 @@ export function ProfileTabs({
                 className={`px-3 py-1.5 rounded-full text-xs font-heading transition-colors ${
                   filter === f.key
                     ? "bg-arcane/20 text-arcane-bright border border-arcane/50"
-                    : "bg-white/5 text-ink-dim border border-transparent hover:text-ink"
+                    : "bg-overlay text-ink-dim border border-transparent hover:text-ink"
                 }`}
                 onClick={() => setFilter(f.key)}
               >
