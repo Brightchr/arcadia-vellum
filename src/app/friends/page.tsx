@@ -2,11 +2,11 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
 import {
-  listFriends,
   listPendingRequests,
   listFollowing,
   listFollowers,
 } from "@/lib/social";
+import { friendsWithPresence } from "@/lib/presence";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { FriendsPanel } from "@/components/social/FriendsPanel";
@@ -21,7 +21,7 @@ export default async function FriendsPage() {
   if (!session || !navUser) redirect("/login");
 
   const [friends, pending, following, followers] = await Promise.all([
-    listFriends(session.user.id),
+    friendsWithPresence(session.user.id),
     listPendingRequests(session.user.id),
     listFollowing(session.user.id),
     listFollowers(session.user.id),
@@ -34,11 +34,12 @@ export default async function FriendsPage() {
       <AppShell user={navUser} active="friends" pins={pins} unreadNotifications={unread}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
         <header className="mb-8">
-          <h1 className="font-display text-2xl text-arcane-bright">
+          <h1 className="font-display text-2xl text-ink">
             Friends &amp; Followers
           </h1>
           <p className="text-sm text-ink-dim">
-            Your circle of scribes and listeners.
+            Your circle of scribes and listeners — see who&apos;s online and
+            what they&apos;re reading.
           </p>
         </header>
         <section className="panel-arcane p-5 mb-5">
