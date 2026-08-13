@@ -1,19 +1,13 @@
 import { db } from "@/db";
-import { profileImages, user } from "@/db/schema";
+import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
-import { newId } from "@/lib/id";
+import { removeProfileImage, saveProfileImage } from "@/lib/media";
 
 export const runtime = "nodejs";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
-
-async function dropAvatar(avatarImageId: string | null) {
-  if (avatarImageId) {
-    await db.delete(profileImages).where(eq(profileImages.id, avatarImageId));
-  }
-}
 
 /** Set the avatar (owner). Multipart field: file */
 export async function POST(request: Request) {
@@ -32,15 +26,13 @@ export async function POST(request: Request) {
     .select({ avatarImageId: user.avatarImageId })
     .from(user)
     .where(eq(user.id, session.user.id));
-  await dropAvatar(rows[0]?.avatarImageId ?? null);
+  await removeProfileImage(rows[0]?.avatarImageId ?? null);
 
-  const id = newId();
-  await db.insert(profileImages).values({
-    id,
-    userId: session.user.id,
-    contentType: type,
-    data: Buffer.from(await file.arrayBuffer()),
-  });
+  const id = await saveProfileImage(
+    session.user.id,
+    type,
+    Buffer.from(await file.arrayBuffer())
+  );
   await db
     .update(user)
     .set({ avatarImageId: id, updatedAt: new Date() })
@@ -55,7 +47,7 @@ export async function DELETE(request: Request) {
     .select({ avatarImageId: user.avatarImageId })
     .from(user)
     .where(eq(user.id, session.user.id));
-  await dropAvatar(rows[0]?.avatarImageId ?? null);
+  await removeProfileImage(rows[0]?.avatarImageId ?? null);
   await db
     .update(user)
     .set({ avatarImageId: null, updatedAt: new Date() })

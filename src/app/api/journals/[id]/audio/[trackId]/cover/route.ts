@@ -1,10 +1,11 @@
 import { db } from "@/db";
-import { journalAudio, journalImages } from "@/db/schema";
+import { journalAudio } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
 import { getTrack } from "@/lib/audio";
 import { storeImage } from "@/lib/content/images";
+import { removeJournalImages } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -21,9 +22,7 @@ async function ownedTrack(request: Request, id: string, trackId: string) {
 }
 
 async function dropImage(coverImageId: string | null) {
-  if (coverImageId) {
-    await db.delete(journalImages).where(eq(journalImages.id, coverImageId));
-  }
+  await removeJournalImages([coverImageId]);
 }
 
 /** Set a chapter image on an entry (owner). Multipart field: file */

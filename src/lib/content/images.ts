@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { journalImages, journals } from "@/db/schema";
 import { and, eq, ne } from "drizzle-orm";
-import { newId } from "@/lib/id";
+import { deleteObjects, saveJournalImage } from "@/lib/media";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -20,13 +20,7 @@ export async function storeImage(
   if (!ALLOWED_IMAGE_TYPES.has(normalized) || data.length > MAX_IMAGE_BYTES) {
     return null;
   }
-  const id = newId();
-  await db.insert(journalImages).values({
-    id,
-    journalId,
-    contentType: normalized,
-    data,
-  });
+  const id = await saveJournalImage(journalId, normalized, data);
   return `/api/images/${id}`;
 }
 
@@ -40,13 +34,15 @@ export async function deleteImagesForJournal(journalId: string) {
     .from(journals)
     .where(eq(journals.id, journalId));
   const keep = journal?.coverImageId;
-  await db
+  const removed = await db
     .delete(journalImages)
     .where(
       keep
         ? and(eq(journalImages.journalId, journalId), ne(journalImages.id, keep))
         : eq(journalImages.journalId, journalId)
-    );
+    )
+    .returning({ storageKey: journalImages.storageKey });
+  await deleteObjects(removed.map((r) => r.storageKey));
 }
 
 /**

@@ -1,16 +1,15 @@
 import { db } from "@/db";
-import { journalImages, journals } from "@/db/schema";
+import { journals } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
 import { storeImage } from "@/lib/content/images";
+import { removeJournalImages } from "@/lib/media";
 
 export const runtime = "nodejs";
 
 async function dropCover(coverImageId: string | null) {
-  if (coverImageId) {
-    await db.delete(journalImages).where(eq(journalImages.id, coverImageId));
-  }
+  await removeJournalImages([coverImageId]);
 }
 
 /** Set the cover image (owner). Multipart field: file */

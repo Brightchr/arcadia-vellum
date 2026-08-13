@@ -3,10 +3,15 @@ import { getJournalById } from "@/lib/journals";
 import { getTrack } from "@/lib/audio";
 import { canAccessJournal } from "@/lib/access";
 import { isUserBanned } from "@/lib/profile";
+import { mediaResponse } from "@/lib/media";
 
 export const runtime = "nodejs";
 
-/** Streams a narration track with Range support so players can seek. */
+/**
+ * Serves a narration track. Bucket-stored tracks redirect to a short-lived
+ * signed URL (the bucket handles Range/seeking natively); legacy in-database
+ * tracks stream from Postgres with manual Range support.
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,11 +30,15 @@ export async function GET(
     }
   }
 
-  const data = track.data;
-  const total = data.length;
   const cacheControl = openToAll
     ? "public, max-age=3600"
     : "private, max-age=300";
+  if (track.storageKey || !track.data) {
+    return mediaResponse(track, cacheControl);
+  }
+
+  const data = track.data;
+  const total = data.length;
 
   const range = request.headers.get("range");
   const match = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;

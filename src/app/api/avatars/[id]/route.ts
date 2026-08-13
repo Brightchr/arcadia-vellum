@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { profileImages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { jsonError } from "@/lib/api";
+import { mediaResponse } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -17,10 +18,5 @@ export async function GET(
     .where(eq(profileImages.id, id));
   const image = rows[0];
   if (!image) return jsonError("Not found", 404);
-  return new Response(new Uint8Array(image.data), {
-    headers: {
-      "Content-Type": image.contentType,
-      "Cache-Control": "public, max-age=3600",
-    },
-  });
+  return mediaResponse(image, "public, max-age=3600");
 }

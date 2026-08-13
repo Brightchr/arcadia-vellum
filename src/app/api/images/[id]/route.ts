@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getJournalById } from "@/lib/journals";
 import { canAccessJournal, isDiscoverable } from "@/lib/access";
+import { mediaResponse } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -31,13 +32,10 @@ export async function GET(
     }
   }
 
-  return new Response(new Uint8Array(image.data), {
-    headers: {
-      "Content-Type": image.contentType,
-      "Cache-Control":
-        journal.visibility === "public"
-          ? "public, max-age=3600"
-          : "private, max-age=300",
-    },
-  });
+  return mediaResponse(
+    image,
+    journal.visibility === "public"
+      ? "public, max-age=3600"
+      : "private, max-age=300"
+  );
 }

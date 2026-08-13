@@ -15,6 +15,7 @@ import {
 } from "@/lib/series";
 import { seriesFollowerIds, followerIds } from "@/lib/social";
 import { notifyMany } from "@/lib/notifications";
+import { deleteObjects, journalStorageKeys } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -192,7 +193,10 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);
 
+  // Bucket keys must be collected before the row cascade wipes them.
+  const storageKeys = await journalStorageKeys(id);
   await deleteJournal(id);
+  await deleteObjects(storageKeys);
   if (journal.seriesId) await deleteSeriesIfEmpty(journal.seriesId);
   return Response.json({ ok: true });
 }

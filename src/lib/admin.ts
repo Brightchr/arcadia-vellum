@@ -236,7 +236,7 @@ export async function adminUserDetail(targetId: string) {
         id: journalImages.id,
         journalId: journalImages.journalId,
         createdAt: journalImages.createdAt,
-        bytes: sql<number>`octet_length(${journalImages.data})::int`,
+        bytes: sql<number>`coalesce(octet_length(${journalImages.data}), 0)::int`,
       })
       .from(journalImages)
       .innerJoin(journals, eq(journalImages.journalId, journals.id))
@@ -249,7 +249,7 @@ export async function adminUserDetail(targetId: string) {
         title: journalAudio.title,
         journalId: journalAudio.journalId,
         createdAt: journalAudio.createdAt,
-        bytes: sql<number>`octet_length(${journalAudio.data})::int`,
+        bytes: sql<number>`coalesce(octet_length(${journalAudio.data}), 0)::int`,
       })
       .from(journalAudio)
       .innerJoin(journals, eq(journalAudio.journalId, journals.id))

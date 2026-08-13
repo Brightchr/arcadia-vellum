@@ -1,8 +1,12 @@
 import { db } from "@/db";
-import { journalAudio, journalImages, journals } from "@/db/schema";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
-import { newId } from "@/lib/id";
+import { journalAudio, journals } from "@/db/schema";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { parseCoverLayout } from "@/lib/cover-layout";
+import {
+  deleteObjects,
+  prepareAudioSegment,
+  removeJournalImages,
+} from "@/lib/media";
 
 export const AUDIO_TYPES: Record<string, string> = {
   ".mp3": "audio/mpeg",
@@ -141,15 +145,22 @@ export async function addEntry(
     .where(eq(journalAudio.journalId, journalId));
   const sortIndex = (row?.max ?? -1) + 1;
 
-  const values = files.map((file, segmentIndex) => ({
-    id: newId(),
-    journalId,
-    title: title.slice(0, 120),
-    sortIndex,
-    segmentIndex,
-    contentType: file.contentType,
-    data: file.data,
-  }));
+  // Bytes land in object storage (or Postgres, when no bucket is configured).
+  const values = [];
+  for (const [segmentIndex, file] of files.entries()) {
+    const stored = await prepareAudioSegment(
+      journalId,
+      file.contentType,
+      file.data
+    );
+    values.push({
+      ...stored,
+      journalId,
+      title: title.slice(0, 120),
+      sortIndex,
+      segmentIndex,
+    });
+  }
   await db.insert(journalAudio).values(values);
   return { id: values[0].id, title: values[0].title, parts: values.length };
 }
@@ -166,11 +177,10 @@ export async function deleteEntryByTrackId(id: string) {
         eq(journalAudio.sortIndex, track.sortIndex)
       )
     )
-    .returning({ coverImageId: journalAudio.coverImageId });
-  const imageIds = removed
-    .map((r) => r.coverImageId)
-    .filter((x): x is string => x !== null);
-  if (imageIds.length > 0) {
-    await db.delete(journalImages).where(inArray(journalImages.id, imageIds));
-  }
+    .returning({
+      coverImageId: journalAudio.coverImageId,
+      storageKey: journalAudio.storageKey,
+    });
+  await deleteObjects(removed.map((r) => r.storageKey));
+  await removeJournalImages(removed.map((r) => r.coverImageId));
 }

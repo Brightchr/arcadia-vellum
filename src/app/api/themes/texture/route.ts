@@ -1,7 +1,5 @@
-import { db } from "@/db";
-import { profileImages } from "@/db/schema";
 import { sessionFromRequest, jsonError } from "@/lib/api";
-import { newId } from "@/lib/id";
+import { saveProfileImage } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -26,12 +24,10 @@ export async function POST(request: Request) {
     return jsonError("Use a .png, .jpg, or .webp under 2 MB", 400);
   }
 
-  const id = newId();
-  await db.insert(profileImages).values({
-    id,
-    userId: session.user.id,
+  const id = await saveProfileImage(
+    session.user.id,
     contentType,
-    data: Buffer.from(await file.arrayBuffer()),
-  });
+    Buffer.from(await file.arrayBuffer())
+  );
   return Response.json({ id, url: `/api/avatars/${id}` });
 }
