@@ -6,7 +6,7 @@ import { Avatar } from "@/components/nav/Avatar";
 import type { ChannelState, GroupRole, Rank } from "@/lib/groups";
 import type { FriendPresence } from "@/lib/presence";
 import type { RelatedUser } from "@/lib/social";
-import { HashIcon } from "@/components/icons";
+import { HashIcon, TrashIcon, XIcon } from "@/components/icons";
 import { IconPicker } from "./IconPicker";
 
 interface GroupInfo {
@@ -20,7 +20,13 @@ interface GroupInfo {
 
 type Member = FriendPresence & { role: GroupRole; rankId: string | null };
 
-type Tab = "overview" | "channels" | "ranks" | "members" | "invites";
+export type SettingsTab =
+  | "overview"
+  | "channels"
+  | "ranks"
+  | "members"
+  | "invites";
+type Tab = SettingsTab;
 
 /** Preset rank swatches (any hex works — these keep it one click). */
 const SWATCHES = [
@@ -56,6 +62,7 @@ export function GroupSettingsDialog({
   ranks,
   members,
   invitable,
+  initialTab,
   onClose,
 }: {
   group: GroupInfo;
@@ -64,11 +71,14 @@ export function GroupSettingsDialog({
   ranks: Rank[];
   members: Member[];
   invitable: RelatedUser[];
+  initialTab?: SettingsTab;
   onClose: () => void;
 }) {
   const router = useRouter();
   const canMod = role === "owner" || role === "admin";
-  const [tab, setTab] = useState<Tab>(canMod ? "overview" : "invites");
+  const [tab, setTab] = useState<Tab>(
+    initialTab ?? (canMod ? "overview" : "invites")
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -136,7 +146,7 @@ export function GroupSettingsDialog({
             className="rounded p-1.5 text-ink-dim hover:bg-overlay hover:text-ink"
             onClick={onClose}
           >
-            ✕
+            <XIcon className="h-4 w-4" />
           </button>
         </div>
 
@@ -355,7 +365,7 @@ export function GroupSettingsDialog({
                         );
                       }}
                     >
-                      ✕
+                      <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
@@ -477,7 +487,7 @@ export function GroupSettingsDialog({
                 </div>
               ))}
               <p className="pt-2 text-xs text-ink-dim">
-                Kick, ban, and promote from the member list&apos;s ⋯ menu in
+                Kick, ban, and promote from the member list&apos;s options menu in
                 the chat view.
               </p>
             </div>

@@ -13,15 +13,26 @@ import type {
   WorkEmbed,
 } from "@/lib/groups";
 import { REPORT_REASONS, type ReportReason } from "@/lib/report-reasons";
-import { GroupSettingsDialog } from "./GroupSettingsDialog";
+import { GroupSettingsDialog, type SettingsTab } from "./GroupSettingsDialog";
+import { ChannelMenu } from "./ChannelMenu";
 import type { FriendPresence } from "@/lib/presence";
 import type { RelatedUser } from "@/lib/social";
 import {
+  AlertTriangleIcon,
+  BellIcon,
+  BellOffIcon,
   BookOpenIcon,
   ChevronLeftIcon,
+  EllipsisIcon,
+  EyeOffIcon,
+  FlagIcon,
+  GearIcon,
   HashIcon,
   LockIcon,
+  MessageSquareIcon,
   SendIcon,
+  TrashIcon,
+  UserPlusIcon,
   UsersIcon,
 } from "@/components/icons";
 
@@ -256,7 +267,7 @@ function MemberRow({
           className="shrink-0 rounded p-1 text-ink-dim opacity-0 transition group-hover/member:opacity-100 hover:text-ink hover:bg-overlay-strong"
           onClick={() => onModerate(m)}
         >
-          ⋯
+          <EllipsisIcon className="h-4 w-4" />
         </button>
       )}
     </li>
@@ -481,16 +492,20 @@ export function GroupView({
   const router = useRouter();
   const canMod = role === "owner" || role === "admin";
   const [moderating, setModerating] = useState<Member | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<{ open: boolean; tab?: SettingsTab }>(
+    { open: false }
+  );
+  const [sheetChannel, setSheetChannel] = useState<ChannelState | null>(null);
   const [channels, setChannels] = useState(initialChannels);
   const [channelId, setChannelId] = useState(initialChannels[0]?.id ?? null);
+  // Discord-style phones: channel list first, chat on tap, back to return.
+  const [mobilePane, setMobilePane] = useState<"list" | "chat">("list");
   const [messages, setMessages] = useState<GroupMessage[] | null>(null);
   const [draft, setDraft] = useState("");
   const [flag, setFlag] = useState<MessageFlag | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [groupMuted, setGroupMuted] = useState(initialGroupMuted);
-  // Layout: collapsible channel rail + member panel (persisted per device).
   const [chanCollapsed, setChanCollapsed] = useState(false);
   const [membersOpen, setMembersOpen] = useState(true);
   const [showMembersMobile, setShowMembersMobile] = useState(false);
@@ -545,7 +560,6 @@ export function GroupView({
     let cancelled = false;
     lastIdRef.current = null;
     setMessages(null);
-    // Opening the channel clears its unread dot.
     setChannels((prev) =>
       prev.map((c) => (c.id === channelId ? { ...c, unread: false } : c))
     );
@@ -631,6 +645,11 @@ export function GroupView({
     });
   }
 
+  function openChannel(id: string) {
+    setChannelId(id);
+    setMobilePane("chat");
+  }
+
   async function send() {
     const text = draft.trim();
     if (!text || busy || !channelId) return;
@@ -709,6 +728,15 @@ export function GroupView({
     }).catch(() => {});
   }
 
+  async function markChannelRead(c: ChannelState) {
+    setChannels((prev) =>
+      prev.map((x) => (x.id === c.id ? { ...x, unread: false } : x))
+    );
+    await fetch(`/api/groups/${group.id}/channels/${c.id}/read`, {
+      method: "POST",
+    }).catch(() => {});
+  }
+
   async function toggleGroupMute() {
     const next = !groupMuted;
     setGroupMuted(next);
@@ -744,45 +772,423 @@ export function GroupView({
   const flagLabel =
     flag === "spoiler" ? "Spoiler" : flag === "nsfw" ? "NSFW" : "No flag";
 
-  const memberList = (
-    <>
-      <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
-        {online.map((m) => (
-          <MemberRow
-            key={m.id}
-            m={m}
-            myRole={role}
-            isMe={m.id === meId}
-            rankById={rankById}
-            onModerate={canMod ? setModerating : undefined}
-          />
-        ))}
-        {members.filter((m) => !m.online).length > 0 && (
-          <li className="px-2 pt-2 pb-1 text-[10px] font-heading uppercase tracking-widest text-ink-dim/70">
-            Offline
-          </li>
+  /** One channel row — used by the desktop rail and the mobile list. */
+  const channelRow = (c: ChannelState, mobile: boolean) => (
+    <div key={c.id} className="group/chan flex items-center">
+      <button
+        type="button"
+        title={`#${c.name}${c.muted ? " (muted)" : ""}`}
+        className={`relative flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 text-sm transition-colors ${
+          mobile ? "py-2.5" : "py-1.5"
+        } ${chanCollapsed && !mobile ? "justify-center" : ""} ${
+          c.id === channelId && !mobile
+            ? "bg-arcane/15 text-arcane-bright"
+            : c.muted
+              ? "text-ink-dim/50 hover:bg-overlay-strong hover:text-ink-dim"
+              : "text-ink-dim hover:bg-overlay-strong hover:text-ink"
+        }`}
+        onClick={() => (mobile ? openChannel(c.id) : setChannelId(c.id))}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setSheetChannel(c);
+        }}
+      >
+        <HashIcon className="h-3.5 w-3.5 shrink-0" />
+        {(mobile || !chanCollapsed) && (
+          <>
+            <span
+              className={`truncate ${
+                c.unread && !c.muted ? "font-bold text-ink" : ""
+              }`}
+            >
+              {c.name}
+            </span>
+            {c.nsfw && (
+              <span className="shrink-0 rounded bg-red-400/15 px-1 text-[8px] font-heading uppercase tracking-wider text-red-400">
+                NSFW
+              </span>
+            )}
+            {c.postMode !== "everyone" && (
+              <LockIcon className="h-3 w-3 shrink-0 opacity-60" />
+            )}
+            {c.muted && <BellOffIcon className="h-3 w-3 shrink-0 opacity-60" />}
+          </>
         )}
-        {members
-          .filter((m) => !m.online)
-          .map((m) => (
-            <MemberRow
-              key={m.id}
-              m={m}
-              myRole={role}
-              isMe={m.id === meId}
-              rankById={rankById}
-              onModerate={canMod ? setModerating : undefined}
-            />
-          ))}
-      </ul>
-    </>
+        {c.unread && !c.muted && (
+          <span
+            aria-label="Unread"
+            className={`h-1.5 w-1.5 shrink-0 rounded-full bg-arcane ${
+              chanCollapsed && !mobile ? "absolute right-1 top-1" : "ml-auto"
+            }`}
+          />
+        )}
+      </button>
+      {(mobile || !chanCollapsed) && (
+        <button
+          type="button"
+          aria-label={`Options for #${c.name}`}
+          title="Channel options"
+          className={`shrink-0 p-1.5 text-ink-dim transition hover:text-ink ${
+            mobile ? "" : "opacity-0 group-hover/chan:opacity-100"
+          }`}
+          onClick={() => setSheetChannel(c)}
+        >
+          <EllipsisIcon className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+
+  const chatPane = (
+    <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b border-edge px-2 sm:px-4">
+        {/* Mobile: back to the channel list */}
+        <button
+          type="button"
+          aria-label="Back to channels"
+          className="rounded-md p-1.5 text-ink-dim transition-colors hover:bg-overlay hover:text-ink md:hidden"
+          onClick={() => setMobilePane("list")}
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+        <p className="flex min-w-0 items-center gap-1.5 font-heading text-sm">
+          <HashIcon className="h-4 w-4 shrink-0 text-ink-dim" />
+          <span className="truncate">{channelName}</span>
+          {channel?.nsfw && (
+            <span className="shrink-0 rounded bg-red-400/15 px-1 text-[9px] font-heading uppercase tracking-wider text-red-400">
+              NSFW
+            </span>
+          )}
+          {channel && channel.postMode !== "everyone" && (
+            <span
+              className="flex shrink-0 items-center gap-1 text-[10px] text-ink-dim"
+              title={
+                channel.postMode === "mods"
+                  ? "Only the owner and admins can post"
+                  : "Only certain ranks can post"
+              }
+            >
+              <LockIcon className="h-3 w-3" />
+              <span className="hidden sm:inline">
+                {channel.postMode === "mods" ? "Mods only" : "Rank-restricted"}
+              </span>
+            </span>
+          )}
+        </p>
+        <button
+          type="button"
+          className="ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-ink-dim transition-colors hover:bg-overlay hover:text-ink lg:hidden"
+          aria-expanded={showMembersMobile}
+          onClick={() => setShowMembersMobile((v) => !v)}
+        >
+          <UsersIcon className="h-4 w-4" />
+          {members.length}
+        </button>
+        <span className="ml-auto hidden items-center gap-2 lg:flex">
+          <span className="flex items-center gap-1.5 text-xs text-ink-dim">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            {online.length} of {members.length} online
+          </span>
+          <button
+            type="button"
+            aria-label={membersOpen ? "Hide members" : "Show members"}
+            title={membersOpen ? "Hide members" : "Show members"}
+            className={`rounded-md p-1.5 transition-colors hover:bg-overlay ${
+              membersOpen ? "text-arcane-bright" : "text-ink-dim"
+            }`}
+            onClick={toggleMembersOpen}
+          >
+            <UsersIcon className="h-4 w-4" />
+          </button>
+        </span>
+      </div>
+
+      <div className="relative flex min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-y-auto px-1 py-3 sm:px-2"
+        >
+          {nsfwGated && channel ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="max-w-sm rounded-xl border border-red-400/30 p-6 text-center space-y-3">
+                <p className="font-heading text-lg">#{channel.name} is NSFW</p>
+                <p className="text-sm text-ink-dim">
+                  This channel may contain adult or sensitive content. Are you
+                  sure you want to view it?
+                </p>
+                <button
+                  type="button"
+                  className="btn-arcane text-xs px-4 py-2"
+                  onClick={() => ackNsfw(channel.id)}
+                >
+                  Show channel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {group.welcomeMessage && channelId === channels[0]?.id && (
+                <div className="mx-3 mb-3 rounded-xl border border-arcane/30 bg-arcane/5 px-4 py-3">
+                  <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-arcane-bright mb-1">
+                    Welcome
+                  </p>
+                  <p className="whitespace-pre-wrap text-sm">
+                    {group.welcomeMessage}
+                  </p>
+                </div>
+              )}
+              {messages === null ? (
+                <p className="px-4 py-6 text-sm text-ink-dim">Loading…</p>
+              ) : messages.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <p className="font-heading text-lg mb-1">#{channelName}</p>
+                  <p className="text-sm text-ink-dim">
+                    Nothing here yet. Say hello — paste a link to any book or
+                    audiobook to share it as a card.
+                  </p>
+                </div>
+              ) : (
+                messages.map((m, i) => {
+                  const prev = messages[i - 1];
+                  const compact =
+                    !!prev &&
+                    prev.authorId === m.authorId &&
+                    m.createdAt - prev.createdAt < 5 * 60 * 1000;
+                  const authorMember = members.find((x) => x.id === m.authorId);
+                  const rank = authorMember?.rankId
+                    ? rankById.get(authorMember.rankId)
+                    : undefined;
+                  return (
+                    <MessageRow
+                      key={m.id}
+                      m={m}
+                      compact={compact}
+                      nameColor={rank?.color}
+                    />
+                  );
+                })
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Members drawer (overlay on small, toggleable rail on lg+) */}
+        <aside
+          className={`${
+            showMembersMobile ? "flex" : "hidden"
+          } absolute inset-y-0 right-0 z-10 w-60 flex-col border-l border-edge bg-void-raised lg:static lg:z-auto lg:bg-overlay ${
+            membersOpen ? "lg:flex" : "lg:hidden"
+          }`}
+        >
+          <p className="border-b border-edge px-3 py-2.5 text-[10px] font-heading uppercase tracking-[0.2em] text-ink-dim">
+            Members — {members.length}
+          </p>
+          <button
+            type="button"
+            className="mx-2 mt-2 flex items-center gap-2.5 rounded-lg border border-edge bg-overlay px-3 py-2.5 text-sm transition-colors hover:bg-overlay-strong"
+            onClick={() => setSettings({ open: true, tab: "invites" })}
+          >
+            <UserPlusIcon className="h-4 w-4 text-arcane-bright" />
+            Invite Members
+          </button>
+          <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
+            {online.map((m) => (
+              <MemberRow
+                key={m.id}
+                m={m}
+                myRole={role}
+                isMe={m.id === meId}
+                rankById={rankById}
+                onModerate={canMod ? setModerating : undefined}
+              />
+            ))}
+            {members.filter((m) => !m.online).length > 0 && (
+              <li className="px-2 pt-2 pb-1 text-[10px] font-heading uppercase tracking-widest text-ink-dim/70">
+                Offline
+              </li>
+            )}
+            {members
+              .filter((m) => !m.online)
+              .map((m) => (
+                <MemberRow
+                  key={m.id}
+                  m={m}
+                  myRole={role}
+                  isMe={m.id === meId}
+                  rankById={rankById}
+                  onModerate={canMod ? setModerating : undefined}
+                />
+              ))}
+          </ul>
+        </aside>
+      </div>
+
+      {/* Composer */}
+      <div className="shrink-0 border-t border-edge p-3">
+        {error && <p className="mb-1 text-xs text-red-400">{error}</p>}
+        {!canPostHere && channel ? (
+          <p className="rounded-md border border-edge bg-overlay px-3 py-2 text-xs text-ink-dim">
+            <LockIcon className="mr-1.5 inline h-3 w-3" />
+            {channel.postMode === "mods"
+              ? "Only the owner and admins can post in this channel."
+              : "Only certain ranks can post here — ask a mod for the rank."}
+          </p>
+        ) : (
+          <>
+            <form
+              className="flex items-end gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void send();
+              }}
+            >
+              <button
+                type="button"
+                title={`Content flag: ${flagLabel} — click to change`}
+                aria-label={`Content flag: ${flagLabel}`}
+                className={`shrink-0 rounded-md border p-2 transition-colors ${
+                  flag === "nsfw"
+                    ? "border-red-400/50 text-red-400"
+                    : flag === "spoiler"
+                      ? "border-ember/50 text-ember"
+                      : "border-edge text-ink-dim hover:text-ink"
+                }`}
+                onClick={() =>
+                  setFlag((f) =>
+                    f === null ? "spoiler" : f === "spoiler" ? "nsfw" : null
+                  )
+                }
+              >
+                {flag === "nsfw" ? (
+                  <AlertTriangleIcon className="h-4 w-4" />
+                ) : flag === "spoiler" ? (
+                  <EyeOffIcon className="h-4 w-4" />
+                ) : (
+                  <FlagIcon className="h-4 w-4" />
+                )}
+              </button>
+              <textarea
+                aria-label={`Message #${channelName}`}
+                className="input-arcane max-h-40 min-h-0 flex-1 resize-none !py-2"
+                rows={1}
+                placeholder={
+                  flag
+                    ? `Message #${channelName} (${flagLabel.toLowerCase()} — hidden until clicked)`
+                    : `Message #${channelName}`
+                }
+                value={draft}
+                maxLength={2000}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                aria-label="Send"
+                className="btn-arcane !px-3"
+                disabled={busy || !draft.trim()}
+              >
+                <SendIcon className="h-4 w-4" />
+              </button>
+            </form>
+            <p className="mt-1 hidden text-[10px] text-ink-dim sm:block">
+              Enter to send · Shift+Enter for a new line · the flag button marks
+              a message spoiler/NSFW · paste a Vellum book or series link to
+              share it
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  /** Mobile channel-list screen (Discord's server view). */
+  const mobileListPane = (
+    <div className="flex min-w-0 flex-1 flex-col md:hidden">
+      <div className="flex items-center gap-3 border-b border-edge px-4 py-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-overlay-strong text-xl">
+          {group.icon ?? (
+            <MessageSquareIcon className="h-5 w-5 text-ink-dim" />
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 truncate font-heading text-base">
+            {group.name}
+            {groupMuted && (
+              <BellOffIcon className="h-3.5 w-3.5 shrink-0 text-ink-dim" />
+            )}
+          </p>
+          <p className="text-xs text-ink-dim">
+            <span className="text-emerald-400">{online.length} online</span> ·{" "}
+            {members.length} member{members.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label={groupMuted ? "Unmute group" : "Mute group"}
+          title={groupMuted ? "Unmute group" : "Mute group"}
+          className="rounded-md p-2 text-ink-dim transition-colors hover:bg-overlay hover:text-ink"
+          onClick={() => void toggleGroupMute()}
+        >
+          {groupMuted ? (
+            <BellIcon className="h-5 w-5" />
+          ) : (
+            <BellOffIcon className="h-5 w-5" />
+          )}
+        </button>
+        <button
+          type="button"
+          aria-label="Group settings"
+          title="Group settings"
+          className="rounded-md p-2 text-ink-dim transition-colors hover:bg-overlay hover:text-ink"
+          onClick={() => setSettings({ open: true })}
+        >
+          <GearIcon className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between px-4 pt-4 pb-1">
+        <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-ink-dim">
+          Text Channels
+        </p>
+        {canMod && (
+          <button
+            type="button"
+            aria-label="New channel"
+            className="rounded p-1 text-ink-dim hover:text-arcane-bright"
+            onClick={() => void addChannel()}
+          >
+            +
+          </button>
+        )}
+      </div>
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+        {channels.map((c) => channelRow(c, true))}
+        <p className="px-2 pt-3 text-[10px] text-ink-dim">
+          Hold a channel for options.
+        </p>
+      </nav>
+
+      <div className="border-t border-edge p-3">
+        <button
+          type="button"
+          className="flex items-center gap-2 text-xs text-ink-dim transition-colors hover:text-red-400"
+          onClick={() => void leaveOrDelete()}
+        >
+          <TrashIcon className="h-3.5 w-3.5" />
+          {role === "owner" ? "Delete group" : "Leave group"}
+        </button>
+      </div>
+    </div>
   );
 
   return (
-    // Mobile subtracts the fixed bottom tab bar too, so the composer stays
-    // visible; md+ has no bottom bar.
     <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] min-h-0">
-      {/* Channel rail — collapses to an icon strip */}
+      {/* Desktop channel rail — collapses to an icon strip */}
       <aside
         style={{ width: chanCollapsed ? "3.75rem" : "14rem" }}
         className="hidden md:flex shrink-0 flex-col border-r border-edge bg-overlay transition-[width] duration-200 overflow-hidden"
@@ -794,12 +1200,14 @@ export function GroupView({
         >
           {!chanCollapsed && (
             <p className="flex min-w-0 items-center gap-2 font-heading text-sm">
-              <span className="text-lg leading-none">{group.icon ?? "💬"}</span>
+              <span className="text-lg leading-none">
+                {group.icon ?? (
+                  <MessageSquareIcon className="inline h-4 w-4 text-ink-dim" />
+                )}
+              </span>
               <span className="truncate">{group.name}</span>
               {groupMuted && (
-                <span title="Group muted" aria-label="Group muted">
-                  🔕
-                </span>
+                <BellOffIcon className="h-3.5 w-3.5 shrink-0 text-ink-dim" />
               )}
             </p>
           )}
@@ -839,92 +1247,27 @@ export function GroupView({
             chanCollapsed ? "px-1.5 pt-2" : "px-2"
           }`}
         >
-          {channels.map((c) => (
-            <div key={c.id} className="group/chan flex items-center">
-              <button
-                type="button"
-                title={`#${c.name}${c.muted ? " (muted)" : ""}`}
-                className={`relative flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                  chanCollapsed ? "justify-center" : ""
-                } ${
-                  c.id === channelId
-                    ? "bg-arcane/15 text-arcane-bright"
-                    : c.muted
-                      ? "text-ink-dim/50 hover:bg-overlay-strong hover:text-ink-dim"
-                      : "text-ink-dim hover:bg-overlay-strong hover:text-ink"
-                }`}
-                onClick={() => setChannelId(c.id)}
-              >
-                <HashIcon className="h-3.5 w-3.5 shrink-0" />
-                {!chanCollapsed && (
-                  <>
-                    <span
-                      className={`truncate ${
-                        c.unread && !c.muted ? "font-bold text-ink" : ""
-                      }`}
-                    >
-                      {c.name}
-                    </span>
-                    {c.nsfw && (
-                      <span className="shrink-0 rounded bg-red-400/15 px-1 text-[8px] font-heading uppercase tracking-wider text-red-400">
-                        NSFW
-                      </span>
-                    )}
-                    {c.postMode !== "everyone" && (
-                      <LockIcon className="h-3 w-3 shrink-0 opacity-60" />
-                    )}
-                  </>
-                )}
-                {c.unread && !c.muted && (
-                  <span
-                    aria-label="Unread"
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full bg-arcane ${
-                      chanCollapsed ? "absolute right-1 top-1" : "ml-auto"
-                    }`}
-                  />
-                )}
-              </button>
-              {!chanCollapsed && (
-                <span className="flex shrink-0 opacity-0 transition group-hover/chan:opacity-100">
-                  <button
-                    type="button"
-                    aria-label={c.muted ? `Unmute #${c.name}` : `Mute #${c.name}`}
-                    title={c.muted ? "Unmute" : "Mute"}
-                    className="p-1 text-xs text-ink-dim hover:text-ink"
-                    onClick={() => void toggleChannelMute(c)}
-                  >
-                    {c.muted ? "🔔" : "🔕"}
-                  </button>
-                  {canMod && channels.length > 1 && (
-                    <button
-                      type="button"
-                      aria-label={`Delete #${c.name}`}
-                      className="p-1 text-ink-dim hover:text-red-400"
-                      onClick={() => void removeChannel(c)}
-                    >
-                      ×
-                    </button>
-                  )}
-                </span>
-              )}
-            </div>
-          ))}
+          {channels.map((c) => channelRow(c, false))}
         </nav>
 
         <div
-          className={`space-y-1.5 border-t border-edge p-2 ${
-            chanCollapsed ? "text-center" : "p-3"
+          className={`space-y-0.5 border-t border-edge p-2 ${
+            chanCollapsed ? "flex flex-col items-center" : ""
           }`}
         >
           <button
             type="button"
             title="Group settings"
+            aria-label="Group settings"
             className={`rounded-md text-xs text-ink-dim transition-colors hover:text-ink hover:bg-overlay-strong ${
-              chanCollapsed ? "p-1.5" : "flex w-full items-center gap-2 px-2 py-1.5"
+              chanCollapsed
+                ? "p-1.5"
+                : "flex w-full items-center gap-2 px-2 py-1.5"
             }`}
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => setSettings({ open: true })}
           >
-            ⚙{!chanCollapsed && <span>Group settings</span>}
+            <GearIcon className="h-4 w-4" />
+            {!chanCollapsed && <span>Group settings</span>}
           </button>
           {!chanCollapsed && (
             <>
@@ -933,260 +1276,64 @@ export function GroupView({
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-ink-dim transition-colors hover:bg-overlay-strong hover:text-ink"
                 onClick={() => void toggleGroupMute()}
               >
-                {groupMuted ? "🔔" : "🔕"}
+                {groupMuted ? (
+                  <BellIcon className="h-4 w-4" />
+                ) : (
+                  <BellOffIcon className="h-4 w-4" />
+                )}
                 <span>{groupMuted ? "Unmute group" : "Mute group"}</span>
               </button>
               <button
                 type="button"
-                className="w-full px-2 py-1 text-left text-xs text-ink-dim transition-colors hover:text-red-400"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-ink-dim transition-colors hover:bg-overlay-strong hover:text-red-400"
                 onClick={() => void leaveOrDelete()}
               >
-                {role === "owner" ? "Delete group" : "Leave group"}
+                <TrashIcon className="h-4 w-4" />
+                <span>{role === "owner" ? "Delete group" : "Leave group"}</span>
               </button>
             </>
           )}
         </div>
       </aside>
 
-      {/* Chat column */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-edge px-3 sm:px-4">
-          {/* Mobile channel picker + settings */}
-          <select
-            aria-label="Channel"
-            className="input-arcane !w-auto !px-2 !py-1 text-sm md:hidden"
-            value={channelId ?? ""}
-            onChange={(e) => setChannelId(e.target.value)}
-          >
-            {channels.map((c) => (
-              <option key={c.id} value={c.id}>
-                #{c.name}
-                {c.unread && !c.muted ? " •" : ""}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            aria-label="Group settings"
-            title="Group settings"
-            className="rounded-md p-1.5 text-ink-dim transition-colors hover:bg-overlay hover:text-ink md:hidden"
-            onClick={() => setSettingsOpen(true)}
-          >
-            ⚙
-          </button>
-          <p className="hidden min-w-0 items-center gap-1.5 font-heading text-sm md:flex">
-            <HashIcon className="h-4 w-4 text-ink-dim" />
-            <span className="truncate">{channelName}</span>
-            {channel?.nsfw && (
-              <span className="shrink-0 rounded bg-red-400/15 px-1 text-[9px] font-heading uppercase tracking-wider text-red-400">
-                NSFW
-              </span>
-            )}
-            {channel && channel.postMode !== "everyone" && (
-              <span
-                className="flex items-center gap-1 text-[10px] text-ink-dim"
-                title={
-                  channel.postMode === "mods"
-                    ? "Only the owner and admins can post"
-                    : "Only certain ranks can post"
-                }
-              >
-                <LockIcon className="h-3 w-3" />
-                {channel.postMode === "mods" ? "Mods only" : "Rank-restricted"}
-              </span>
-            )}
-          </p>
-          <button
-            type="button"
-            className="ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-ink-dim transition-colors hover:bg-overlay hover:text-ink lg:hidden"
-            aria-expanded={showMembersMobile}
-            onClick={() => setShowMembersMobile((v) => !v)}
-          >
-            <UsersIcon className="h-4 w-4" />
-            {members.length}
-          </button>
-          <span className="ml-auto hidden items-center gap-2 lg:flex">
-            <span className="flex items-center gap-1.5 text-xs text-ink-dim">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              {online.length} of {members.length} online
-            </span>
-            <button
-              type="button"
-              aria-label={membersOpen ? "Hide members" : "Show members"}
-              title={membersOpen ? "Hide members" : "Show members"}
-              className={`rounded-md p-1.5 transition-colors hover:bg-overlay ${
-                membersOpen ? "text-arcane-bright" : "text-ink-dim"
-              }`}
-              onClick={toggleMembersOpen}
-            >
-              <UsersIcon className="h-4 w-4" />
-            </button>
-          </span>
-        </div>
+      {/* Mobile: channel list OR chat; desktop: always chat */}
+      {mobilePane === "list" ? (
+        <>
+          {mobileListPane}
+          <div className="hidden md:flex min-w-0 flex-1">{chatPane}</div>
+        </>
+      ) : (
+        chatPane
+      )}
 
-        <div className="relative flex min-h-0 flex-1">
-          <div
-            ref={scrollRef}
-            className="min-h-0 flex-1 overflow-y-auto px-1 py-3 sm:px-2"
-          >
-            {/* NSFW gate — confirm before the channel renders */}
-            {nsfwGated && channel ? (
-              <div className="flex h-full items-center justify-center">
-                <div className="max-w-sm rounded-xl border border-red-400/30 p-6 text-center space-y-3">
-                  <p className="font-heading text-lg">#{channel.name} is NSFW</p>
-                  <p className="text-sm text-ink-dim">
-                    This channel may contain adult or sensitive content. Are
-                    you sure you want to view it?
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-arcane text-xs px-4 py-2"
-                    onClick={() => ackNsfw(channel.id)}
-                  >
-                    Show channel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Welcome banner (first channel only) */}
-                {group.welcomeMessage &&
-                  channelId === channels[0]?.id && (
-                    <div className="mx-3 mb-3 rounded-xl border border-arcane/30 bg-arcane/5 px-4 py-3">
-                      <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-arcane-bright mb-1">
-                        Welcome
-                      </p>
-                      <p className="whitespace-pre-wrap text-sm">
-                        {group.welcomeMessage}
-                      </p>
-                    </div>
-                  )}
-                {messages === null ? (
-                  <p className="px-4 py-6 text-sm text-ink-dim">Loading…</p>
-                ) : messages.length === 0 ? (
-                  <div className="px-4 py-10 text-center">
-                    <p className="font-heading text-lg mb-1">#{channelName}</p>
-                    <p className="text-sm text-ink-dim">
-                      Nothing here yet. Say hello — paste a link to any book or
-                      audiobook to share it as a card.
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((m, i) => {
-                    const prev = messages[i - 1];
-                    const compact =
-                      !!prev &&
-                      prev.authorId === m.authorId &&
-                      m.createdAt - prev.createdAt < 5 * 60 * 1000;
-                    const authorMember = members.find(
-                      (x) => x.id === m.authorId
-                    );
-                    const rank = authorMember?.rankId
-                      ? rankById.get(authorMember.rankId)
-                      : undefined;
-                    return (
-                      <MessageRow
-                        key={m.id}
-                        m={m}
-                        compact={compact}
-                        nameColor={rank?.color}
-                      />
-                    );
-                  })
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Members drawer (overlay on small, toggleable rail on lg+) */}
-          <aside
-            className={`${
-              showMembersMobile ? "flex" : "hidden"
-            } absolute inset-y-0 right-0 z-10 w-60 flex-col border-l border-edge bg-void-raised lg:static lg:z-auto lg:bg-overlay ${
-              membersOpen ? "lg:flex" : "lg:hidden"
-            }`}
-          >
-            <p className="border-b border-edge px-3 py-2.5 text-[10px] font-heading uppercase tracking-[0.2em] text-ink-dim">
-              Members — {members.length}
-            </p>
-            {memberList}
-          </aside>
-        </div>
-
-        {/* Composer */}
-        <div className="shrink-0 border-t border-edge p-3">
-          {error && <p className="mb-1 text-xs text-red-400">{error}</p>}
-          {!canPostHere && channel ? (
-            <p className="rounded-md border border-edge bg-overlay px-3 py-2 text-xs text-ink-dim">
-              <LockIcon className="mr-1.5 inline h-3 w-3" />
-              {channel.postMode === "mods"
-                ? "Only the owner and admins can post in this channel."
-                : "Only certain ranks can post here — ask a mod for the rank."}
-            </p>
-          ) : (
-            <>
-              <form
-                className="flex items-end gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void send();
-                }}
-              >
-                <button
-                  type="button"
-                  title={`Content flag: ${flagLabel} — click to change`}
-                  aria-label={`Content flag: ${flagLabel}`}
-                  className={`shrink-0 rounded-md border px-2 py-2 text-xs transition-colors ${
-                    flag === "nsfw"
-                      ? "border-red-400/50 text-red-400"
-                      : flag === "spoiler"
-                        ? "border-ember/50 text-ember"
-                        : "border-edge text-ink-dim hover:text-ink"
-                  }`}
-                  onClick={() =>
-                    setFlag((f) =>
-                      f === null ? "spoiler" : f === "spoiler" ? "nsfw" : null
-                    )
-                  }
-                >
-                  {flag === "nsfw" ? "18+" : flag === "spoiler" ? "⚠" : "◎"}
-                </button>
-                <textarea
-                  aria-label={`Message #${channelName}`}
-                  className="input-arcane max-h-40 min-h-0 flex-1 resize-none !py-2"
-                  rows={1}
-                  placeholder={
-                    flag
-                      ? `Message #${channelName} (${flagLabel.toLowerCase()} — hidden until clicked)`
-                      : `Message #${channelName}`
-                  }
-                  value={draft}
-                  maxLength={2000}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void send();
-                    }
-                  }}
-                />
-                <button
-                  type="submit"
-                  aria-label="Send"
-                  className="btn-arcane !px-3"
-                  disabled={busy || !draft.trim()}
-                >
-                  <SendIcon className="h-4 w-4" />
-                </button>
-              </form>
-              <p className="mt-1 hidden text-[10px] text-ink-dim sm:block">
-                Enter to send · Shift+Enter for a new line · ◎ flags a message
-                as spoiler/NSFW · paste a Vellum book or series link to share it
-              </p>
-            </>
-          )}
-        </div>
-      </div>
+      {sheetChannel && (
+        <ChannelMenu
+          channel={
+            channels.find((c) => c.id === sheetChannel.id) ?? sheetChannel
+          }
+          canMod={canMod}
+          canDelete={channels.length > 1}
+          onMarkRead={() => {
+            void markChannelRead(sheetChannel);
+            setSheetChannel(null);
+          }}
+          onToggleMute={() => {
+            void toggleChannelMute(
+              channels.find((c) => c.id === sheetChannel.id) ?? sheetChannel
+            );
+            setSheetChannel(null);
+          }}
+          onEdit={() => {
+            setSheetChannel(null);
+            setSettings({ open: true, tab: "channels" });
+          }}
+          onDelete={() => {
+            setSheetChannel(null);
+            void removeChannel(sheetChannel);
+          }}
+          onClose={() => setSheetChannel(null)}
+        />
+      )}
 
       {moderating && (
         <ModerateDialog
@@ -1201,7 +1348,7 @@ export function GroupView({
         />
       )}
 
-      {settingsOpen && (
+      {settings.open && (
         <GroupSettingsDialog
           group={group}
           role={role}
@@ -1209,7 +1356,8 @@ export function GroupView({
           ranks={ranks}
           members={members}
           invitable={invitable}
-          onClose={() => setSettingsOpen(false)}
+          initialTab={settings.tab}
+          onClose={() => setSettings({ open: false })}
         />
       )}
     </div>
