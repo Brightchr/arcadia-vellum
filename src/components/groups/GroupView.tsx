@@ -779,7 +779,9 @@ export function GroupView({
   );
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0">
+    // Mobile subtracts the fixed bottom tab bar too, so the composer stays
+    // visible; md+ has no bottom bar.
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] min-h-0">
       {/* Channel rail — collapses to an icon strip */}
       <aside
         style={{ width: chanCollapsed ? "3.75rem" : "14rem" }}
@@ -1177,7 +1179,7 @@ export function GroupView({
                   <SendIcon className="h-4 w-4" />
                 </button>
               </form>
-              <p className="mt-1 text-[10px] text-ink-dim">
+              <p className="mt-1 hidden text-[10px] text-ink-dim sm:block">
                 Enter to send · Shift+Enter for a new line · ◎ flags a message
                 as spoiler/NSFW · paste a Vellum book or series link to share it
               </p>

@@ -118,7 +118,7 @@ export default async function GroupsPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {mine.map((g) => (
                   <GroupTile key={g.id} g={g} />
                 ))}
@@ -129,7 +129,7 @@ export default async function GroupsPage() {
           {discover.length > 0 && (
             <section>
               <h2 className="font-heading text-lg mb-3">Discover</h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {discover.map((g) => (
                   <GroupTile key={g.id} g={g} showJoin />
                 ))}
