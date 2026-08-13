@@ -75,6 +75,24 @@ function readAckList(): string[] {
   }
 }
 
+/** Highlights @username tokens Discord-style. Display-only — no lookups. */
+function renderWithMentions(body: string): React.ReactNode {
+  const parts = body.split(/(@[a-z0-9][a-z0-9_.-]{1,29})/gi);
+  if (parts.length === 1) return body;
+  return parts.map((part, i) =>
+    /^@[a-z0-9][a-z0-9_.-]{1,29}$/i.test(part) ? (
+      <span
+        key={i}
+        className="rounded bg-arcane/15 px-0.5 font-semibold text-arcane-bright"
+      >
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
+
 /**
  * Discord-style rank badge: a compact colored pill next to the name. Long
  * rank names truncate at the pill's cap — hover/hold shows the full name.
@@ -147,7 +165,9 @@ function MessageBody({ m }: { m: GroupMessage }) {
   }
   return (
     <>
-      <p className="whitespace-pre-wrap break-words text-sm">{m.body}</p>
+      <p className="whitespace-pre-wrap break-words text-sm">
+        {renderWithMentions(m.body)}
+      </p>
       {m.embeds.map((e) => (
         <EmbedCard key={`${e.kind}:${e.slug}`} embed={e} />
       ))}
@@ -496,6 +516,7 @@ export function GroupView({
   ranks,
   invitable,
   groupMuted: initialGroupMuted,
+  initialChannelId,
 }: {
   group: GroupInfo;
   role: GroupRole;
@@ -505,6 +526,8 @@ export function GroupView({
   ranks: Rank[];
   invitable: RelatedUser[];
   groupMuted: boolean;
+  /** Deep link (notification click) — opens this channel directly. */
+  initialChannelId?: string;
 }) {
   const router = useRouter();
   const canMod = role === "owner" || role === "admin";
@@ -514,9 +537,14 @@ export function GroupView({
   );
   const [sheetChannel, setSheetChannel] = useState<ChannelState | null>(null);
   const [channels, setChannels] = useState(initialChannels);
-  const [channelId, setChannelId] = useState(initialChannels[0]?.id ?? null);
+  const [channelId, setChannelId] = useState(
+    initialChannelId ?? initialChannels[0]?.id ?? null
+  );
   // Discord-style phones: channel list first, chat on tap, back to return.
-  const [mobilePane, setMobilePane] = useState<"list" | "chat">("list");
+  // Deep links (notification clicks) land straight in the chat.
+  const [mobilePane, setMobilePane] = useState<"list" | "chat">(
+    initialChannelId ? "chat" : "list"
+  );
   const [messages, setMessages] = useState<GroupMessage[] | null>(null);
   const [draft, setDraft] = useState("");
   const [flag, setFlag] = useState<MessageFlag | null>(null);

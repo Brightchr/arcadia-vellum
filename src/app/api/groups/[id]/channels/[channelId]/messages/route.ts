@@ -7,9 +7,11 @@ import {
   markChannelRead,
   memberMeta,
   memberRole,
+  mentionTargets,
   postMessage,
   MAX_MESSAGE_LENGTH,
 } from "@/lib/groups";
+import { notify } from "@/lib/notifications";
 import { isTextSafe, UNSAFE_TEXT_ERROR } from "@/lib/safety";
 import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 import { isUserMuted, MUTED_ERROR } from "@/lib/reports";
@@ -98,5 +100,16 @@ export async function POST(
   }
 
   const message = await postMessage(g.channelId, g.session.user.id, text, flag);
+
+  // @mentions alert members (in-app + device push); group mutes suppress.
+  const mentioned = await mentionTargets(id, text);
+  for (const targetId of mentioned) {
+    await notify(targetId, "mention", {
+      actorId: g.session.user.id,
+      kind: "group",
+      itemId: id,
+    });
+  }
+
   return Response.json({ message });
 }

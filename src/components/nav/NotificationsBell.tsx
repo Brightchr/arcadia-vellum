@@ -37,6 +37,8 @@ function message(n: NotificationItem): string {
       return `${who} granted you access to ${n.itemTitle ?? "a work"}`;
     case "group_invite":
       return `${who} invited you to ${n.itemTitle ?? "a group"}`;
+    case "mention":
+      return `${who} mentioned you in ${n.itemTitle ?? "a group"}`;
     case "report_opened":
       return "Your account was reported and is temporarily restricted while moderators review it";
     case "report_dismissed":

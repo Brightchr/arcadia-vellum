@@ -831,6 +831,52 @@ export async function unreadGroupIds(
   return new Set(rows.map((r) => r.groupId));
 }
 
+/** Matches @username tokens (username rules: lowercase letters/digits/_/-/.). */
+export const MENTION_PATTERN = /@([a-z0-9][a-z0-9_.-]{1,29})/gi;
+
+/**
+ * Resolve @mentions in a message to group members who should be notified:
+ * actual members whose username matched, minus anyone who muted the group.
+ */
+export async function mentionTargets(
+  groupId: string,
+  body: string
+): Promise<string[]> {
+  const usernames = [
+    ...new Set(
+      [...body.matchAll(MENTION_PATTERN)].map((m) => m[1].toLowerCase())
+    ),
+  ].slice(0, 10);
+  if (usernames.length === 0) return [];
+
+  const rows = await db
+    .select({ id: user.id, username: user.username })
+    .from(groupMembers)
+    .innerJoin(user, eq(groupMembers.userId, user.id))
+    .where(
+      and(
+        eq(groupMembers.groupId, groupId),
+        inArray(user.username, usernames)
+      )
+    );
+  if (rows.length === 0) return [];
+
+  const muted = await db
+    .select({ userId: groupMutes.userId })
+    .from(groupMutes)
+    .where(
+      and(
+        eq(groupMutes.groupId, groupId),
+        inArray(
+          groupMutes.userId,
+          rows.map((r) => r.id)
+        )
+      )
+    );
+  const mutedSet = new Set(muted.map((m) => m.userId));
+  return rows.filter((r) => !mutedSet.has(r.id)).map((r) => r.id);
+}
+
 /** Group ids this user muted. */
 export async function mutedGroupIds(userId: string): Promise<Set<string>> {
   const rows = await db

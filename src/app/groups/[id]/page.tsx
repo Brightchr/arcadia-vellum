@@ -25,8 +25,10 @@ export const metadata: Metadata = {
 
 export default async function GroupPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ channel?: string }>;
 }) {
   const { session, navUser, pins, unread } = await shellData();
   if (!session || !navUser) redirect("/login");
@@ -96,6 +98,10 @@ export default async function GroupPage({
     mutedGroupIds(session.user.id),
   ]);
   const invitable = await invitableFriends(id, friends);
+  const { channel: channelParam } = await searchParams;
+  const initialChannelId = channels.some((c) => c.id === channelParam)
+    ? channelParam
+    : undefined;
 
   return (
     <main
@@ -124,6 +130,7 @@ export default async function GroupPage({
           ranks={ranks}
           invitable={invitable}
           groupMuted={mutedGroups.has(id)}
+          initialChannelId={initialChannelId}
         />
       </AppShell>
     </main>

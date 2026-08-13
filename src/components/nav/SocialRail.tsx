@@ -50,13 +50,17 @@ function alertText(a: SocialAlert): string {
       return `${who} started following you`;
     case "group_invite":
       return `${who} invited you to ${a.itemTitle ?? "a group"}`;
+    case "mention":
+      return `${who} mentioned you in ${a.itemTitle ?? "a group"}`;
     default:
       return "Something happened";
   }
 }
 
 function alertHref(a: SocialAlert): string {
-  if (a.type === "group_invite") return a.itemHref ?? "/groups";
+  if (a.type === "group_invite" || a.type === "mention") {
+    return a.itemHref ?? "/groups";
+  }
   if (a.type === "new_follower" && a.actorUsername) return `/u/${a.actorUsername}`;
   return "/friends";
 }
