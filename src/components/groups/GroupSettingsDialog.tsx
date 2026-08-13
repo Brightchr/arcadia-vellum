@@ -7,6 +7,7 @@ import type { ChannelState, GroupRole, Rank } from "@/lib/groups";
 import type { FriendPresence } from "@/lib/presence";
 import type { RelatedUser } from "@/lib/social";
 import { HashIcon } from "@/components/icons";
+import { IconPicker } from "./IconPicker";
 
 interface GroupInfo {
   id: string;
@@ -139,7 +140,7 @@ export function GroupSettingsDialog({
           </button>
         </div>
 
-        <div className="flex gap-1 border-b border-void-border px-3 py-2 overflow-x-auto">
+        <div className="flex gap-1 border-b border-void-border px-3 py-2 overflow-x-auto overflow-y-hidden overscroll-x-contain">
           {tabs
             .filter((t) => t.show)
             .map((t) => (
@@ -175,38 +176,22 @@ export function GroupSettingsDialog({
           {/* ---------------- Overview ---------------- */}
           {tab === "overview" && canMod && (
             <>
-              <div className="flex gap-3">
-                <div className="w-20">
-                  <label
-                    htmlFor="gs-icon"
-                    className="block text-xs text-ink-dim mb-1"
-                  >
-                    Icon
-                  </label>
-                  <input
-                    id="gs-icon"
-                    className="input-arcane text-center"
-                    value={icon}
-                    maxLength={4}
-                    onChange={(e) => setIcon(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <label
-                    htmlFor="gs-name"
-                    className="block text-xs text-ink-dim mb-1"
-                  >
-                    Name
-                  </label>
-                  <input
-                    id="gs-name"
-                    className="input-arcane"
-                    value={name}
-                    maxLength={60}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+              <div>
+                <label
+                  htmlFor="gs-name"
+                  className="block text-xs text-ink-dim mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  id="gs-name"
+                  className="input-arcane"
+                  value={name}
+                  maxLength={60}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
+              <IconPicker value={icon} onChange={setIcon} />
               <div>
                 <label
                   htmlFor="gs-desc"

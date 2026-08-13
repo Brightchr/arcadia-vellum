@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { IconPicker } from "./IconPicker";
 
 /** "Create Group" button + inline dialog form. */
 export function CreateGroupPanel() {
@@ -42,7 +43,7 @@ export function CreateGroupPanel() {
   }
 
   return (
-    <div className="relative">
+    <div>
       <button
         type="button"
         className="btn-arcane"
@@ -51,7 +52,16 @@ export function CreateGroupPanel() {
         + Create Group
       </button>
       {open && (
-        <div className="app-menu absolute right-0 top-full mt-2 z-50 w-80 max-w-[90vw] rounded-lg p-4 shadow-xl shadow-black/30 space-y-3">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create a group"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="panel-arcane w-full max-w-sm p-4 space-y-3">
           <div>
             <label htmlFor="group-name" className="block text-xs text-ink-dim mb-1">
               Name
@@ -81,42 +91,25 @@ export function CreateGroupPanel() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <div className="w-20">
-              <label
-                htmlFor="group-icon"
-                className="block text-xs text-ink-dim mb-1"
-              >
-                Icon
-              </label>
-              <input
-                id="group-icon"
-                className="input-arcane text-center"
-                value={icon}
-                maxLength={4}
-                placeholder="🐉"
-                onChange={(e) => setIcon(e.target.value)}
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                htmlFor="group-visibility"
-                className="block text-xs text-ink-dim mb-1"
-              >
-                Who can join
-              </label>
-              <select
-                id="group-visibility"
-                className="input-arcane"
-                value={visibility}
-                onChange={(e) =>
-                  setVisibility(e.target.value as "public" | "private")
-                }
-              >
-                <option value="public">Anyone (public)</option>
-                <option value="private">Invite only</option>
-              </select>
-            </div>
+          <IconPicker value={icon} onChange={setIcon} />
+          <div>
+            <label
+              htmlFor="group-visibility"
+              className="block text-xs text-ink-dim mb-1"
+            >
+              Who can join
+            </label>
+            <select
+              id="group-visibility"
+              className="input-arcane"
+              value={visibility}
+              onChange={(e) =>
+                setVisibility(e.target.value as "public" | "private")
+              }
+            >
+              <option value="public">Anyone (public)</option>
+              <option value="private">Invite only</option>
+            </select>
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <div className="flex justify-end gap-2">
@@ -135,6 +128,7 @@ export function CreateGroupPanel() {
             >
               {busy ? "Creating..." : "Create"}
             </button>
+          </div>
           </div>
         </div>
       )}
