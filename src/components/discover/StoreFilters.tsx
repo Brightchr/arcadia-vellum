@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SearchIcon } from "@/components/icons";
+import { SearchIcon, XIcon } from "@/components/icons";
 
 /**
  * The store's control bar: search, one Filters button (badged with the
@@ -196,7 +196,7 @@ export function StoreFilters({
                 className="rounded p-1.5 text-ink-dim hover:bg-overlay hover:text-ink"
                 onClick={() => setOpen(false)}
               >
-                ✕
+                <XIcon className="h-4 w-4" />
               </button>
             </div>
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
@@ -303,7 +303,7 @@ function RemovableChip({
         className="rounded-full px-1 hover:bg-arcane/20"
         onClick={onRemove}
       >
-        ✕
+        <XIcon className="h-3 w-3" />
       </button>
     </span>
   );

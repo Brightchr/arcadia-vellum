@@ -267,6 +267,129 @@ export function SendIcon({ className }: IconProps) {
   );
 }
 
+export function BellIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </Icon>
+  );
+}
+
+export function BellOffIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5" />
+      <path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      <path d="m2 2 20 20" />
+    </Icon>
+  );
+}
+
+export function PinIcon({ className, filled }: IconProps & { filled?: boolean }) {
+  return (
+    <Icon className={className}>
+      <path
+        d="M12 17v5" fill="none"
+      />
+      <path
+        d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"
+        fill={filled ? "currentColor" : "none"}
+      />
+    </Icon>
+  );
+}
+
+export function GearIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </Icon>
+  );
+}
+
+export function EllipsisIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+      <circle cx="19" cy="12" r="1" fill="currentColor" />
+      <circle cx="5" cy="12" r="1" fill="currentColor" />
+    </Icon>
+  );
+}
+
+export function XIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </Icon>
+  );
+}
+
+export function EyeIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+      <circle cx="12" cy="12" r="3" />
+    </Icon>
+  );
+}
+
+export function EyeOffIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+      <path d="m2 2 20 20" />
+    </Icon>
+  );
+}
+
+export function TrashIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </Icon>
+  );
+}
+
+export function UserPlusIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <line x1="19" y1="8" x2="19" y2="14" />
+      <line x1="22" y1="11" x2="16" y2="11" />
+    </Icon>
+  );
+}
+
+export function AlertTriangleIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </Icon>
+  );
+}
+
+export function FlagIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 8 2a6 6 0 0 0 3.6-1.2A1 1 0 0 1 21 3.6V15a1 1 0 0 1-.4.8A6 6 0 0 1 17 17c-3 0-5-2-8-2a6 6 0 0 0-4 1.4" />
+    </Icon>
+  );
+}
+
 export function SkipForwardIcon({ className }: IconProps) {
   return (
     <Icon className={className}>

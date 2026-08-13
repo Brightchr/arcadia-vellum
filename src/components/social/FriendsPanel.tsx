@@ -6,7 +6,11 @@ import Link from "next/link";
 import { Avatar } from "@/components/nav/Avatar";
 import type { RelatedUser } from "@/lib/social";
 import type { FriendPresence } from "@/lib/presence";
-import { BookOpenIcon } from "@/components/icons";
+import {
+  BookOpenIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from "@/components/icons";
 
 /** Avatar with a Steam-style presence dot pinned to its corner. */
 function PresenceAvatar({
@@ -213,7 +217,14 @@ export function FriendsPanel({
               className="px-3 text-[11px] font-heading uppercase tracking-widest text-ink-dim hover:text-ink transition-colors"
               onClick={() => setShowOffline((v) => !v)}
             >
-              Offline — {offline.length} {showOffline ? "▾" : "▸"}
+              <span className="inline-flex items-center gap-1">
+                Offline — {offline.length}
+                {showOffline ? (
+                  <ChevronDownIcon className="h-3 w-3" />
+                ) : (
+                  <ChevronRightIcon className="h-3 w-3" />
+                )}
+              </span>
             </button>
             {showOffline && offline.length > 0 && (
               <ul className="space-y-1 mt-1 opacity-70">

@@ -6,9 +6,12 @@ import { Avatar } from "./Avatar";
 import type { FriendPresence } from "@/lib/presence";
 import type { GroupSummary } from "@/lib/groups";
 import {
+  BellIcon,
+  BellOffIcon,
   BookOpenIcon,
   ChevronRightIcon,
   MessageSquareIcon,
+  PinIcon,
   UsersIcon,
 } from "@/components/icons";
 
@@ -376,7 +379,9 @@ export function SocialRail() {
                             }`}
                           >
                             {g.name}
-                            {g.muted && " 🔕"}
+                            {g.muted && (
+                              <BellOffIcon className="ml-1 inline h-3 w-3 text-ink-dim" />
+                            )}
                           </span>
                           <span className="flex items-center gap-1.5 text-[11px] text-ink-dim">
                             {g.onlineCount > 0 && (
@@ -398,7 +403,11 @@ export function SocialRail() {
                           className="p-1 text-xs text-ink-dim opacity-0 transition group-hover/pin:opacity-100 hover:text-ink"
                           onClick={() => void toggleMute(g)}
                         >
-                          {g.muted ? "🔔" : "🔕"}
+                          {g.muted ? (
+                            <BellIcon className="h-3.5 w-3.5" />
+                          ) : (
+                            <BellOffIcon className="h-3.5 w-3.5" />
+                          )}
                         </button>
                         <button
                           type="button"
@@ -411,7 +420,10 @@ export function SocialRail() {
                           }`}
                           onClick={() => void togglePin(g)}
                         >
-                          {g.pinned ? "📌" : "📍"}
+                          <PinIcon
+                            className="h-3.5 w-3.5"
+                            filled={g.pinned}
+                          />
                         </button>
                       </span>
                     </li>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { XIcon } from "@/components/icons";
 
 /**
  * The little ✕ on work cards: "don't show me this again". Appears on hover,
@@ -41,7 +42,7 @@ export function NotInterestedButton({
         }
       }}
     >
-      ✕
+      <XIcon className="h-3.5 w-3.5" />
     </button>
   );
 }
