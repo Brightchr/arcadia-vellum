@@ -504,8 +504,10 @@ export const groups = pgTable("groups", {
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  /** Tile icon (an emoji the owner picks). */
+  /** Tile icon (an emoji the owner picks) — fallback when no image is set. */
   icon: text("icon"),
+  /** Uploaded group avatar (profile_images id, served via /api/avatars). */
+  imageId: text("image_id"),
   visibility: text("visibility", { enum: ["public", "private"] })
     .notNull()
     .default("public"),
@@ -615,6 +617,8 @@ export const groupChannels = pgTable("group_channels", {
     .references(() => groups.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   sortIndex: integer("sort_index").notNull().default(0),
+  /** Optional thumbnail (profile_images id) shown beside the channel name. */
+  imageId: text("image_id"),
   /** Age/content gate: readers confirm before the channel renders. */
   nsfw: boolean("nsfw").notNull().default(false),
   /** Who may post: everyone, mods (owner+admins), or listed ranks (+mods). */

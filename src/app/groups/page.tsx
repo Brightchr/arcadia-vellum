@@ -10,6 +10,7 @@ import {
   type GroupSummary,
 } from "@/lib/groups";
 import { CreateGroupPanel } from "@/components/groups/CreateGroupPanel";
+import { GroupAvatar } from "@/components/groups/GroupAvatar";
 import { JoinGroupButton } from "@/components/groups/JoinGroupButton";
 import { MessageSquareIcon, UsersIcon } from "@/components/icons";
 
@@ -26,12 +27,7 @@ function GroupTile({
 }) {
   const inner = (
     <>
-      <span
-        aria-hidden
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-overlay-strong text-xl"
-      >
-        {g.icon ?? <MessageSquareIcon className="h-5 w-5 text-ink-dim" />}
-      </span>
+      <GroupAvatar imageId={g.imageId} icon={g.icon} className="h-11 w-11" />
       <span className="min-w-0 flex-1">
         <span className="block truncate font-heading text-sm">{g.name}</span>
         <span className="mt-0.5 flex items-center gap-2 text-xs text-ink-dim">

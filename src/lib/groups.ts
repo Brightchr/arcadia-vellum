@@ -28,6 +28,8 @@ export interface GroupSummary {
   name: string;
   description: string | null;
   icon: string | null;
+  /** Uploaded avatar (served via /api/avatars/<id>) — icon is the fallback. */
+  imageId: string | null;
   visibility: "public" | "private";
   ownerId: string;
   memberCount: number;
@@ -165,6 +167,7 @@ async function summarize(
     name: g.name,
     description: g.description,
     icon: g.icon,
+    imageId: g.imageId,
     visibility: g.visibility,
     ownerId: g.ownerId,
     memberCount: members.get(g.id) ?? 0,
@@ -553,6 +556,8 @@ export interface Channel {
   id: string;
   name: string;
   sortIndex: number;
+  /** Optional thumbnail (served via /api/avatars/<id>). */
+  imageId: string | null;
   nsfw: boolean;
   postMode: PostMode;
   /** Rank ids allowed to post when postMode is "ranks" (mods always can). */
@@ -581,6 +586,7 @@ const channelCols = {
   id: groupChannels.id,
   name: groupChannels.name,
   sortIndex: groupChannels.sortIndex,
+  imageId: groupChannels.imageId,
   nsfw: groupChannels.nsfw,
   postMode: groupChannels.postMode,
   postRanks: groupChannels.postRanks,
@@ -590,6 +596,7 @@ function toChannel(row: {
   id: string;
   name: string;
   sortIndex: number;
+  imageId: string | null;
   nsfw: boolean;
   postMode: PostMode;
   postRanks: string | null;
@@ -863,6 +870,7 @@ export async function createChannel(
     id: row.id,
     name: row.name,
     sortIndex: row.sortIndex,
+    imageId: row.imageId,
     nsfw: row.nsfw,
     postMode: row.postMode,
     postRanks: parseRankIds(row.postRanks),

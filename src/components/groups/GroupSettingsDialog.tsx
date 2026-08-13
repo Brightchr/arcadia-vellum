@@ -8,12 +8,14 @@ import type { FriendPresence } from "@/lib/presence";
 import type { RelatedUser } from "@/lib/social";
 import { HashIcon, TrashIcon, XIcon } from "@/components/icons";
 import { IconPicker } from "./IconPicker";
+import { GroupAvatar } from "./GroupAvatar";
 
 interface GroupInfo {
   id: string;
   name: string;
   description: string | null;
   icon: string | null;
+  imageId: string | null;
   visibility: "public" | "private";
   welcomeMessage: string | null;
 }
@@ -186,6 +188,63 @@ export function GroupSettingsDialog({
           {/* ---------------- Overview ---------------- */}
           {tab === "overview" && canMod && (
             <>
+              <div className="flex items-center gap-4">
+                <GroupAvatar
+                  imageId={group.imageId}
+                  icon={group.icon}
+                  className="h-16 w-16"
+                  iconClassName="text-3xl"
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="btn-ghost cursor-pointer text-xs px-3 py-1.5">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      className="hidden"
+                      disabled={busy}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        if (!f) return;
+                        void run(async () => {
+                          const form = new FormData();
+                          form.set("file", f);
+                          const res = await fetch(`/api/groups/${group.id}/image`, {
+                            method: "POST",
+                            body: form,
+                          });
+                          return res.ok
+                            ? null
+                            : ((await res.json().catch(() => null))?.error ??
+                                "Upload failed.");
+                        }, "Group image updated.");
+                      }}
+                    />
+                    {group.imageId ? "Change Image" : "Upload Image"}
+                  </label>
+                  {group.imageId && (
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs px-3 py-1.5"
+                      disabled={busy}
+                      onClick={() =>
+                        void run(async () => {
+                          const res = await fetch(`/api/groups/${group.id}/image`, {
+                            method: "DELETE",
+                          });
+                          return res.ok ? null : "Could not remove the image.";
+                        }, "Image removed.")
+                      }
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="w-full text-[10px] text-ink-dim">
+                    Square works best · up to 2 MB. Without an image the emoji
+                    icon below shows instead.
+                  </p>
+                </div>
+              </div>
               <div>
                 <label
                   htmlFor="gs-name"
@@ -572,7 +631,16 @@ function ChannelSettingsRow({
   return (
     <div className="rounded-lg border border-void-border p-3 space-y-2">
       <p className="flex items-center gap-1.5 text-sm font-heading">
-        <HashIcon className="h-3.5 w-3.5 text-ink-dim" />
+        {channel.imageId ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/api/avatars/${channel.imageId}`}
+            alt=""
+            className="h-5 w-5 rounded object-cover"
+          />
+        ) : (
+          <HashIcon className="h-3.5 w-3.5 text-ink-dim" />
+        )}
         {channel.name}
         {nsfw && (
           <span className="rounded bg-red-400/15 px-1 text-[9px] font-heading uppercase tracking-wider text-red-400">
@@ -605,6 +673,52 @@ function ChannelSettingsRow({
           />
           NSFW — readers confirm before viewing
         </label>
+        <span className="flex items-center gap-1.5">
+          <label className="btn-ghost cursor-pointer !px-2 !py-1 text-xs">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              className="hidden"
+              disabled={busy}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                void run(async () => {
+                  const form = new FormData();
+                  form.set("file", f);
+                  const res = await fetch(
+                    `/api/groups/${groupId}/channels/${channel.id}/image`,
+                    { method: "POST", body: form }
+                  );
+                  return res.ok
+                    ? null
+                    : ((await res.json().catch(() => null))?.error ??
+                        "Upload failed.");
+                }, "Thumbnail updated.");
+              }}
+            />
+            {channel.imageId ? "Change thumbnail" : "Add thumbnail"}
+          </label>
+          {channel.imageId && (
+            <button
+              type="button"
+              className="btn-ghost !px-2 !py-1 text-xs"
+              disabled={busy}
+              onClick={() =>
+                void run(async () => {
+                  const res = await fetch(
+                    `/api/groups/${groupId}/channels/${channel.id}/image`,
+                    { method: "DELETE" }
+                  );
+                  return res.ok ? null : "Could not remove the thumbnail.";
+                }, "Thumbnail removed.")
+              }
+            >
+              Remove
+            </button>
+          )}
+        </span>
       </div>
       {postMode === "ranks" && (
         <div className="flex flex-wrap gap-1.5">

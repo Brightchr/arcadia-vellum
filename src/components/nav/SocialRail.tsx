@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "./Avatar";
+import { GroupAvatar } from "@/components/groups/GroupAvatar";
 import type { FriendPresence } from "@/lib/presence";
 import type { GroupSummary } from "@/lib/groups";
 import {
@@ -361,10 +362,13 @@ export function SocialRail() {
                         href={`/groups/${g.id}`}
                         className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-overlay"
                       >
-                        <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-overlay-strong text-base">
-                          {g.icon ?? (
-                            <UsersIcon className="h-4 w-4 text-ink-dim" />
-                          )}
+                        <span className="relative shrink-0">
+                          <GroupAvatar
+                            imageId={g.imageId}
+                            icon={g.icon}
+                            className="h-8 w-8"
+                            iconClassName="text-base"
+                          />
                           {g.unread && (
                             <span
                               aria-label="Unread messages"

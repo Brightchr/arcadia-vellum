@@ -15,6 +15,7 @@ import type {
 import { REPORT_REASONS, type ReportReason } from "@/lib/report-reasons";
 import { GroupSettingsDialog, type SettingsTab } from "./GroupSettingsDialog";
 import { ChannelMenu } from "./ChannelMenu";
+import { GroupAvatar } from "./GroupAvatar";
 import type { FriendPresence } from "@/lib/presence";
 import type { RelatedUser } from "@/lib/social";
 import {
@@ -43,6 +44,7 @@ interface GroupInfo {
   name: string;
   description: string | null;
   icon: string | null;
+  imageId: string | null;
   visibility: "public" | "private";
   welcomeMessage: string | null;
 }
@@ -808,7 +810,18 @@ export function GroupView({
           setSheetChannel(c);
         }}
       >
-        <HashIcon className="h-3.5 w-3.5 shrink-0" />
+        {c.imageId ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/api/avatars/${c.imageId}`}
+            alt=""
+            className={`shrink-0 rounded object-cover ${
+              mobile ? "h-6 w-6" : "h-4.5 w-4.5"
+            }`}
+          />
+        ) : (
+          <HashIcon className="h-3.5 w-3.5 shrink-0" />
+        )}
         {(mobile || !chanCollapsed) && (
           <>
             <span
@@ -1120,11 +1133,11 @@ export function GroupView({
   const mobileListPane = (
     <div className="flex min-w-0 flex-1 flex-col md:hidden">
       <div className="flex items-center gap-3 border-b border-edge px-4 py-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-overlay-strong text-xl">
-          {group.icon ?? (
-            <MessageSquareIcon className="h-5 w-5 text-ink-dim" />
-          )}
-        </span>
+        <GroupAvatar
+          imageId={group.imageId}
+          icon={group.icon}
+          className="h-10 w-10"
+        />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 truncate font-heading text-base">
             {group.name}
@@ -1213,11 +1226,12 @@ export function GroupView({
         >
           {!chanCollapsed && (
             <p className="flex min-w-0 items-center gap-2 font-heading text-sm">
-              <span className="text-lg leading-none">
-                {group.icon ?? (
-                  <MessageSquareIcon className="inline h-4 w-4 text-ink-dim" />
-                )}
-              </span>
+              <GroupAvatar
+                imageId={group.imageId}
+                icon={group.icon}
+                className="h-6 w-6 !rounded-md"
+                iconClassName="text-sm"
+              />
               <span className="truncate">{group.name}</span>
               {groupMuted && (
                 <BellOffIcon className="h-3.5 w-3.5 shrink-0 text-ink-dim" />

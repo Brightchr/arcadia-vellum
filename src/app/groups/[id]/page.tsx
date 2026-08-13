@@ -16,6 +16,7 @@ import {
 import { listFriends } from "@/lib/social";
 import { GroupView } from "@/components/groups/GroupView";
 import { JoinGroupButton } from "@/components/groups/JoinGroupButton";
+import { GroupAvatar } from "@/components/groups/GroupAvatar";
 import { UsersIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
@@ -53,8 +54,13 @@ export default async function GroupPage({
         >
           <div className="max-w-lg mx-auto p-4 sm:p-6 md:p-10">
             <div className="panel-arcane p-8 text-center space-y-3">
-              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-overlay-strong text-3xl">
-                {group.icon ?? "💬"}
+              <span className="mx-auto block w-fit">
+                <GroupAvatar
+                  imageId={group.imageId}
+                  icon={group.icon}
+                  className="h-16 w-16"
+                  iconClassName="text-3xl"
+                />
               </span>
               <h1 className="font-display text-2xl text-ink">{group.name}</h1>
               {group.description && (
@@ -107,6 +113,7 @@ export default async function GroupPage({
             name: group.name,
             description: group.description,
             icon: group.icon,
+            imageId: group.imageId,
             visibility: group.visibility,
             welcomeMessage: group.welcomeMessage,
           }}
