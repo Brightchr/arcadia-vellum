@@ -39,7 +39,9 @@ export function WorkRow({
           </Link>
         )}
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+      {/* overflow-y-hidden + overscroll containment keep vertical swipes
+          flowing to the page instead of getting trapped by the strip */}
+      <div className="flex gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 -mx-1 px-1">
         {works.slice(0, limit).map((w) => (
           <div key={`${w.kind}:${w.id}`} className="w-40 sm:w-44 shrink-0">
             <WorkCard work={w} dismissable={dismissable} />
