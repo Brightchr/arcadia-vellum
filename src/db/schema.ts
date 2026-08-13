@@ -5,6 +5,7 @@ import {
   boolean,
   integer,
   customType,
+  index,
   primaryKey,
   unique,
 } from "drizzle-orm/pg-core";
@@ -166,7 +167,12 @@ export const journals = pgTable("journals", {
   featured: boolean("featured").notNull().default(false),
   lastSyncedAt: timestamp("last_synced_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [
+    index("journals_owner_id_idx").on(t.ownerId),
+    index("journals_series_id_idx").on(t.seriesId),
+  ]
+);
 
 export const journalContent = pgTable("journal_content", {
   journalId: text("journal_id")
@@ -195,9 +201,14 @@ export const journalAudio = pgTable("journal_audio", {
   /** Chapter image (journal_images id), stored on the entry's first segment. */
   coverImageId: text("cover_image_id"),
   contentType: text("content_type").notNull(),
-  data: bytea("data").notNull(),
+  /** Legacy in-database bytes; null once the row lives in object storage. */
+  data: bytea("data"),
+  /** Object-storage key; when set, bytes are served from the bucket. */
+  storageKey: text("storage_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [index("journal_audio_journal_id_idx").on(t.journalId)]
+);
 
 export const journalImages = pgTable("journal_images", {
   id: text("id").primaryKey(),
@@ -205,9 +216,14 @@ export const journalImages = pgTable("journal_images", {
     .notNull()
     .references(() => journals.id, { onDelete: "cascade" }),
   contentType: text("content_type").notNull(),
-  data: bytea("data").notNull(),
+  /** Legacy in-database bytes; null once the row lives in object storage. */
+  data: bytea("data"),
+  /** Object-storage key; when set, bytes are served from the bucket. */
+  storageKey: text("storage_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [index("journal_images_journal_id_idx").on(t.journalId)]
+);
 
 /**
  * User-built themes from the theme builder. config is validated JSON
@@ -236,7 +252,10 @@ export const profileImages = pgTable("profile_images", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   contentType: text("content_type").notNull(),
-  data: bytea("data").notNull(),
+  /** Legacy in-database bytes; null once the row lives in object storage. */
+  data: bytea("data"),
+  /** Object-storage key; when set, bytes are served from the bucket. */
+  storageKey: text("storage_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -252,7 +271,10 @@ export const follows = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.followerId, t.followingId] })]
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followingId] }),
+    index("follows_following_id_idx").on(t.followingId),
+  ]
 );
 
 /** Mutual friendships: a pending row is a request awaiting the addressee. */
@@ -271,7 +293,10 @@ export const friendships = pgTable(
       .default("pending"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [unique().on(t.requesterId, t.addresseeId)]
+  (t) => [
+    unique().on(t.requesterId, t.addresseeId),
+    index("friendships_addressee_id_idx").on(t.addresseeId),
+  ]
 );
 
 /** Search tags (lowercase, safety-filtered on write). */
@@ -290,7 +315,10 @@ export const journalTags = pgTable(
       .notNull()
       .references(() => tags.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.journalId, t.tagId] })]
+  (t) => [
+    primaryKey({ columns: [t.journalId, t.tagId] }),
+    index("journal_tags_tag_id_idx").on(t.tagId),
+  ]
 );
 
 /**
@@ -309,7 +337,10 @@ export const savedItems = pgTable(
     icon: text("icon"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.kind, t.itemId] })]
+  (t) => [
+    primaryKey({ columns: [t.userId, t.kind, t.itemId] }),
+    index("saved_items_item_id_idx").on(t.itemId),
+  ]
 );
 
 /** 1-5 star reviews with text; one per user per work. */
@@ -327,7 +358,10 @@ export const reviews = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [unique().on(t.userId, t.kind, t.itemId)]
+  (t) => [
+    unique().on(t.userId, t.kind, t.itemId),
+    index("reviews_item_id_idx").on(t.itemId),
+  ]
 );
 
 /** Follows on a series — get notified when new volumes are published. */
@@ -361,7 +395,9 @@ export const notifications = pgTable("notifications", {
   itemId: text("item_id"),
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [index("notifications_user_read_idx").on(t.userId, t.read)]
+);
 
 /** Last-opened works per user — powers the "jump back in" shelf. */
 export const readingActivity = pgTable(
@@ -514,7 +550,10 @@ export const groupMembers = pgTable(
     pinned: boolean("pinned").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.groupId, t.userId] })]
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.userId] }),
+    index("group_members_user_id_idx").on(t.userId),
+  ]
 );
 
 /** Users banned from a group — they can't rejoin or be re-invited. */
@@ -585,7 +624,9 @@ export const groupChannels = pgTable("group_channels", {
   /** JSON array of group_ranks ids allowed to post when postMode="ranks". */
   postRanks: text("post_ranks"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [index("group_channels_group_id_idx").on(t.groupId)]
+);
 
 /**
  * Standing invites into a group. Any member can invite a friend; the invite
@@ -624,7 +665,11 @@ export const groupMessages = pgTable("group_messages", {
   /** Sender-set content warning: hidden until the reader clicks through. */
   flag: text("flag", { enum: ["spoiler", "nsfw"] }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+  },
+  (t) => [
+    index("group_messages_channel_created_idx").on(t.channelId, t.createdAt),
+  ]
+);
 
 /** Last time each member looked at a channel — powers unread dots. */
 export const channelReads = pgTable(

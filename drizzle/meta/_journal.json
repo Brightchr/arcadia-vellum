@@ -183,6 +183,20 @@
       "when": 1786563582468,
       "tag": "0025_group-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786627462630,
+      "tag": "0026_media-storage-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786627870513,
+      "tag": "0027_query-indexes",
+      "breakpoints": true
     }
   ]
 }
