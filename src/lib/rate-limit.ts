@@ -13,10 +13,20 @@ interface Bucket {
 const buckets = new Map<string, Bucket>();
 const MAX_BUCKETS = 50_000;
 
-/** Best-effort client IP behind Railway's proxy. */
+/**
+ * Best-effort client IP. Behind Cloudflare, CF-Connecting-IP is the real
+ * client (the first x-forwarded-for entry becomes client-spoofable once a
+ * second proxy is in the chain). Without it, fall back to the LAST forwarded
+ * entry — the one appended by the trusted edge — then x-real-ip.
+ */
 export function clientIp(request: Request): string {
+  const cf = request.headers.get("cf-connecting-ip");
+  if (cf) return cf.trim();
   const fwd = request.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
+  if (fwd) {
+    const parts = fwd.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
+  }
   return request.headers.get("x-real-ip") ?? "unknown";
 }
 
