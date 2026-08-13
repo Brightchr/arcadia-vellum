@@ -5,6 +5,7 @@ import { getUserById } from "@/lib/profile";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
 import { ProfileSettingsForm } from "@/components/social/ProfileSettingsForm";
+import { PushSettings } from "@/components/settings/PushSettings";
 
 export const metadata: Metadata = {
   title: "Settings — Vellum",
@@ -28,6 +29,9 @@ export default async function SettingsPage() {
             Your public identity and privacy.
           </p>
         </header>
+        <div className="mb-6">
+          <PushSettings />
+        </div>
         <ProfileSettingsForm
           profile={{
             name: me.name,

@@ -9,6 +9,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { PresenceBeacon } from "./PresenceBeacon";
+import { ServiceWorkerSetup } from "./ServiceWorkerSetup";
 import { SocialRail } from "./SocialRail";
 import {
   BookOpenIcon,
@@ -195,6 +196,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh">
       {user && <PresenceBeacon />}
+      {user && <ServiceWorkerSetup />}
       {/* Sidenav (desktop, signed in) — collapses to a Spotify-style rail */}
       {user && (
         <aside className="app-sidenav hidden md:flex shrink-0 flex-col overflow-hidden border-r sticky top-0 h-dvh transition-[width] duration-200">

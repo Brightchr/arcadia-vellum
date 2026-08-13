@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { notifications, user, journals, series, groups } from "@/db/schema";
 import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
+import { pushForNotification } from "@/lib/push";
 
 export type NotificationType =
   | "friend_request"
@@ -13,6 +14,7 @@ export type NotificationType =
   | "access_request"
   | "access_granted"
   | "group_invite"
+  | "mention"
   | "report_opened"
   | "report_dismissed"
   | "report_upheld"
@@ -27,6 +29,7 @@ export const SOCIAL_TYPES: NotificationType[] = [
   "friend_accept",
   "new_follower",
   "group_invite",
+  "mention",
 ];
 
 export type NotificationScope = "social" | "system";
@@ -65,6 +68,8 @@ export async function notify(
     kind: opts.kind ?? null,
     itemId: opts.itemId ?? null,
   });
+  // Device push (mentions, invites, friend events) — never blocks the caller.
+  void pushForNotification(userId, type, opts);
 }
 
 export async function notifyMany(

@@ -472,6 +472,22 @@ export const shareLinks = pgTable("share_links", {
 });
 
 /**
+ * Web Push endpoints, one row per browser/device a user enabled
+ * notifications on. Dead endpoints (unsubscribed/expired) are pruned when a
+ * send bounces.
+ */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+/**
  * Audit trail of moderation actions (bans, unbans). Append-only — rows are
  * never updated or deleted, so there's always a record of who did what.
  */
