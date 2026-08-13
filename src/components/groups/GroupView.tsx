@@ -73,6 +73,26 @@ function readAckList(): string[] {
   }
 }
 
+/**
+ * Discord-style rank badge: a compact colored pill next to the name. Long
+ * rank names truncate at the pill's cap — hover/hold shows the full name.
+ */
+function RankPill({ rank }: { rank: Rank }) {
+  return (
+    <span
+      title={rank.name}
+      className="max-w-24 shrink-0 truncate rounded border px-1 text-[9px] font-heading uppercase tracking-wider"
+      style={{
+        color: rank.color,
+        borderColor: `${rank.color}55`,
+        backgroundColor: `${rank.color}1f`,
+      }}
+    >
+      {rank.name}
+    </span>
+  );
+}
+
 /** A shared work rendered as a compact card under the message. */
 function EmbedCard({ embed }: { embed: WorkEmbed }) {
   return (
@@ -136,12 +156,13 @@ function MessageBody({ m }: { m: GroupMessage }) {
 function MessageRow({
   m,
   compact,
-  nameColor,
+  rank,
 }: {
   m: GroupMessage;
   compact: boolean;
-  nameColor?: string;
+  rank?: Rank;
 }) {
+  const nameColor = rank?.color;
   if (compact) {
     return (
       <div className="group flex gap-3 px-3 py-0.5 hover:bg-overlay rounded-md">
@@ -180,6 +201,7 @@ function MessageRow({
               {m.authorName}
             </span>
           )}
+          {rank && <RankPill rank={rank} />}
           <span className="text-[10px] text-ink-dim">
             {timeLabel(m.createdAt)}
           </span>
@@ -244,15 +266,8 @@ function MemberRow({
               Admin
             </span>
           )}
+          {rank && <RankPill rank={rank} />}
         </span>
-        {rank && (
-          <span
-            className="block truncate text-[10px] font-heading uppercase tracking-wider"
-            style={{ color: rank.color }}
-          >
-            {rank.name}
-          </span>
-        )}
         {m.online && m.activityLabel && (
           <span className="block truncate text-[11px] text-emerald-400">
             {m.activityLabel}
@@ -959,12 +974,7 @@ export function GroupView({
                     ? rankById.get(authorMember.rankId)
                     : undefined;
                   return (
-                    <MessageRow
-                      key={m.id}
-                      m={m}
-                      compact={compact}
-                      nameColor={rank?.color}
-                    />
+                    <MessageRow key={m.id} m={m} compact={compact} rank={rank} />
                   );
                 })
               )}
@@ -1187,7 +1197,10 @@ export function GroupView({
   );
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] min-h-0">
+    // Exactly viewport minus topbar (3.5rem) and the shell's mobile
+    // bottom-bar padding (pb-20 = 5rem) — any mismatch makes the PAGE scroll
+    // and buries the group header, so keep these in lockstep with AppShell.
+    <div className="flex h-[calc(100dvh-8.5rem)] md:h-[calc(100dvh-3.5rem)] min-h-0">
       {/* Desktop channel rail — collapses to an icon strip */}
       <aside
         style={{ width: chanCollapsed ? "3.75rem" : "14rem" }}
