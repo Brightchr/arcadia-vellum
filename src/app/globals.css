@@ -228,23 +228,24 @@ body {
 }
 
 .app-theme-midnight {
-  --void: #1a1d21;
-  --void-raised: #212529;
-  --void-border: #32383e;
-  --ink: #ced4da;
-  --ink-dim: #878a99;
+  /* Truly dark: near-black navy ground with a faint blue cast throughout. */
+  --void: #060a14;
+  --void-raised: #0b111e;
+  --void-border: #1b2536;
+  --ink: #cbd5e6;
+  --ink-dim: #7e8ba1;
   --arcane: #0ab39c;
   --arcane-bright: #3dc4b0;
   --ember: #f7b84b;
-  --overlay: rgba(255, 255, 255, 0.04);
-  --overlay-strong: rgba(255, 255, 255, 0.08);
-  --edge: rgba(255, 255, 255, 0.08);
-  --sidenav-bg: #1b1e22;
-  --topbar-bg: color-mix(in srgb, #212529 92%, transparent);
-  --menu-bg: #24282d;
-  --input-bg: #23272c;
+  --overlay: rgba(150, 180, 255, 0.05);
+  --overlay-strong: rgba(150, 180, 255, 0.09);
+  --edge: rgba(150, 180, 255, 0.1);
+  --sidenav-bg: #070c16;
+  --topbar-bg: color-mix(in srgb, #0b111e 92%, transparent);
+  --menu-bg: #0d1524;
+  --input-bg: #0c1321;
   --btn-ink: #ffffff;
-  --panel-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  --panel-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
 .app-theme-midnight.arcane-bg {
