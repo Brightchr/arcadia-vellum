@@ -396,7 +396,11 @@ export const notifications = pgTable("notifications", {
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("notifications_user_read_idx").on(t.userId, t.read)]
+  (t) => [
+    index("notifications_user_read_idx").on(t.userId, t.read),
+    // listNotifications sorts newest-first per user on every social poll.
+    index("notifications_user_created_idx").on(t.userId, t.createdAt.desc()),
+  ]
 );
 
 /** Last-opened works per user — powers the "jump back in" shelf. */
@@ -476,16 +480,21 @@ export const shareLinks = pgTable("share_links", {
  * notifications on. Dead endpoints (unsubscribed/expired) are pruned when a
  * send bounces.
  */
-export const pushSubscriptions = pgTable("push_subscriptions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  endpoint: text("endpoint").notNull().unique(),
-  p256dh: text("p256dh").notNull(),
-  auth: text("auth").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  // Every push send looks up a user's devices.
+  (t) => [index("push_subscriptions_user_idx").on(t.userId)]
+);
 
 /**
  * Audit trail of moderation actions (bans, unbans). Append-only — rows are
@@ -598,7 +607,9 @@ export const groupBans = pgTable(
  * reviews. Admins resolve to "dismissed" (mute lifts) or "upheld" (usually
  * paired with a platform ban).
  */
-export const userReports = pgTable("user_reports", {
+export const userReports = pgTable(
+  "user_reports",
+  {
   id: text("id").primaryKey(),
   /** The reported user. */
   userId: text("user_id")
@@ -623,7 +634,10 @@ export const userReports = pgTable("user_reports", {
   resolvedBy: text("resolved_by").references(() => user.id, {
     onDelete: "set null",
   }),
-});
+  },
+  // isUserMuted runs on every message post and review.
+  (t) => [index("user_reports_user_status_idx").on(t.userId, t.status)]
+);
 
 /** Text channels within a group, in sortIndex order. */
 export const groupChannels = pgTable("group_channels", {

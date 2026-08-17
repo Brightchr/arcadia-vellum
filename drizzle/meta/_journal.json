@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "7",
   "dialect": "postgresql",
   "entries": [
@@ -210,6 +210,13 @@
       "version": "7",
       "when": 1786633318207,
       "tag": "0029_push-subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786993048220,
+      "tag": "0030_security-indexes",
       "breakpoints": true
     }
   ]
