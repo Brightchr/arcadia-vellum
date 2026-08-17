@@ -1,10 +1,12 @@
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { captcha } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
+import { banLoginMessage, getActiveBan } from "@/lib/bans";
 
 // Turnstile guards email sign-in/sign-up when BOTH keys are set (the widget
 // needs the public key, verification needs the secret). With either missing,
@@ -36,6 +38,28 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 60 * 5,
+    },
+  },
+  advanced: {
+    // Sessions record the real client address (Cloudflare-fronted), which is
+    // what IP bans are built from.
+    ipAddress: {
+      ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        // Every sign-in (email or OAuth) creates a session — refusing here
+        // blocks banned accounts on all routes in one place. Expired
+        // suspensions clear themselves inside getActiveBan.
+        before: async (session) => {
+          const ban = await getActiveBan(session.userId);
+          if (ban) {
+            throw new APIError("FORBIDDEN", { message: banLoginMessage(ban) });
+          }
+        },
+      },
     },
   },
   user: {

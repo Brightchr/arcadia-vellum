@@ -52,6 +52,10 @@ export const user = pgTable("user", {
   /** Banned users' works, reviews, and profile are hidden platform-wide. */
   banned: boolean("banned").notNull().default(false),
   bannedAt: timestamp("banned_at"),
+  /** Null = permanent while banned; a date = suspension that auto-expires. */
+  bannedUntil: timestamp("banned_until"),
+  /** Ban reason code (see src/lib/ban-reasons.ts) — shown at sign-in. */
+  banReason: text("ban_reason"),
   /** JSON array ordering the profile sections, e.g. ["bio","featured","works","saved"]. */
   profileLayout: text("profile_layout"),
   /** Last presence heartbeat — "online" means within the last few minutes. */
@@ -165,6 +169,13 @@ export const journals = pgTable("journals", {
   listed: boolean("listed").notNull().default(true),
   /** Featured works lead the owner's profile page. */
   featured: boolean("featured").notNull().default(false),
+  /**
+   * Admin takedown: hidden from store/search/share for everyone; the owner
+   * still sees it (marked banned) on their own shelves.
+   */
+  bannedAt: timestamp("banned_at"),
+  /** Takedown reason code (see src/lib/ban-reasons.ts) — shown to the owner. */
+  banReason: text("ban_reason"),
   lastSyncedAt: timestamp("last_synced_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   },
@@ -495,6 +506,27 @@ export const pushSubscriptions = pgTable(
   // Every push send looks up a user's devices.
   (t) => [index("push_subscriptions_user_idx").on(t.userId)]
 );
+
+/**
+ * Network-level bans: sign-in and sign-up are refused from these addresses.
+ * Rows usually come from banning an account's known session IPs, but can be
+ * added by hand. expiresAt null = permanent.
+ */
+export const ipBans = pgTable("ip_bans", {
+  id: text("id").primaryKey(),
+  ip: text("ip").notNull().unique(),
+  /** Ban reason code (see src/lib/ban-reasons.ts). */
+  reason: text("reason").notNull(),
+  /** The account whose network this was, when derived from a user ban. */
+  targetUserId: text("target_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  createdBy: text("created_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
 
 /**
  * Audit trail of moderation actions (bans, unbans). Append-only — rows are

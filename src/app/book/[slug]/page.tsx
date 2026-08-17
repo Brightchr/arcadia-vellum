@@ -10,6 +10,8 @@ import { isSaved } from "@/lib/saves";
 import { volumeLabel } from "@/lib/volume";
 import { canAccessJournal, grantStatus, listGrants } from "@/lib/access";
 import { isUserBanned } from "@/lib/profile";
+import { isAdmin } from "@/lib/admin";
+import { banReasonLabel } from "@/lib/ban-reasons";
 import { RequestAccessButton } from "@/components/discover/RequestAccessButton";
 import { AccessManager } from "@/components/discover/AccessManager";
 import { appThemeClass } from "@/lib/themes";
@@ -47,6 +49,11 @@ export default async function BookHomePage({
   const { session, navUser, pins, unread } = await shellData();
   const isOwner = session?.user.id === journal.ownerId;
   if (!isOwner && (await isUserBanned(journal.ownerId))) notFound();
+  // Taken-down works 404 for everyone except the owner (who sees the ban
+  // notice below) and admins (who need to review them).
+  if (journal.bannedAt && !isOwner) {
+    if (!session || !(await isAdmin(session.user.id))) notFound();
+  }
   const canAccess = await canAccessJournal(session?.user.id ?? null, journal);
   // Everything except private has a homepage: discoverable works show their
   // teaser to all, friends-only works show a "friends can open this" teaser.
@@ -82,6 +89,18 @@ export default async function BookHomePage({
       <ThemeStyle css={customCss} />
       <AppShell user={navUser} pins={pins} unreadNotifications={unread}>
       <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 space-y-8">
+        {journal.bannedAt && (
+          <div className="rounded-lg border border-red-500/40 bg-red-950/40 px-5 py-4">
+            <p className="font-heading text-red-300">
+              This work has been banned and removed from view.
+            </p>
+            <p className="text-sm text-red-200/80 mt-1">
+              Reason: {banReasonLabel(journal.banReason)}. It no longer appears
+              in the store, search, or shared links — only you can open this
+              page. If you believe this is a mistake, contact support.
+            </p>
+          </div>
+        )}
         <div className="grid gap-6 md:grid-cols-[14rem_1fr] items-start">
           <WorkCover work={work} className="max-w-56" />
           <div className="space-y-3">

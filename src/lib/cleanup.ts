@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { notifications, session, shareLinks, verification } from "@/db/schema";
 import { and, eq, isNotNull, lt } from "drizzle-orm";
+import { sweepExpiredIpBans } from "@/lib/bans";
 
 /** Read notifications older than this are considered dead weight. */
 const NOTIFICATION_RETENTION_DAYS = 30;
@@ -42,6 +43,7 @@ export async function runCleanupSweep(): Promise<void> {
           and(isNotNull(shareLinks.expiresAt), lt(shareLinks.expiresAt, now))
         ),
     ],
+    ["ip bans", sweepExpiredIpBans()],
   ];
 
   for (const [what, job] of jobs) {

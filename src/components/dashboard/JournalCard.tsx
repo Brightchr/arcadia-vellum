@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Journal } from "@/lib/journals";
 import { THEMES } from "@/lib/themes";
+import { banReasonLabel } from "@/lib/ban-reasons";
 import { BookOpenIcon, HeadphonesIcon, PenIcon } from "@/components/icons";
 import { volumeLabel } from "@/lib/volume";
 
@@ -13,7 +14,7 @@ function Chip({
   title,
   children,
 }: {
-  tone?: "arcane" | "ember" | "dim";
+  tone?: "arcane" | "ember" | "dim" | "red";
   title?: string;
   children: React.ReactNode;
 }) {
@@ -21,6 +22,7 @@ function Chip({
     arcane: "bg-arcane/15 text-arcane-bright",
     ember: "bg-ember/15 text-ember",
     dim: "bg-overlay text-ink-dim",
+    red: "bg-red-500/15 text-red-400",
   };
   return (
     <span
@@ -206,6 +208,14 @@ export function JournalCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
+        {journal.bannedAt && (
+          <Chip
+            tone="red"
+            title={`Removed from view — ${banReasonLabel(journal.banReason)}`}
+          >
+            banned
+          </Chip>
+        )}
         {journal.volumeNumber !== null && (
           <Chip tone="arcane">Vol. {volumeLabel(journal)}</Chip>
         )}

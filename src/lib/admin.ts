@@ -17,6 +17,7 @@ import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
 import { notifyMany } from "@/lib/notifications";
 import { listFollowers, listFollowing, listFriends } from "@/lib/social";
+import { revokeAllSessions } from "@/lib/bans";
 
 /** True when this user id holds the admin role. */
 export async function isAdmin(userId: string): Promise<boolean> {
@@ -130,19 +131,33 @@ export async function listActionsForUser(
 
 /**
  * Ban or unban a user. Banning hides their works, reviews, and profile
- * platform-wide (enforced in the access/discovery layers) and notifies
- * everyone who had saved one of their works.
+ * platform-wide (enforced in the access/discovery layers), refuses their
+ * next sign-in with the given reason, signs them out everywhere, and
+ * notifies everyone who had saved one of their works. A `days` duration
+ * makes it a suspension that auto-expires.
  */
-export async function setUserBanned(targetId: string, banned: boolean) {
+export async function setUserBanned(
+  targetId: string,
+  banned: boolean,
+  opts?: { reason?: string | null; days?: number | null }
+) {
+  const bannedUntil =
+    banned && opts?.days
+      ? new Date(Date.now() + opts.days * 24 * 60 * 60 * 1000)
+      : null;
   await db
     .update(user)
     .set({
       banned,
       bannedAt: banned ? new Date() : null,
+      bannedUntil,
+      banReason: banned ? (opts?.reason ?? null) : null,
       updatedAt: new Date(),
     })
     .where(eq(user.id, targetId));
   if (!banned) return;
+  // Kill their live sessions — the ban lands within the cookie-cache window.
+  await revokeAllSessions(targetId);
 
   // Everyone who shelved one of the banned user's works gets a heads-up.
   const [ownJournals, ownSeries] = await Promise.all([
@@ -178,6 +193,25 @@ export async function setUserBanned(targetId: string, banned: boolean) {
     "user_banned",
     { actorId: targetId }
   );
+}
+
+/**
+ * Take a work down or restore it. A taken-down work vanishes from the
+ * store, search, series pages, and share links; the owner still sees it on
+ * their own shelves, marked banned with the reason.
+ */
+export async function setWorkBanned(
+  journalId: string,
+  banned: boolean,
+  reason?: string | null
+) {
+  await db
+    .update(journals)
+    .set({
+      bannedAt: banned ? new Date() : null,
+      banReason: banned ? (reason ?? null) : null,
+    })
+    .where(eq(journals.id, journalId));
 }
 
 // ---------------------------------------------------------------------------

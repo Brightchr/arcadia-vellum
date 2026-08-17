@@ -8,7 +8,7 @@ import {
   savedItems,
   user,
 } from "@/db/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { Journal } from "@/lib/journals";
 import { reviewSummary, type SentimentTone } from "@/lib/sentiment";
 
@@ -135,7 +135,9 @@ export async function listPublicWorks(filter: {
     .where(
       and(
         inArray(journals.visibility, ["public", "restricted"]),
-        eq(journals.listed, true)
+        eq(journals.listed, true),
+        // Taken-down works never surface in the store.
+        isNull(journals.bannedAt)
       )
     );
   if (publicJournals.length === 0) return [];
@@ -347,7 +349,8 @@ export async function isWorkPublic(
       .where(
         and(
           eq(journals.id, itemId),
-          inArray(journals.visibility, ["public", "restricted"])
+          inArray(journals.visibility, ["public", "restricted"]),
+          isNull(journals.bannedAt)
         )
       );
     return { ok: rows.length > 0, ownerId: rows[0]?.ownerId ?? null };
@@ -407,7 +410,8 @@ export async function seriesVolumes(seriesId: string, isOwner: boolean) {
         ? eq(journals.seriesId, seriesId)
         : and(
             eq(journals.seriesId, seriesId),
-            inArray(journals.visibility, ["public", "restricted"])
+            inArray(journals.visibility, ["public", "restricted"]),
+            isNull(journals.bannedAt)
           )
     );
   return rows;

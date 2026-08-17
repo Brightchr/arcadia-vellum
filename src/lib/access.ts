@@ -12,6 +12,15 @@ import type { Journal } from "@/lib/journals";
 
 export type GrantStatus = "none" | "pending" | "granted";
 
+/** Local admin check — lib/admin.ts pulls in far more than a role lookup. */
+async function isAdminUser(userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, userId));
+  return rows[0]?.role === "admin";
+}
+
 /** The viewer's grant on a specific work (journal or series level). */
 export async function grantStatus(
   userId: string,
@@ -40,6 +49,10 @@ export async function canAccessJournal(
   journal: Journal
 ): Promise<boolean> {
   if (viewerId === journal.ownerId) return true;
+  // Admins open anything — they have to be able to review reported content.
+  if (viewerId && (await isAdminUser(viewerId))) return true;
+  // A taken-down work is invisible to everyone but its owner (and admins).
+  if (journal.bannedAt) return false;
   // A banned owner's works are hidden from everyone but the owner.
   if (await isUserBanned(journal.ownerId)) return false;
   // Unlisted works need a share link — only listed public works are open.
@@ -90,6 +103,7 @@ export async function accessibleJournalIds(
       ok.add(j.id);
       continue;
     }
+    if (j.bannedAt) continue;
     if (banned.has(j.ownerId)) continue;
     if (j.visibility === "public" && j.listed) {
       ok.add(j.id);
