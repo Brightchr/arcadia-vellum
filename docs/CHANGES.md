@@ -3,6 +3,48 @@
 Working doc from the August 2026 scalability/security audit. Temporary — delete
 once the items land as real issues/commits.
 
+## Landed on dev — 2026-08-17
+
+Security items 1–6 below are DONE (plus the "smaller fixes" indexes), along
+with a moderation suite that grew out of them:
+
+- **Origin lock** (`ORIGIN_SECRET` + `X-Origin-Auth` check in `src/proxy.ts`).
+  Needs two manual steps to activate: set the env var on Railway and add the
+  matching Cloudflare Transform Rule.
+- **Auth hardening**: `trustedOrigins`, 5-min session cookie cache,
+  `minPasswordLength: 12`, and env-gated Cloudflare Turnstile on
+  sign-in/sign-up (set `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  to activate; inert until both are present).
+- **Rate limits** on friends/follow/message-polling/social/uploads.
+- **Upload hardening**: Content-Length prechecks before buffering, file-count
+  + 200 MB request cap on audio, magic-byte sniffing everywhere (stored
+  content types no longer trust the client), SSRF guards + 50-image cap in
+  `localizeImages`.
+- **Pool bounds + advisory-locked boot migrations** (failed migrations now
+  crash the boot instead of serving a wrong schema).
+- **Daily cleanup sweep**: expired sessions/verifications, 30-day-old read
+  notifications, expired share links, expired IP bans.
+- **Indexes**: `push_subscriptions(user_id)`,
+  `notifications(user_id, created_at desc)`, `user_reports(user_id, status)`.
+- **Moderation suite**:
+  - Tiered account bans (24h/7d/30d/permanent) with built-in reasons
+    (`src/lib/ban-reasons.ts`) shown at sign-in; sessions revoked on ban;
+    suspensions auto-expire.
+  - IP bans (optional checkbox on the ban dialog) built from the account's
+    known session IPs; sign-in/sign-up refused from banned networks; lifted
+    on unban; auth sessions now record the Cloudflare client IP.
+  - Work takedowns: ban a tome/audiobook from the store with a reason — the
+    owner still sees it (marked banned, with the reason) on their shelves
+    and book page; everyone else 404s, media URLs included.
+  - Admin media review: the user inspection page now shows profile images
+    (avatars/banners/textures), playable audio, read/listen links into any
+    work (admins bypass access checks for review), known sign-in IPs, and
+    per-work ban/restore controls.
+
+Still open: the admin dashboard observability tiles (section below), email
+verification (needs a mail provider), image resizing, and the perf batch
+(markChannelRead skip, listNotifications N+1, mention fanout).
+
 ## Already resolved (verified 2026-08-13)
 
 - **Media backfill to bucket: done.** `migrate-media-to-bucket.mjs --dry-run`
