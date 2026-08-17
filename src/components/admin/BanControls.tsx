@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BanDialog } from "./BanDialog";
 
 /** Ban/unban button for the admin inspection page. */
 export function BanControls({
@@ -17,15 +18,13 @@ export function BanControls({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function act() {
-    const next = !banned;
+  async function unban() {
     if (
       !window.confirm(
-        next
-          ? `Ban ${name}${username ? ` (@${username})` : ""}? Their works, reviews, and profile will be hidden, and everyone who saved their work will be notified.`
-          : `Unban ${name}? Their works, reviews, and profile become visible again.`
+        `Unban ${name}? Their works, reviews, and profile become visible again, and any IP bans tied to the account are lifted.`
       )
     ) {
       return;
@@ -36,7 +35,7 @@ export function BanControls({
       const res = await fetch("/api/admin/ban", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, banned: next }),
+        body: JSON.stringify({ userId, banned: false }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) setError(body?.error ?? "That didn't work.");
@@ -56,7 +55,7 @@ export function BanControls({
             : "btn-ghost !border-red-500/40 hover:!border-red-400 text-red-400"
         }
         disabled={busy}
-        onClick={() => void act()}
+        onClick={() => (banned ? void unban() : setDialogOpen(true))}
       >
         {busy ? "..." : banned ? "Unban" : "Ban"}
       </button>
@@ -64,6 +63,13 @@ export function BanControls({
         <p className="text-xs text-red-400 mt-1" role="alert">
           {error}
         </p>
+      )}
+      {dialogOpen && (
+        <BanDialog
+          user={{ id: userId, name, username }}
+          onClose={() => setDialogOpen(false)}
+          onBanned={() => router.refresh()}
+        />
       )}
     </div>
   );

@@ -22,7 +22,8 @@ export async function GET(
 
   const journal = await getJournalById(track.journalId);
   if (!journal) return jsonError("Not found", 404);
-  const openToAll = journal.visibility === "public" && journal.listed;
+  const openToAll =
+    journal.visibility === "public" && journal.listed && !journal.bannedAt;
   if (!openToAll || (await isUserBanned(journal.ownerId))) {
     const session = await sessionFromRequest(request);
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {

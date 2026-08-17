@@ -10,6 +10,7 @@ import {
   playlists,
   playlistItems,
   follows,
+  profileImages,
   readingActivity,
   adminActions,
 } from "@/db/schema";
@@ -17,7 +18,11 @@ import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { newId } from "@/lib/id";
 import { notifyMany } from "@/lib/notifications";
 import { listFollowers, listFollowing, listFriends } from "@/lib/social";
-import { revokeAllSessions } from "@/lib/bans";
+import {
+  revokeAllSessions,
+  knownIpsForUser,
+  listIpBansForUser,
+} from "@/lib/bans";
 
 /** True when this user id holds the admin role. */
 export async function isAdmin(userId: string): Promise<boolean> {
@@ -238,6 +243,7 @@ export async function adminUserDetail(targetId: string) {
     audio,
     ownPlaylists,
     ownReviews,
+    uploadedProfileImages,
     followers,
     following,
     friends,
@@ -245,6 +251,8 @@ export async function adminUserDetail(targetId: string) {
     reading,
     followedUsers,
     moderation,
+    knownIps,
+    ipBanList,
   ] = await Promise.all([
     db
       .select({
@@ -257,6 +265,8 @@ export async function adminUserDetail(targetId: string) {
         coverImageId: journals.coverImageId,
         seriesId: journals.seriesId,
         createdAt: journals.createdAt,
+        bannedAt: journals.bannedAt,
+        banReason: journals.banReason,
       })
       .from(journals)
       .where(eq(journals.ownerId, targetId))
@@ -300,6 +310,16 @@ export async function adminUserDetail(targetId: string) {
       .where(eq(reviews.userId, targetId))
       .orderBy(desc(reviews.updatedAt))
       .limit(100),
+    db
+      .select({
+        id: profileImages.id,
+        contentType: profileImages.contentType,
+        createdAt: profileImages.createdAt,
+      })
+      .from(profileImages)
+      .where(eq(profileImages.userId, targetId))
+      .orderBy(desc(profileImages.createdAt))
+      .limit(60),
     listFollowers(targetId),
     listFollowing(targetId),
     listFriends(targetId),
@@ -322,6 +342,8 @@ export async function adminUserDetail(targetId: string) {
       .orderBy(desc(follows.createdAt))
       .limit(50),
     listActionsForUser(targetId),
+    knownIpsForUser(targetId),
+    listIpBansForUser(targetId),
   ]);
 
   // Resolve titles referenced by reviews/saves/reading for the timeline.
@@ -433,6 +455,9 @@ export async function adminUserDetail(targetId: string) {
       ...p,
       count: playlistCounts.get(p.id) ?? 0,
     })),
+    profileImages: uploadedProfileImages,
+    knownIps,
+    ipBans: ipBanList,
     reviews: ownReviews.map((r) => ({
       ...r,
       itemTitle: refTitle(r.kind, r.itemId) ?? null,

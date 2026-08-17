@@ -8,6 +8,8 @@ import { AppShell } from "@/components/nav/AppShell";
 import { Avatar } from "@/components/nav/Avatar";
 import { Stars } from "@/components/discover/StarRating";
 import { BanControls } from "@/components/admin/BanControls";
+import { WorkBanButton } from "@/components/admin/WorkBanButton";
+import { banReasonLabel } from "@/lib/ban-reasons";
 import type { RelatedUser } from "@/lib/social";
 
 export const metadata: Metadata = {
@@ -127,7 +129,15 @@ export default async function AdminUserPage({
                 {profile.username ? `@${profile.username} · ` : ""}
                 {profile.email} · joined {ts(profile.createdAt)}
                 {profile.bannedAt ? ` · banned ${ts(profile.bannedAt)}` : ""}
+                {profile.banned && profile.bannedUntil
+                  ? ` · until ${ts(profile.bannedUntil)}`
+                  : ""}
               </p>
+              {profile.banned && (
+                <p className="text-sm text-red-400/90 mt-0.5">
+                  Reason: {banReasonLabel(profile.banReason)}
+                </p>
+              )}
             </div>
             {profile.role !== "admin" && (
               <BanControls
@@ -212,6 +222,8 @@ export default async function AdminUserPage({
                       <th className="pr-4 py-2">Type</th>
                       <th className="pr-4 py-2">Visibility</th>
                       <th className="pr-4 py-2">Created</th>
+                      <th className="pr-4 py-2">Review</th>
+                      <th className="py-2 text-right">Moderation</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -227,6 +239,14 @@ export default async function AdminUserPage({
                           >
                             {w.title}
                           </Link>
+                          {w.bannedAt && (
+                            <span
+                              className="ml-2 inline-flex items-center rounded-full bg-red-500/15 border border-red-500/40 px-1.5 py-0.5 text-[9px] font-heading uppercase tracking-widest text-red-400"
+                              title={`${banReasonLabel(w.banReason)} — ${ts(w.bannedAt)}`}
+                            >
+                              Banned
+                            </span>
+                          )}
                         </td>
                         <td className="pr-4 py-2 text-ink-dim">
                           {w.sourceType === "audio" ? "audiobook" : w.sourceType}
@@ -237,6 +257,25 @@ export default async function AdminUserPage({
                         </td>
                         <td className="pr-4 py-2 text-ink-dim whitespace-nowrap">
                           {ts(w.createdAt)}
+                        </td>
+                        <td className="pr-4 py-2 whitespace-nowrap">
+                          <Link
+                            href={
+                              w.sourceType === "audio"
+                                ? `/j/${w.slug}/listen`
+                                : `/j/${w.slug}`
+                            }
+                            className="text-xs text-arcane-bright hover:underline"
+                          >
+                            {w.sourceType === "audio" ? "Listen" : "Read"}
+                          </Link>
+                        </td>
+                        <td className="py-2 text-right whitespace-nowrap">
+                          <WorkBanButton
+                            journalId={w.id}
+                            title={w.title}
+                            banned={Boolean(w.bannedAt)}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -275,29 +314,113 @@ export default async function AdminUserPage({
             )
           )}
 
-          {/* Audio files */}
+          {/* Profile images: avatars, banners, theme textures */}
+          {section(
+            `Profile Images (${detail.profileImages.length})`,
+            detail.profileImages.length === 0 ? (
+              <p className="text-sm text-ink-dim italic">
+                No uploaded avatars, banners, or textures.
+              </p>
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2">
+                {detail.profileImages.map((img) => (
+                  <a
+                    key={img.id}
+                    href={`/api/avatars/${img.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={`${img.contentType} — ${ts(img.createdAt)}`}
+                    className="block"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/api/avatars/${img.id}`}
+                      alt=""
+                      loading="lazy"
+                      className="aspect-square w-full object-cover rounded-md border border-edge hover:border-arcane/60 transition-colors"
+                    />
+                  </a>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* Audio files — playable so reported narration can be reviewed */}
           {section(
             `Audio Files (${detail.audio.length})`,
             detail.audio.length === 0 ? (
               <p className="text-sm text-ink-dim italic">No audio.</p>
             ) : (
-              <ul className="space-y-1 max-h-80 overflow-y-auto pr-2 text-sm">
+              <ul className="space-y-2 max-h-96 overflow-y-auto pr-2 text-sm">
                 {detail.audio.map((a) => (
                   <li
                     key={a.id}
-                    className="flex items-baseline gap-3 border-b border-void-border/40 last:border-0 pb-1"
+                    className="flex flex-wrap items-center gap-3 border-b border-void-border/40 last:border-0 pb-2"
                   >
                     <span className="min-w-0 flex-1 truncate">
                       {a.title}
                       <span className="text-ink-dim"> — {a.journalTitle}</span>
+                      <span className="block text-xs text-ink-dim">
+                        {fmtBytes(a.bytes)} · {ts(a.createdAt)}
+                      </span>
                     </span>
-                    <span className="text-xs text-ink-dim whitespace-nowrap">
-                      {fmtBytes(a.bytes)} · {ts(a.createdAt)}
-                    </span>
+                    <audio
+                      controls
+                      preload="none"
+                      src={`/api/audio/${a.id}`}
+                      className="h-9 max-w-72"
+                    />
                   </li>
                 ))}
               </ul>
             )
+          )}
+
+          {/* Network: known sign-in addresses and active IP bans */}
+          {section(
+            "Network",
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-xs font-heading uppercase tracking-wider text-ink-dim mb-1">
+                  Known sign-in IPs (latest first)
+                </p>
+                {detail.knownIps.length === 0 ? (
+                  <p className="text-ink-dim italic">No recorded addresses.</p>
+                ) : (
+                  <p className="font-mono text-xs break-all">
+                    {detail.knownIps.join(" · ")}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-heading uppercase tracking-wider text-ink-dim mb-1">
+                  Active IP bans tied to this account
+                </p>
+                {detail.ipBans.length === 0 ? (
+                  <p className="text-ink-dim italic">None.</p>
+                ) : (
+                  <ul className="space-y-0.5">
+                    {detail.ipBans.map((b) => (
+                      <li key={b.ip} className="font-mono text-xs">
+                        {b.ip}
+                        <span className="font-sans text-ink-dim">
+                          {" "}
+                          — {banReasonLabel(b.reason)} · added {ts(b.createdAt)}
+                          {b.expiresAt
+                            ? ` · expires ${ts(b.expiresAt)}`
+                            : " · permanent"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <p className="text-xs text-ink-dim">
+                IP bans are created from the ban dialog (&quot;also ban their
+                known IP addresses&quot;) and lifted automatically when the
+                account is unbanned.
+              </p>
+            </div>
           )}
 
           {/* Reviews they wrote */}
@@ -381,7 +504,9 @@ export default async function AdminUserPage({
                     <span>
                       <span
                         className={
-                          m.action === "ban" ? "text-red-400" : "text-emerald-400"
+                          m.action.startsWith("ban")
+                            ? "text-red-400"
+                            : "text-emerald-400"
                         }
                       >
                         {m.action}

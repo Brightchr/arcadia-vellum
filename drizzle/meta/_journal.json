@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "7",
   "dialect": "postgresql",
   "entries": [
@@ -217,6 +217,13 @@
       "version": "7",
       "when": 1786993048220,
       "tag": "0030_security-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1786994625507,
+      "tag": "0031_moderation-bans",
       "breakpoints": true
     }
   ]

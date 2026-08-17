@@ -24,8 +24,9 @@ export async function GET(
   if (!journal) return jsonError("Not found", 404);
 
   // Cover images double as browse/teaser art, so anything discoverable can
-  // serve its images; friends/private works keep the full access check.
-  if (!isDiscoverable(journal.visibility)) {
+  // serve its images; friends/private works — and taken-down works — keep
+  // the full access check (owner and admins only for banned).
+  if (journal.bannedAt || !isDiscoverable(journal.visibility)) {
     const session = await sessionFromRequest(request);
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);

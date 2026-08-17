@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/nav/Avatar";
 import { SearchIcon } from "@/components/icons";
+import { BanDialog } from "./BanDialog";
 
 export interface AdminUser {
   id: string;
@@ -22,6 +23,7 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
   const [q, setQ] = useState("");
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -43,13 +45,21 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
     };
   }, [q]);
 
-  async function setBanned(u: AdminUser, banned: boolean) {
-    const verb = banned ? "Ban" : "Unban";
+  function markBanned(id: string, banned: boolean) {
+    setUsers((prev) =>
+      prev.map((x) =>
+        x.id === id
+          ? { ...x, banned, bannedAt: banned ? new Date().toISOString() : null }
+          : x
+      )
+    );
+  }
+
+  /** Unban keeps the simple confirm; banning opens the reason dialog. */
+  async function unban(u: AdminUser) {
     if (
       !window.confirm(
-        banned
-          ? `${verb} ${u.name}${u.username ? ` (@${u.username})` : ""}? Their works, reviews, and profile will be hidden, and everyone who saved their work will be notified.`
-          : `${verb} ${u.name}? Their works, reviews, and profile become visible again.`
+        `Unban ${u.name}? Their works, reviews, and profile become visible again, and any IP bans tied to the account are lifted.`
       )
     ) {
       return;
@@ -60,20 +70,14 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
       const res = await fetch("/api/admin/ban", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: u.id, banned }),
+        body: JSON.stringify({ userId: u.id, banned: false }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
         setError(body?.error ?? "That didn't work.");
         return;
       }
-      setUsers((prev) =>
-        prev.map((x) =>
-          x.id === u.id
-            ? { ...x, banned, bannedAt: banned ? new Date().toISOString() : null }
-            : x
-        )
-      );
+      markBanned(u.id, false);
     } finally {
       setBusyId(null);
     }
@@ -185,7 +189,7 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
                           type="button"
                           className="btn-ghost !px-3 !py-1 text-xs"
                           disabled={busyId !== null}
-                          onClick={() => void setBanned(u, false)}
+                          onClick={() => void unban(u)}
                         >
                           {busyId === u.id ? "..." : "Unban"}
                         </button>
@@ -194,9 +198,9 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
                           type="button"
                           className="btn-ghost !px-3 !py-1 text-xs !border-red-500/40 hover:!border-red-400 text-red-400"
                           disabled={busyId !== null}
-                          onClick={() => void setBanned(u, true)}
+                          onClick={() => setBanTarget(u)}
                         >
-                          {busyId === u.id ? "..." : "Ban"}
+                          Ban
                         </button>
                       ))}
                   </td>
@@ -206,6 +210,14 @@ export function AdminPanel({ initialUsers }: { initialUsers: AdminUser[] }) {
           </tbody>
         </table>
       </div>
+
+      {banTarget && (
+        <BanDialog
+          user={banTarget}
+          onClose={() => setBanTarget(null)}
+          onBanned={() => markBanned(banTarget.id, true)}
+        />
+      )}
     </div>
   );
 }
