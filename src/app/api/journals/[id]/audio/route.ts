@@ -1,6 +1,7 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
 import { addEntry, AUDIO_TYPES, MAX_AUDIO_BYTES, MAX_AUDIO_MB } from "@/lib/audio";
+import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -15,8 +16,18 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const limited = rateLimit(request, "audio-upload", {
+    limit: 10,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  const userLimited = rateLimitUser(session.user.id, "audio-upload", {
+    limit: 30,
+    windowMs: 60 * 60_000,
+  });
+  if (userLimited) return userLimited;
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);

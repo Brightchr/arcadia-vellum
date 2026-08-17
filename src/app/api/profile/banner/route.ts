@@ -3,6 +3,7 @@ import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { removeProfileImage, saveProfileImage } from "@/lib/media";
+import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -12,8 +13,19 @@ const ALLOWED = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
 /** Set the profile banner (owner). Multipart field: file */
 export async function POST(request: Request) {
+  // Shares the profile-image budget with avatar/texture uploads.
+  const limited = rateLimit(request, "profile-image", {
+    limit: 20,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  const userLimited = rateLimitUser(session.user.id, "profile-image", {
+    limit: 30,
+    windowMs: 60 * 60_000,
+  });
+  if (userLimited) return userLimited;
 
   const form = await request.formData();
   const file = form.get("file");

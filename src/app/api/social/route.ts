@@ -10,13 +10,26 @@ import {
   markAllRead,
   unreadCount,
 } from "@/lib/notifications";
+import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 /** Everything the social rail shows: friends, groups, social alerts. */
 export async function GET(request: Request) {
+  // The most expensive read in the app; polled every 60s per tab. Generous
+  // per-IP cap for shared NATs, tighter per-account budget below.
+  const limited = rateLimit(request, "social", {
+    limit: 120,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  const userLimited = rateLimitUser(session.user.id, "social", {
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (userLimited) return userLimited;
   const [friends, groups, alerts, unread] = await Promise.all([
     friendsWithPresence(session.user.id),
     listGroupsForUser(session.user.id),

@@ -39,8 +39,21 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string; channelId: string }> }
 ) {
+  // Coarse per-IP cap — generous because shared NATs poll legitimately;
+  // the real budget is per-account below.
+  const limited = rateLimit(request, "messages-read", {
+    limit: 300,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
   const g = await guard(request, params);
   if ("error" in g) return g.error;
+  // 5s polling needs 12/min per open channel; allow a handful of tabs.
+  const userLimited = rateLimitUser(g.session.user.id, "messages-read", {
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (userLimited) return userLimited;
   const after =
     new URL(request.url).searchParams.get("after") ?? undefined;
   const messages = await listMessages(g.channelId, { after });
