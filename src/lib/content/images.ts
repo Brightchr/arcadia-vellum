@@ -1,7 +1,10 @@
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import { db } from "@/db";
 import { journalImages, journals } from "@/db/schema";
 import { and, eq, ne } from "drizzle-orm";
 import { deleteObjects, saveJournalImage } from "@/lib/media";
+import { sniffImageType } from "@/lib/sniff";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -16,11 +19,19 @@ export async function storeImage(
   contentType: string,
   data: Buffer
 ): Promise<string | null> {
-  const normalized = contentType.split(";")[0].trim().toLowerCase();
-  if (!ALLOWED_IMAGE_TYPES.has(normalized) || data.length > MAX_IMAGE_BYTES) {
+  // The stored type comes from the bytes — `contentType` arrives from
+  // client-declared uploads, data: URIs, or remote servers, none of which
+  // we trust to describe what gets served back from /api/images.
+  void contentType;
+  const sniffed = sniffImageType(data);
+  if (
+    !sniffed ||
+    !ALLOWED_IMAGE_TYPES.has(sniffed) ||
+    data.length > MAX_IMAGE_BYTES
+  ) {
     return null;
   }
-  const id = await saveJournalImage(journalId, normalized, data);
+  const id = await saveJournalImage(journalId, sniffed, data);
   return `/api/images/${id}`;
 }
 
@@ -50,6 +61,9 @@ export async function deleteImagesForJournal(journalId: string) {
  * stores the bytes locally, and rewrites the src to /api/images/<id>.
  * Images that can't be fetched/stored are left for the sanitizer to strip.
  */
+// One document can't turn the server into a fetch cannon.
+const MAX_REMOTE_IMAGES_PER_DOC = 50;
+
 export async function localizeImages(
   html: string,
   journalId: string
@@ -59,6 +73,7 @@ export async function localizeImages(
   for (const match of html.matchAll(srcRegex)) {
     const src = match[2] ?? match[3];
     if (src && !src.startsWith("/api/images/")) sources.add(src);
+    if (sources.size >= MAX_REMOTE_IMAGES_PER_DOC) break;
   }
 
   const replacements = new Map<string, string>();
@@ -89,10 +104,74 @@ async function captureImage(
     if (!match) return null;
     return storeImage(journalId, match[1], Buffer.from(match[2], "base64"));
   }
-  if (!/^https:\/\//i.test(src)) return null;
-  const res = await fetch(src, { signal: AbortSignal.timeout(15_000) });
-  if (!res.ok) return null;
-  const contentType = res.headers.get("content-type") ?? "";
-  const data = Buffer.from(await res.arrayBuffer());
-  return storeImage(journalId, contentType, data);
+  const data = await fetchRemoteImage(src);
+  if (!data) return null;
+  return storeImage(journalId, "", data);
+}
+
+/**
+ * Fetches a remote image with SSRF guards: https only, no credentials or
+ * custom ports, the resolved address must be public, redirects are refused
+ * (a redirect could bounce the request somewhere the checks never saw), and
+ * the body is read through a hard size cap instead of trusting
+ * Content-Length.
+ */
+async function fetchRemoteImage(src: string): Promise<Buffer | null> {
+  let url: URL;
+  try {
+    url = new URL(src);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.port) {
+    return null;
+  }
+  try {
+    const { address } = await lookup(url.hostname);
+    if (isPrivateIp(address)) return null;
+  } catch {
+    return null;
+  }
+
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(15_000),
+    redirect: "error",
+  });
+  if (!res.ok || !res.body) return null;
+  const declared = Number(res.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) return null;
+
+  const reader = res.body.getReader();
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > MAX_IMAGE_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks);
+}
+
+/** Loopback, link-local, RFC-1918, CGNAT, and their IPv6 equivalents. */
+function isPrivateIp(ip: string): boolean {
+  const v4 = ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+  if (isIP(v4) === 4) {
+    const [a, b] = v4.split(".").map(Number);
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    return false;
+  }
+  const lower = ip.toLowerCase();
+  if (lower === "::" || lower === "::1") return true;
+  if (/^f[cd]/.test(lower)) return true; // fc00::/7 unique local
+  if (/^fe[89ab]/.test(lower)) return true; // fe80::/10 link local
+  return false;
 }

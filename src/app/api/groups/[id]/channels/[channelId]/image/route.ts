@@ -1,10 +1,11 @@
 import { db } from "@/db";
 import { groupChannels } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
 import { canModerate, getChannel, memberRole } from "@/lib/groups";
 import { removeProfileImage, saveProfileImage } from "@/lib/media";
 import { rateLimit } from "@/lib/rate-limit";
+import { sniffImageType } from "@/lib/sniff";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,8 @@ export async function POST(
     windowMs: 60_000,
   });
   if (limited) return limited;
+  const tooLarge = bodyTooLarge(request, MAX_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
   const { id, channelId } = await params;
   const g = await guard(request, id, channelId);
   if ("error" in g) return g.error;
@@ -39,17 +42,15 @@ export async function POST(
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) return jsonError("An image is required", 400);
-  const type = file.type.split(";")[0].trim().toLowerCase();
-  if (!ALLOWED.has(type) || file.size > MAX_BYTES) {
+  const data = Buffer.from(await file.arrayBuffer());
+  // Type comes from the bytes, not the client-declared file.type.
+  const type = sniffImageType(data);
+  if (!type || !ALLOWED.has(type) || data.length > MAX_BYTES) {
     return jsonError("Use a .png, .jpg, .gif, or .webp under 2 MB", 400);
   }
 
   await removeProfileImage(g.channel.imageId);
-  const imageId = await saveProfileImage(
-    g.session.user.id,
-    type,
-    Buffer.from(await file.arrayBuffer())
-  );
+  const imageId = await saveProfileImage(g.session.user.id, type, data);
   await db
     .update(groupChannels)
     .set({ imageId })

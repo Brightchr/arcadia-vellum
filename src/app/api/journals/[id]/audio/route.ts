@@ -1,9 +1,14 @@
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
 import { addEntry, AUDIO_TYPES, MAX_AUDIO_BYTES, MAX_AUDIO_MB } from "@/lib/audio";
 import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
+import { sniffAudioType } from "@/lib/sniff";
 
 export const runtime = "nodejs";
+
+// Whole-request ceiling: everything below it sits in memory at once.
+const MAX_FILES_PER_REQUEST = 10;
+const MAX_REQUEST_BYTES = 200 * 1024 * 1024;
 
 /**
  * Upload narration audio (owner). Multipart fields:
@@ -28,6 +33,8 @@ export async function POST(
     windowMs: 60 * 60_000,
   });
   if (userLimited) return userLimited;
+  const tooLarge = bodyTooLarge(request, MAX_REQUEST_BYTES);
+  if (tooLarge) return tooLarge;
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);
@@ -38,14 +45,19 @@ export async function POST(
   const form = await request.formData();
   const files = form.getAll("files").filter((f): f is File => f instanceof File);
   if (files.length === 0) return jsonError("No audio files provided", 400);
+  if (files.length > MAX_FILES_PER_REQUEST) {
+    return jsonError(
+      `Upload at most ${MAX_FILES_PER_REQUEST} files at a time`,
+      400
+    );
+  }
   const combine = String(form.get("combine") ?? "") === "true";
   const entryTitle = String(form.get("entryTitle") ?? "").trim();
 
   const prepared = [];
   for (const file of files) {
     const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-    const contentType = AUDIO_TYPES[ext];
-    if (!contentType) {
+    if (!AUDIO_TYPES[ext]) {
       return jsonError(
         `Unsupported audio type "${ext}". Use .mp3, .m4a, .ogg, or .wav.`,
         400
@@ -54,10 +66,20 @@ export async function POST(
     if (file.size > MAX_AUDIO_BYTES) {
       return jsonError(`"${file.name}" is over the ${MAX_AUDIO_MB} MB limit`, 400);
     }
+    const data = Buffer.from(await file.arrayBuffer());
+    // The stored type comes from the bytes, not the filename — it's served
+    // back verbatim from a public URL.
+    const contentType = sniffAudioType(data);
+    if (!contentType) {
+      return jsonError(
+        `"${file.name}" doesn't look like audio. Use .mp3, .m4a, .ogg, or .wav.`,
+        400
+      );
+    }
     prepared.push({
       title: file.name.replace(/\.[^.]+$/, "").slice(0, 120) || "Track",
       contentType,
-      data: Buffer.from(await file.arrayBuffer()),
+      data,
     });
   }
 

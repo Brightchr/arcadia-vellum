@@ -1,9 +1,10 @@
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
 import { removeProfileImage, saveProfileImage } from "@/lib/media";
 import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
+import { sniffImageType } from "@/lib/sniff";
 
 export const runtime = "nodejs";
 
@@ -26,12 +27,17 @@ export async function POST(request: Request) {
     windowMs: 60 * 60_000,
   });
   if (userLimited) return userLimited;
+  const tooLarge = bodyTooLarge(request, MAX_AVATAR_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
 
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) return jsonError("An image is required", 400);
-  const type = file.type.split(";")[0].trim().toLowerCase();
-  if (!ALLOWED.has(type) || file.size > MAX_AVATAR_BYTES) {
+  const data = Buffer.from(await file.arrayBuffer());
+  // Type comes from the bytes — the declared file.type is attacker-chosen
+  // and gets served back verbatim from a public URL.
+  const type = sniffImageType(data);
+  if (!type || !ALLOWED.has(type) || data.length > MAX_AVATAR_BYTES) {
     return jsonError("Use a .png, .jpg, .gif, or .webp under 2 MB", 400);
   }
 
@@ -41,11 +47,7 @@ export async function POST(request: Request) {
     .where(eq(user.id, session.user.id));
   await removeProfileImage(rows[0]?.avatarImageId ?? null);
 
-  const id = await saveProfileImage(
-    session.user.id,
-    type,
-    Buffer.from(await file.arrayBuffer())
-  );
+  const id = await saveProfileImage(session.user.id, type, data);
   await db
     .update(user)
     .set({ avatarImageId: id, updatedAt: new Date() })

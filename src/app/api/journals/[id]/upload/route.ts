@@ -1,4 +1,4 @@
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
 import { getOwnedJournal } from "@/lib/journals";
 import { ingestUpload } from "@/lib/content/ingest";
 import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
@@ -24,6 +24,8 @@ export async function POST(
     windowMs: 60 * 60_000,
   });
   if (userLimited) return userLimited;
+  const tooLarge = bodyTooLarge(request, MAX_UPLOAD_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);

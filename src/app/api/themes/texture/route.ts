@@ -1,6 +1,7 @@
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
 import { saveProfileImage } from "@/lib/media";
 import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
+import { sniffImageType } from "@/lib/sniff";
 
 export const runtime = "nodejs";
 
@@ -26,20 +27,20 @@ export async function POST(request: Request) {
     windowMs: 60 * 60_000,
   });
   if (userLimited) return userLimited;
+  const tooLarge = bodyTooLarge(request, MAX_TEXTURE_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
 
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) return jsonError("An image is required", 400);
 
-  const contentType = file.type.split(";")[0].trim().toLowerCase();
-  if (!ALLOWED.has(contentType) || file.size > MAX_TEXTURE_BYTES) {
+  const data = Buffer.from(await file.arrayBuffer());
+  // Type comes from the bytes, not the client-declared file.type.
+  const contentType = sniffImageType(data);
+  if (!contentType || !ALLOWED.has(contentType) || data.length > MAX_TEXTURE_BYTES) {
     return jsonError("Use a .png, .jpg, or .webp under 2 MB", 400);
   }
 
-  const id = await saveProfileImage(
-    session.user.id,
-    contentType,
-    Buffer.from(await file.arrayBuffer())
-  );
+  const id = await saveProfileImage(session.user.id, contentType, data);
   return Response.json({ id, url: `/api/avatars/${id}` });
 }
