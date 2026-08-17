@@ -33,12 +33,15 @@ function ts(d: Date): string {
 }
 
 function UserChips({ users, empty }: { users: RelatedUser[]; empty: string }) {
-  if (users.length === 0) {
+  // Defensive: a duplicated relationship row (e.g. a friendship stored in
+  // both directions) must not crash the page with duplicate React keys.
+  const unique = [...new Map(users.map((u) => [u.id, u])).values()];
+  if (unique.length === 0) {
     return <p className="text-sm text-ink-dim italic">{empty}</p>;
   }
   return (
     <ul className="flex flex-wrap gap-2">
-      {users.map((u) => (
+      {unique.map((u) => (
         <li key={u.id}>
           <Link
             href={u.username ? `/u/${u.username}` : "#"}

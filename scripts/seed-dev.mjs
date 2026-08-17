@@ -102,10 +102,16 @@ console.log(`users: ${PEOPLE.length} ensured (password: ${PASSWORD})`);
 // ---------------------------------------------------------------------------
 
 async function friendship(a, b, status, daysAgo) {
+  // A pair may already exist in the REVERSED direction (the unique
+  // constraint is directional) — inserting both makes friends render twice.
   await client.query(
     `INSERT INTO friendships (id, requester_id, addressee_id, status, created_at)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT DO NOTHING`,
+     SELECT $1, $2, $3, $4, $5
+     WHERE NOT EXISTS (
+       SELECT 1 FROM friendships
+       WHERE (requester_id = $2 AND addressee_id = $3)
+          OR (requester_id = $3 AND addressee_id = $2)
+     )`,
     [id(), a, b, status, days(daysAgo)]
   );
 }
