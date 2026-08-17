@@ -13,10 +13,23 @@ export async function register() {
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
-    await migrate(drizzle(pool), { migrationsFolder: "./drizzle" });
-    console.log("[migrate] database is up to date");
+    // Advisory lock so concurrently-booting replicas take turns instead of
+    // racing on the migrations table. Session-scoped: released on unlock or
+    // if this connection dies.
+    const client = await pool.connect();
+    try {
+      await client.query("SELECT pg_advisory_lock(727501)");
+      await migrate(drizzle(client), { migrationsFolder: "./drizzle" });
+      console.log("[migrate] database is up to date");
+    } finally {
+      await client.query("SELECT pg_advisory_unlock(727501)").catch(() => {});
+      client.release();
+    }
   } catch (error) {
+    // A failed migration means the schema and the code disagree — crash the
+    // boot loudly instead of serving against the wrong schema.
     console.error("[migrate] failed to apply migrations:", error);
+    throw error;
   } finally {
     await pool.end();
   }
