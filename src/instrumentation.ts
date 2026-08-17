@@ -1,11 +1,13 @@
 /**
  * Runs once when the server boots (Next.js instrumentation hook).
  * Applies pending database migrations so deploys are self-contained —
- * no custom start command required.
+ * no custom start command required — then starts the daily cleanup sweep.
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (!process.env.DATABASE_URL) return;
+
+  scheduleCleanup();
 
   const { drizzle } = await import("drizzle-orm/node-postgres");
   const { migrate } = await import("drizzle-orm/node-postgres/migrator");
@@ -33,4 +35,19 @@ export async function register() {
   } finally {
     await pool.end();
   }
+}
+
+/**
+ * Daily sweep of rows nothing reads anymore (expired sessions/verifications,
+ * old read notifications, expired share links). First run a few minutes
+ * after boot so it never competes with deploy warm-up. unref() keeps the
+ * timers from holding the process open on shutdown.
+ */
+function scheduleCleanup() {
+  const run = async () => {
+    const { runCleanupSweep } = await import("@/lib/cleanup");
+    await runCleanupSweep().catch(() => {});
+  };
+  setTimeout(run, 5 * 60_000).unref();
+  setInterval(run, 24 * 60 * 60_000).unref();
 }
