@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { TurnstileWidget } from "./TurnstileWidget";
+
+// Inlined at build time; empty string disables the challenge entirely.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 export function AuthForm({
   mode,
@@ -20,6 +24,9 @@ export function AuthForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // Bumped after a failed submit to remount the widget — tokens are single-use.
+  const [captchaNonce, setCaptchaNonce] = useState(0);
 
   async function checkUsername(value: string) {
     if (!value) return;
@@ -47,13 +54,21 @@ export function AuthForm({
         return;
       }
     }
+    const fetchOptions = captchaToken
+      ? { headers: { "x-captcha-response": captchaToken } }
+      : undefined;
     const result =
       mode === "signup"
-        ? await authClient.signUp.email({ name, email, password })
-        : await authClient.signIn.email({ email, password });
+        ? await authClient.signUp.email({ name, email, password }, fetchOptions)
+        : await authClient.signIn.email({ email, password }, fetchOptions);
     if (result.error) {
       setBusy(false);
       setError(result.error.message ?? "Something went wrong.");
+      if (TURNSTILE_SITE_KEY) {
+        // The token was consumed by the failed attempt; ask for a fresh one.
+        setCaptchaToken(null);
+        setCaptchaNonce((n) => n + 1);
+      }
       return;
     }
     if (mode === "signup") {
@@ -167,10 +182,18 @@ export function AuthForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={8}
+            minLength={mode === "signup" ? 12 : 8}
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
           />
         </div>
+
+        {TURNSTILE_SITE_KEY && (
+          <TurnstileWidget
+            key={captchaNonce}
+            siteKey={TURNSTILE_SITE_KEY}
+            onToken={setCaptchaToken}
+          />
+        )}
 
         {error && (
           <p className="text-red-400 text-sm" role="alert">
@@ -178,7 +201,11 @@ export function AuthForm({
           </p>
         )}
 
-        <button type="submit" className="btn-arcane w-full" disabled={busy}>
+        <button
+          type="submit"
+          className="btn-arcane w-full"
+          disabled={busy || (Boolean(TURNSTILE_SITE_KEY) && !captchaToken)}
+        >
           {busy
             ? "Working..."
             : mode === "signup"

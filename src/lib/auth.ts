@@ -1,17 +1,42 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { captcha } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
+
+// Turnstile guards email sign-in/sign-up when BOTH keys are set (the widget
+// needs the public key, verification needs the secret). With either missing,
+// auth works without a challenge — so a half-configured deploy can't lock
+// everyone out.
+const turnstileSecret = process.env.TURNSTILE_SECRET_KEY ?? "";
+const turnstileEnabled = Boolean(
+  turnstileSecret && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+);
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
   }),
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL ?? "",
+    "https://vellum-books.org",
+  ].filter(Boolean),
   emailAndPassword: {
     enabled: true,
+    // Applies to new passwords only; existing shorter ones still sign in.
+    minPasswordLength: 12,
+  },
+  session: {
+    // Session reads come from a signed cookie for up to 5 minutes instead of
+    // hitting the DB on every request (page renders + all the polling).
+    // Revocations and bans take up to that long to bite on cached requests.
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,
+    },
   },
   user: {
     additionalFields: {
@@ -55,7 +80,18 @@ export const auth = betterAuth({
       prompt: "select_account consent",
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    ...(turnstileEnabled
+      ? [
+          captcha({
+            provider: "cloudflare-turnstile",
+            secretKey: turnstileSecret,
+          }),
+        ]
+      : []),
+    // Keep last — it must wrap the other plugins' cookie handling.
+    nextCookies(),
+  ],
 });
 
 export async function getSession() {
