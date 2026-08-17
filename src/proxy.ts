@@ -1,13 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * App-level country block — a backstop behind Cloudflare's WAF rule. When
- * traffic arrives through Cloudflare, CF-IPCountry carries the visitor's
- * country; anything on the BLOCKED_COUNTRIES list (comma-separated ISO
- * codes, e.g. "CN,RU,KP,IR") is refused here too. Direct-to-Railway traffic
- * has no such header and passes — the edge rule remains the primary gate.
- * With the env var unset, this middleware is a no-op.
+ * Edge gate, two checks — both no-ops until their env var is set:
+ *
+ * 1. Origin lock. ORIGIN_SECRET must match the X-Origin-Auth header, which a
+ *    Cloudflare Transform Rule stamps onto every proxied request. Requests
+ *    that reach Railway directly carry no such header and are refused —
+ *    without this, a direct request can spoof CF-Connecting-IP and get a
+ *    fresh rate-limit bucket per request, and skip the country block.
+ *
+ * 2. Country block — a backstop behind Cloudflare's WAF rule. When traffic
+ *    arrives through Cloudflare, CF-IPCountry carries the visitor's country;
+ *    anything on the BLOCKED_COUNTRIES list (comma-separated ISO codes,
+ *    e.g. "CN,RU,KP,IR") is refused here too.
  */
+
+const originSecret = process.env.ORIGIN_SECRET ?? "";
 
 const blocked = new Set(
   (process.env.BLOCKED_COUNTRIES ?? "")
@@ -17,6 +25,12 @@ const blocked = new Set(
 );
 
 export function proxy(request: NextRequest) {
+  if (originSecret && request.headers.get("x-origin-auth") !== originSecret) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
   if (blocked.size === 0) return NextResponse.next();
   const country = request.headers.get("cf-ipcountry")?.toUpperCase();
   if (country && blocked.has(country)) {
