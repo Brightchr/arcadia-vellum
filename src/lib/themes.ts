@@ -1,6 +1,7 @@
 export type ThemeId =
   | "midnight"
   | "daylight"
+  | "darkstar"
   | "witch-grimoire"
   | "ancient-tome"
   | "elven-chronicle"
@@ -27,6 +28,13 @@ export const THEMES: ThemeDef[] = [
     name: "Daylight (Light)",
     description: "A bright, minimal light dashboard for daytime reading.",
     kind: "standard",
+  },
+  {
+    id: "darkstar",
+    name: "Darkstar",
+    description:
+      "Void-black binding lit by a violet-and-teal nebula — starlight ink on night pages.",
+    kind: "fantasy",
   },
   {
     id: "witch-grimoire",

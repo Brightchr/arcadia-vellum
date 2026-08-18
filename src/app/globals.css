@@ -217,7 +217,8 @@ body {
 --------------------------------------------------------------------------- */
 
 .app-theme-midnight,
-.app-theme-daylight {
+.app-theme-daylight,
+.app-theme-darkstar {
   font-family:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -251,6 +252,36 @@ body {
 .app-theme-midnight.arcane-bg {
   background-color: var(--void);
   background-image: none;
+}
+
+.app-theme-darkstar {
+  /* The landing page's nebula, as app chrome: violet accent, teal highlight,
+     near-black blue ground with a faint blue cast on every edge. */
+  --void: #05060c;
+  --void-raised: #0b0d18;
+  --void-border: #1d2338;
+  --ink: #e2e6f5;
+  --ink-dim: #8b91ab;
+  --arcane: #7c5cff;
+  --arcane-bright: #9d85ff;
+  --ember: #f7b84b;
+  --overlay: rgba(150, 160, 255, 0.05);
+  --overlay-strong: rgba(150, 160, 255, 0.1);
+  --edge: rgba(150, 160, 255, 0.12);
+  --sidenav-bg: #070912;
+  --topbar-bg: color-mix(in srgb, #0b0d18 92%, transparent);
+  --menu-bg: #0e1120;
+  --input-bg: #0d1020;
+  --btn-ink: #ffffff;
+  --panel-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+.app-theme-darkstar.arcane-bg {
+  background-color: var(--void);
+  background-image:
+    radial-gradient(42rem 26rem at 12% -4%, rgba(124, 92, 255, 0.14), transparent 70%),
+    radial-gradient(38rem 24rem at 88% -6%, rgba(10, 179, 156, 0.1), transparent 70%);
+  background-attachment: fixed;
 }
 
 .app-theme-daylight {

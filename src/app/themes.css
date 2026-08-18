@@ -232,6 +232,56 @@
   --tome-ornament: "✷";
 }
 
+/* ---------------------------------------------------------------------------
+   Theme: Darkstar — void-black binding lit by a violet-and-teal nebula;
+   starlight ink on night pages  (#05060c / #7c5cff / #0ab39c / #cfd6ea)
+--------------------------------------------------------------------------- */
+.theme-darkstar {
+  --tome-page-bg-color: #0d101d;
+  --tome-page-bg:
+    var(--tome-noise),
+    radial-gradient(circle at 14% 18%, rgba(157, 133, 255, 0.1) 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 78% 9%, rgba(214, 222, 255, 0.12) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 88% 68%, rgba(61, 196, 176, 0.09) 0 1.3px, transparent 2px),
+    radial-gradient(circle at 30% 84%, rgba(214, 222, 255, 0.08) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 56% 38%, rgba(157, 133, 255, 0.07) 0 1px, transparent 1.6px),
+    radial-gradient(ellipse at 68% 22%, rgba(124, 92, 255, 0.14), transparent 58%),
+    radial-gradient(ellipse at 22% 78%, rgba(10, 179, 156, 0.1), transparent 55%),
+    linear-gradient(160deg, #11152a 0%, #0c101f 55%, #080a14 100%);
+  --tome-ink: #cfd6ea;
+  --tome-accent: #9d85ff;
+  --tome-accent-2: #3dc4b0;
+  --tome-heading-font: var(--font-cinzel), serif;
+  --tome-body-font: var(--font-garamond), serif;
+  --tome-body-size: 1.05rem;
+  --tome-body-line: 1.6;
+  --tome-cover-bg:
+    var(--tome-noise),
+    radial-gradient(circle at 24% 20%, rgba(214, 222, 255, 0.16) 0 1.6px, transparent 2.4px),
+    radial-gradient(circle at 62% 74%, rgba(214, 222, 255, 0.12) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 82% 34%, rgba(214, 222, 255, 0.1) 0 1px, transparent 1.8px),
+    radial-gradient(ellipse at 34% 28%, rgba(124, 92, 255, 0.34), transparent 58%),
+    radial-gradient(ellipse at 72% 78%, rgba(10, 179, 156, 0.24), transparent 55%),
+    linear-gradient(150deg, #12132b 0%, #0a0b1c 55%, #05060c 100%);
+  --tome-cover-ink: #b9a8ff;
+  --tome-cover-border: rgba(124, 92, 255, 0.55);
+  --tome-cover-font: var(--font-cinzel), serif;
+  --tome-img-filter: saturate(0.9) brightness(0.95);
+  --tome-vignette: rgba(3, 4, 10, 0.55);
+  --tome-ornament: "✦";
+  --tome-cover-ornament: "✧ ✦ ✧";
+}
+
+.theme-darkstar .tome-page .tome-page-number::before {
+  content: "✦ ";
+  opacity: 0.6;
+}
+
+.theme-darkstar .tome-page .tome-page-number::after {
+  content: " ✦";
+  opacity: 0.6;
+}
+
 /* ===========================================================================
    Shared page & cover construction
    =========================================================================== */

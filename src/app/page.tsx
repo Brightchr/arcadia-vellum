@@ -128,9 +128,9 @@ export default async function LandingPage() {
                 <span className="ld-swatch s4" />
               </div>
             </div>
-            <h3>Seven Bindings</h3>
+            <h3>Eight Bindings</h3>
             <p>
-              From a witch&apos;s grimoire to a captain&apos;s log — hand-crafted
+              From a witch&apos;s grimoire to the Darkstar nebula — hand-crafted
               themes style your pages, covers, and player. Or build your own.
             </p>
           </div>
@@ -214,7 +214,7 @@ export default async function LandingPage() {
           <span className="ld-stat-l">to bind your first tome</span>
         </div>
         <div>
-          <span className="ld-stat-n">7</span>
+          <span className="ld-stat-n">8</span>
           <span className="ld-stat-l">hand-crafted bindings</span>
         </div>
         <div>
