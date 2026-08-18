@@ -133,7 +133,15 @@ const CATALOG_TTL_MS = 60_000;
 // Guardrail, newest-first — revisit with real pagination before the catalog
 // approaches this.
 const CATALOG_MAX_JOURNALS = 2000;
-let catalogCache: { at: number; works: Work[] } | null = null;
+// Stores the assembly PROMISE (single-flight): concurrent misses at the TTL
+// boundary share one assembly instead of stampeding the pool.
+let catalogCache: { at: number; works: Promise<Work[]> } | null = null;
+
+/** Drop the cached catalog now — takedowns and publishes call this so
+ * moderation is immediate in listings instead of waiting out the TTL. */
+export function invalidateCatalog() {
+  catalogCache = null;
+}
 
 async function assembleCatalog(): Promise<Work[]> {
   const publicJournals = await db
@@ -268,10 +276,15 @@ export async function listPublicWorks(filter: {
 } = {}): Promise<Work[]> {
   const now = Date.now();
   if (!catalogCache || now - catalogCache.at > CATALOG_TTL_MS) {
-    catalogCache = { at: now, works: await assembleCatalog() };
+    const works = assembleCatalog().catch((error) => {
+      // Never cache a failure.
+      catalogCache = null;
+      throw error;
+    });
+    catalogCache = { at: now, works };
   }
   // Copy before sorting — the cached array is shared across requests.
-  let result = [...catalogCache.works];
+  let result = [...(await catalogCache.works)];
   if (filter.type === "books") result = result.filter((w) => w.hasWritten);
   if (filter.type === "audiobooks") result = result.filter((w) => w.hasAudio);
   if (filter.tag) {

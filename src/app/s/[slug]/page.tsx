@@ -68,16 +68,19 @@ export default async function SeriesReaderPage({
     await recordActivity(session.user.id, "series", s.id, "read");
   }
 
+  // Fetch every volume's content concurrently — serial loads made long
+  // series pay one round-trip per volume before the page could render.
+  const contents = await Promise.all(written.map((v) => getJournalContent(v.id)));
   const parts: string[] = [];
-  for (const v of written) {
-    const content = await getJournalContent(v.id);
+  for (let i = 0; i < written.length; i++) {
+    const v = written[i];
     const label = volumeLabel(v);
     const prefix = label !== null ? `Volume ${label} — ` : "";
     parts.push(`<h1>${escapeHtml(`${prefix}${v.title}`)}</h1>`);
     if (v.subtitle) {
       parts.push(`<p><em>${escapeHtml(v.subtitle)}</em></p>`);
     }
-    if (content?.html) parts.push(content.html);
+    if (contents[i]?.html) parts.push(contents[i]!.html);
   }
 
   const theme = written[0].theme;

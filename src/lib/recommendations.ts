@@ -5,7 +5,7 @@ import {
   savedItems,
   userDislikes,
 } from "@/db/schema";
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { listPublicWorks, type Work } from "@/lib/discovery";
 import { listFollowing, listFriends, listFollowedSeriesIds } from "@/lib/social";
 
@@ -56,23 +56,33 @@ export async function tasteProfile(
   userId: string,
   pool: Work[]
 ): Promise<TasteProfile> {
+  // Recent signals only — history tables grow forever, and 200 recent
+  // interactions describe taste as well as a lifetime of them.
   const [saves, loved, panned, opened, disliked] = await Promise.all([
     db
       .select({ kind: savedItems.kind, itemId: savedItems.itemId })
       .from(savedItems)
-      .where(eq(savedItems.userId, userId)),
+      .where(eq(savedItems.userId, userId))
+      .orderBy(desc(savedItems.createdAt))
+      .limit(200),
     db
       .select({ kind: reviews.kind, itemId: reviews.itemId })
       .from(reviews)
-      .where(and(eq(reviews.userId, userId), gte(reviews.rating, 4))),
+      .where(and(eq(reviews.userId, userId), gte(reviews.rating, 4)))
+      .orderBy(desc(reviews.updatedAt))
+      .limit(200),
     db
       .select({ kind: reviews.kind, itemId: reviews.itemId })
       .from(reviews)
-      .where(and(eq(reviews.userId, userId), lte(reviews.rating, 2))),
+      .where(and(eq(reviews.userId, userId), lte(reviews.rating, 2)))
+      .orderBy(desc(reviews.updatedAt))
+      .limit(200),
     db
       .select({ kind: readingActivity.kind, itemId: readingActivity.itemId })
       .from(readingActivity)
-      .where(eq(readingActivity.userId, userId)),
+      .where(eq(readingActivity.userId, userId))
+      .orderBy(desc(readingActivity.updatedAt))
+      .limit(200),
     dislikedKeys(userId),
   ]);
 

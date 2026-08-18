@@ -43,7 +43,9 @@ export async function listReviews(
         eq(user.banned, false)
       )
     )
-    .orderBy(desc(reviews.updatedAt));
+    .orderBy(desc(reviews.updatedAt))
+    // Newest 100 — an unbounded review list grows the page payload forever.
+    .limit(100);
   return rows;
 }
 

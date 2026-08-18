@@ -5,6 +5,9 @@ import { sweepExpiredIpBans } from "@/lib/bans";
 
 /** Read notifications older than this are considered dead weight. */
 const NOTIFICATION_RETENTION_DAYS = 30;
+/** Even unread notifications expire eventually — nobody reads a 90-day-old
+ * mention, and they sit on the 60s social-poll path forever otherwise. */
+const NOTIFICATION_MAX_AGE_DAYS = 90;
 
 /**
  * Deletes rows nothing will ever read again: expired auth sessions and
@@ -32,6 +35,17 @@ export async function runCleanupSweep(): Promise<void> {
           and(
             eq(notifications.read, true),
             lt(notifications.createdAt, notificationCutoff)
+          )
+        ),
+    ],
+    [
+      "stale notifications",
+      db
+        .delete(notifications)
+        .where(
+          lt(
+            notifications.createdAt,
+            new Date(now.getTime() - NOTIFICATION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000)
           )
         ),
     ],

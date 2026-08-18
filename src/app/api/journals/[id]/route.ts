@@ -15,6 +15,7 @@ import {
 } from "@/lib/series";
 import { seriesFollowerIds, followerIds } from "@/lib/social";
 import { notifyMany } from "@/lib/notifications";
+import { invalidateCatalog } from "@/lib/discovery";
 import { deleteObjects, journalStorageKeys } from "@/lib/media";
 
 export const runtime = "nodejs";
@@ -191,6 +192,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     await deleteSeriesIfEmpty(journal.seriesId);
   }
 
+  // Visibility/listing changes must reach the store without the cache TTL lag.
+  invalidateCatalog();
   return Response.json({ journal: updated });
 }
 
@@ -206,5 +209,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   await deleteJournal(id);
   await deleteObjects(storageKeys);
   if (journal.seriesId) await deleteSeriesIfEmpty(journal.seriesId);
+  invalidateCatalog();
   return Response.json({ ok: true });
 }

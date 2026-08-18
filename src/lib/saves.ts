@@ -46,11 +46,43 @@ export async function unsaveItem(
  * banned scribes drop out (savers get a notification when the ban lands).
  */
 export async function listSaved(userId: string) {
+  // Runs inside shellData() on every authenticated page render — this must
+  // be a fixed number of queries, never one per saved row.
   const rows = await db
     .select()
     .from(savedItems)
     .where(eq(savedItems.userId, userId))
-    .orderBy(desc(savedItems.createdAt));
+    .orderBy(desc(savedItems.createdAt))
+    .limit(200);
+
+  const journalIds = rows.filter((r) => r.kind === "journal").map((r) => r.itemId);
+  const seriesIds = rows.filter((r) => r.kind === "series").map((r) => r.itemId);
+  const [journalRows, seriesRows] = await Promise.all([
+    journalIds.length > 0
+      ? db
+          .select({
+            id: journals.id,
+            slug: journals.slug,
+            title: journals.title,
+            ownerId: journals.ownerId,
+          })
+          .from(journals)
+          .where(
+            and(
+              inArray(journals.id, journalIds),
+              inArray(journals.visibility, ["public", "restricted"])
+            )
+          )
+      : Promise.resolve([]),
+    seriesIds.length > 0
+      ? db
+          .select({ id: series.id, slug: series.slug, name: series.name, ownerId: series.ownerId })
+          .from(series)
+          .where(inArray(series.id, seriesIds))
+      : Promise.resolve([]),
+  ]);
+  const jRef = new Map(journalRows.map((j) => [j.id, j]));
+  const sRef = new Map(seriesRows.map((s) => [s.id, s]));
 
   const out: {
     kind: WorkKind;
@@ -62,42 +94,27 @@ export async function listSaved(userId: string) {
   }[] = [];
   for (const row of rows) {
     if (row.kind === "series") {
-      const s = await db
-        .select({ slug: series.slug, name: series.name, ownerId: series.ownerId })
-        .from(series)
-        .where(eq(series.id, row.itemId));
-      if (s[0]) {
+      const s = sRef.get(row.itemId);
+      if (s) {
         out.push({
           kind: "series",
           id: row.itemId,
-          slug: s[0].slug,
-          title: s[0].name,
+          slug: s.slug,
+          title: s.name,
           icon: row.icon,
-          ownerId: s[0].ownerId,
+          ownerId: s.ownerId,
         });
       }
     } else {
-      const j = await db
-        .select({
-          slug: journals.slug,
-          title: journals.title,
-          ownerId: journals.ownerId,
-        })
-        .from(journals)
-        .where(
-          and(
-            eq(journals.id, row.itemId),
-            inArray(journals.visibility, ["public", "restricted"])
-          )
-        );
-      if (j[0]) {
+      const j = jRef.get(row.itemId);
+      if (j) {
         out.push({
           kind: "journal",
           id: row.itemId,
-          slug: j[0].slug,
-          title: j[0].title,
+          slug: j.slug,
+          title: j.title,
           icon: row.icon,
-          ownerId: j[0].ownerId,
+          ownerId: j.ownerId,
         });
       }
     }

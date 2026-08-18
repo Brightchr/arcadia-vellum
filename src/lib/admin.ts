@@ -23,6 +23,7 @@ import {
   knownIpsForUser,
   listIpBansForUser,
 } from "@/lib/bans";
+import { invalidateCatalog } from "@/lib/discovery";
 
 /** True when this user id holds the admin role. */
 export async function isAdmin(userId: string): Promise<boolean> {
@@ -160,6 +161,8 @@ export async function setUserBanned(
       updatedAt: new Date(),
     })
     .where(eq(user.id, targetId));
+  // Their works must appear/disappear from listings immediately.
+  invalidateCatalog();
   if (!banned) return;
   // Kill their live sessions — the ban lands within the cookie-cache window.
   await revokeAllSessions(targetId);
@@ -219,6 +222,8 @@ export async function setWorkBanned(
       banReason: banned ? (reason ?? null) : null,
     })
     .where(eq(journals.id, journalId));
+  // Takedowns must leave listings immediately, not after the cache TTL.
+  invalidateCatalog();
 }
 
 // ---------------------------------------------------------------------------

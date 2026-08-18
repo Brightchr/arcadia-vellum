@@ -123,7 +123,9 @@ export default function TomeReader({
 
       // Reopening the same tome at the same size: reuse the cached page set
       // (only trusted once fonts are in, since layout depends on metrics).
-      const cacheKey = pageCacheKey(html, dims.pageW, dims.pageH);
+      // Theme is part of the key: themes change fonts, so page breaks
+      // measured under one theme are wrong for another.
+      const cacheKey = pageCacheKey(`${theme}|${html}`, dims.pageW, dims.pageH);
       if (document.fonts.status === "loaded") {
         const cached = readPageCache(cacheKey);
         if (cached && cached.length > 0) {
