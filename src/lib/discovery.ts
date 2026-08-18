@@ -8,7 +8,7 @@ import {
   savedItems,
   user,
 } from "@/db/schema";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { Journal } from "@/lib/journals";
 import { reviewSummary, type SentimentTone } from "@/lib/sentiment";
 
@@ -122,13 +122,20 @@ export type WorkSort = "top" | "new" | "popular";
  * type ("books" = has written volumes, "audiobooks" = has audio volumes),
  * and review sentiment; sorted by rating (default), age, or popularity.
  */
-export async function listPublicWorks(filter: {
-  q?: string;
-  tag?: string;
-  type?: "books" | "audiobooks";
-  sentiment?: SentimentTone;
-  sort?: WorkSort;
-} = {}): Promise<Work[]> {
+/**
+ * The assembled catalog is cached briefly: /browse and the home feed both
+ * hit this on every render, and assembly costs 6+ queries plus rating/save
+ * aggregates over every public work. New/removed works appear within a
+ * minute, which the store can tolerate; per-request filters and sorts run
+ * over the cached array instead of re-querying.
+ */
+const CATALOG_TTL_MS = 60_000;
+// Guardrail, newest-first — revisit with real pagination before the catalog
+// approaches this.
+const CATALOG_MAX_JOURNALS = 2000;
+let catalogCache: { at: number; works: Work[] } | null = null;
+
+async function assembleCatalog(): Promise<Work[]> {
   const publicJournals = await db
     .select()
     .from(journals)
@@ -139,7 +146,9 @@ export async function listPublicWorks(filter: {
         // Taken-down works never surface in the store.
         isNull(journals.bannedAt)
       )
-    );
+    )
+    .orderBy(desc(journals.createdAt))
+    .limit(CATALOG_MAX_JOURNALS);
   if (publicJournals.length === 0) return [];
 
   const seriesIds = [
@@ -247,8 +256,22 @@ export async function listPublicWorks(filter: {
     }
     w.saveCount = saves.get(`${w.kind}:${w.id}`) ?? 0;
   }
+  return works;
+}
 
-  let result = works;
+export async function listPublicWorks(filter: {
+  q?: string;
+  tag?: string;
+  type?: "books" | "audiobooks";
+  sentiment?: SentimentTone;
+  sort?: WorkSort;
+} = {}): Promise<Work[]> {
+  const now = Date.now();
+  if (!catalogCache || now - catalogCache.at > CATALOG_TTL_MS) {
+    catalogCache = { at: now, works: await assembleCatalog() };
+  }
+  // Copy before sorting — the cached array is shared across requests.
+  let result = [...catalogCache.works];
   if (filter.type === "books") result = result.filter((w) => w.hasWritten);
   if (filter.type === "audiobooks") result = result.filter((w) => w.hasAudio);
   if (filter.tag) {

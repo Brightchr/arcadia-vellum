@@ -10,13 +10,36 @@
 const SPLITTABLE = new Set(["P", "BLOCKQUOTE", "UL", "OL", "DIV", "LI"]);
 const BREAK_BEFORE = new Set(["H1", "H2"]);
 
-export function paginateHtml(
+// Yield to the event loop this often so a long tome doesn't freeze the tab —
+// each iteration forces a synchronous reflow, and big books have thousands.
+const BLOCKS_PER_SLICE = 40;
+
+/**
+ * Every image gets a fixed display box BEFORE measurement, so pagination
+ * never has to wait for downloads: the measured height is the same whether
+ * the bytes have arrived or not. Images lazy-load into their boxes after the
+ * tome is already bound.
+ */
+function fixImageBoxes(root: DocumentFragment, pageHeight: number) {
+  const boxH = Math.round(pageHeight * 0.55);
+  root.querySelectorAll("img").forEach((img) => {
+    img.style.height = `${boxH}px`;
+    img.style.width = "100%";
+    img.style.objectFit = "contain";
+    img.setAttribute("loading", "lazy");
+    img.setAttribute("decoding", "async");
+  });
+}
+
+export async function paginateHtml(
   html: string,
   measurer: HTMLElement,
-  pageHeight: number
-): string[] {
+  pageHeight: number,
+  isCancelled: () => boolean = () => false
+): Promise<string[]> {
   const tpl = document.createElement("template");
   tpl.innerHTML = html;
+  fixImageBoxes(tpl.content, pageHeight);
 
   // Top-level work queue; stray text nodes get wrapped in paragraphs.
   const queue: Element[] = [];
@@ -42,9 +65,16 @@ export function paginateHtml(
   };
 
   let guard = 0;
+  let sinceYield = 0;
   let i = 0;
   while (i < queue.length) {
     if (++guard > 20000) break; // safety against pathological loops
+    if (++sinceYield >= BLOCKS_PER_SLICE) {
+      sinceYield = 0;
+      await new Promise((r) => setTimeout(r, 0));
+      // A newer pagination (resize, font load) owns the measurer now.
+      if (isCancelled()) return [];
+    }
     const block = queue[i];
 
     if (BREAK_BEFORE.has(block.tagName) && measurer.childNodes.length > 0) {
@@ -212,24 +242,42 @@ function fillFrom(
   return null;
 }
 
-/** Resolve once every <img> in the HTML has known dimensions (or failed). */
-export async function preloadImages(html: string): Promise<void> {
-  const tpl = document.createElement("template");
-  tpl.innerHTML = html;
-  const srcs = new Set<string>();
-  tpl.content.querySelectorAll("img[src]").forEach((img) => {
-    const src = img.getAttribute("src");
-    if (src) srcs.add(src);
-  });
-  await Promise.all(
-    Array.from(srcs).map(
-      (src) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = src;
-        })
-    )
-  );
+// ---------------------------------------------------------------------------
+// Pagination cache — reopening the same tome at the same size skips the
+// whole measurement pass. Session-scoped: it dies with the tab.
+// ---------------------------------------------------------------------------
+
+const CACHE_MAX_BYTES = 2_000_000;
+
+export function pageCacheKey(html: string, pageW: number, pageH: number): string {
+  // djb2 over the content — collisions are astronomically unlikely at this
+  // scale, and a collision only mis-renders until the next repagination.
+  let hash = 5381;
+  for (let i = 0; i < html.length; i++) {
+    hash = ((hash << 5) + hash + html.charCodeAt(i)) | 0;
+  }
+  return `tome-pages:${hash}:${pageW}x${pageH}`;
+}
+
+export function readPageCache(key: string): string[] | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const value = JSON.parse(raw);
+    return Array.isArray(value) && value.every((p) => typeof p === "string")
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writePageCache(key: string, pages: string[]): void {
+  try {
+    const raw = JSON.stringify(pages);
+    if (raw.length > CACHE_MAX_BYTES) return;
+    sessionStorage.setItem(key, raw);
+  } catch {
+    // Storage full or unavailable — the cache is purely an optimization.
+  }
 }

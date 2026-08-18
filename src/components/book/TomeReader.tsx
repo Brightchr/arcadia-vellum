@@ -4,7 +4,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip-enhanced";
-import { paginateHtml, preloadImages } from "./paginate";
+import {
+  paginateHtml,
+  pageCacheKey,
+  readPageCache,
+  writePageCache,
+} from "./paginate";
 import { ThemedArrow, JumpIcon } from "./NavIcons";
 import { CoverArt } from "./CoverArt";
 import type { CoverLayout } from "@/lib/cover-layout";
@@ -105,7 +110,9 @@ export default function TomeReader({
     };
   }, []);
 
-  // Paginate whenever size or content changes (after fonts and images load).
+  // Paginate whenever size or content changes (after fonts load). Images are
+  // NOT waited for — they get fixed boxes during pagination and lazy-load
+  // into the already-bound tome.
   useEffect(() => {
     if (!dims) return;
     let cancelled = false;
@@ -113,20 +120,42 @@ export default function TomeReader({
       const measurer = measurerRef.current;
       if (!measurer) return;
       measurer.style.width = `${dims.pageW}px`;
+
+      // Reopening the same tome at the same size: reuse the cached page set
+      // (only trusted once fonts are in, since layout depends on metrics).
+      const cacheKey = pageCacheKey(html, dims.pageW, dims.pageH);
+      if (document.fonts.status === "loaded") {
+        const cached = readPageCache(cacheKey);
+        if (cached && cached.length > 0) {
+          setPages(cached);
+          setPaginationId((v) => v + 1);
+          return;
+        }
+      }
+
       // Warm up the theme's fonts with real usage BEFORE measuring: web fonts
       // only start loading on first use, and document.fonts.ready resolves
       // early if nothing has requested them yet. Measuring with fallback
       // fonts (taller metrics) under-fills every page.
       measurer.innerHTML =
         "<h1>Ag</h1><h2>Ag</h2><p>Ag <strong>Ag</strong> <em>Ag</em></p>";
-      await new Promise((r) => requestAnimationFrame(r));
+      // A macrotask (NOT requestAnimationFrame) lets the font-face requests
+      // kick off: rAF never fires in a hidden/background tab, which left the
+      // tome stuck on "Binding..." until the reader focused it.
+      await new Promise((r) => setTimeout(r, 0));
       await document.fonts.ready;
-      await preloadImages(html);
       if (cancelled || !measurerRef.current) return;
-      const result = paginateHtml(html, measurerRef.current, dims.pageH);
+      const result = await paginateHtml(
+        html,
+        measurerRef.current,
+        dims.pageH,
+        () => cancelled
+      );
       if (!cancelled) {
-        setPages(result.length > 0 ? result : [emptyPageHtml()]);
+        const finalPages = result.length > 0 ? result : [emptyPageHtml()];
+        setPages(finalPages);
         setPaginationId((v) => v + 1);
+        writePageCache(cacheKey, finalPages);
       }
     })();
     return () => {
