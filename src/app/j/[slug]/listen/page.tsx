@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { recordView } from "@/lib/analytics";
 import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug } from "@/lib/journals";
 import { listTracks, entryCoverUrls, volumeCoverText } from "@/lib/audio";
@@ -56,9 +58,14 @@ export default async function ListenPage({
   // Only audio-only tomes have a listening side.
   if (journal.sourceType !== "audio") notFound();
 
-  if (session) {
-    await recordActivity(session.user.id, "journal", journal.id, "listen");
-  }
+  // Both writes land after the response is sent — never on the render path.
+  const viewerId = session?.user.id ?? null;
+  after(async () => {
+    if (viewerId) {
+      await recordActivity(viewerId, "journal", journal.id, "listen");
+    }
+    await recordView(journal.id, journal.ownerId, viewerId);
+  });
 
   const tracks = await listTracks(journal.id);
   // Owners see a hint instead of a 404 so an empty audio-only tome isn't a

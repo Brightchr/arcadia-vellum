@@ -48,7 +48,7 @@ export interface SidebarPin {
 
 const NAV = [
   { key: "library", label: "Home", href: "/dashboard", icon: LibraryIcon },
-  { key: "browse", label: "Browse", href: "/browse", icon: CompassIcon },
+  { key: "browse", label: "Archives", href: "/browse", icon: CompassIcon },
   { key: "saved", label: "Saved", href: "/saved", icon: BookmarkIcon },
   { key: "friends", label: "Friends", href: "/friends", icon: UsersIcon },
   { key: "groups", label: "Groups", href: "/groups", icon: MessageSquareIcon },

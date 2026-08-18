@@ -31,7 +31,7 @@ function crumbsFor(path: string, signedIn: boolean): Crumb[] {
       if (b === "listen") out.push({ label: "Your Audiobooks", href: path });
       break;
     case "browse":
-      out.push({ label: "Browse", href: "/browse" });
+      out.push({ label: "Archives", href: "/browse" });
       break;
     case "saved":
       out.push({ label: "Saved", href: "/saved" });
@@ -53,11 +53,11 @@ function crumbsFor(path: string, signedIn: boolean): Crumb[] {
       if (b) out.push({ label: `@${decodeURIComponent(b)}`, href: `/u/${b}` });
       break;
     case "book":
-      out.push({ label: "Browse", href: "/browse" });
+      out.push({ label: "Archives", href: "/browse" });
       if (b) out.push({ label: prettify(b), href: `/book/${b}` });
       break;
     case "series":
-      out.push({ label: "Browse", href: "/browse" });
+      out.push({ label: "Archives", href: "/browse" });
       if (b) out.push({ label: prettify(b), href: `/series/${b}` });
       break;
     case "s":

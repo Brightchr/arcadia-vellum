@@ -737,6 +737,23 @@ export const groupMessages = pgTable("group_messages", {
   ]
 );
 
+/**
+ * Daily read/listen counts per work — powers the author's Home charts.
+ * One row per work per day, incremented when a non-owner opens the tome.
+ */
+export const workViews = pgTable(
+  "work_views",
+  {
+    journalId: text("journal_id")
+      .notNull()
+      .references(() => journals.id, { onDelete: "cascade" }),
+    /** UTC calendar day, YYYY-MM-DD. */
+    day: text("day").notNull(),
+    views: integer("views").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.journalId, t.day] })]
+);
+
 /** Last time each member looked at a channel — powers unread dots. */
 export const channelReads = pgTable(
   "channel_reads",

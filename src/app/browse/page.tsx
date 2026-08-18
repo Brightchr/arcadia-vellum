@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { shellData } from "@/lib/nav";
+import { listRecentActivity } from "@/lib/activity";
 import {
   GENRES,
   listPublicWorks,
@@ -10,14 +12,15 @@ import {
 } from "@/lib/discovery";
 import { appThemeClass } from "@/lib/themes";
 import { AppShell } from "@/components/nav/AppShell";
-import { WorkCard } from "@/components/discover/WorkCard";
+import { WorkCard, WorkCover } from "@/components/discover/WorkCard";
+import { WorkRow } from "@/components/discover/WorkRow";
 import { StoreFilters } from "@/components/discover/StoreFilters";
 import { customThemeCssFor } from "@/lib/custom-themes";
 import { ThemeStyle } from "@/components/book/ThemeStyle";
-import { personalScore, tasteProfile } from "@/lib/recommendations";
+import { homeFeed, personalScore, tasteProfile } from "@/lib/recommendations";
 
 export const metadata: Metadata = {
-  title: "Browse — Vellum",
+  title: "The Archives — Vellum",
 };
 
 const SENTIMENT_VALUES: SentimentTone[] = ["positive", "mixed", "negative"];
@@ -51,9 +54,14 @@ export default async function BrowsePage({
     ? (params.sort as WorkSort)
     : undefined;
 
-  const [pool, tags] = await Promise.all([
+  // Discovery rows only decorate the unfiltered front page of the Archives;
+  // any search/filter/sort collapses to the classic grid.
+  const filtered = Boolean(q || type || tag || sentiment || sort);
+  const [pool, tags, recent, feed] = await Promise.all([
     listPublicWorks({ q: q || undefined, type, tag, sentiment, sort }),
     popularTags(),
+    !filtered ? listRecentActivity(session.user.id) : Promise.resolve([]),
+    !filtered ? homeFeed(session.user.id) : Promise.resolve(null),
   ]);
 
   // Signed-in default order is "For you": what they save, read, rate, and
@@ -74,7 +82,22 @@ export default async function BrowsePage({
   const genreSet = new Set<string>(GENRES);
   const extraTags = tags.filter((t) => !genreSet.has(t)).slice(0, 12);
 
-  const customCss = await customThemeCssFor(works.map((w) => w.theme));
+  const customCss = await customThemeCssFor([
+    ...works.map((w) => w.theme),
+    ...recent.map((a) => a.theme),
+    ...(feed
+      ? [
+          feed.followedNew,
+          feed.friendsRecommend,
+          feed.bestReviewed,
+          feed.newAndNoteworthy,
+          feed.popular,
+        ]
+          .flat()
+          .map((w) => w.theme)
+      : []),
+    ...(feed ? feed.tagRows.flatMap((r) => r.works.map((w) => w.theme)) : []),
+  ]);
   const resultLabel = tag
     ? `${tag} — ${works.length} work${works.length === 1 ? "" : "s"}`
     : q
@@ -96,11 +119,88 @@ export default async function BrowsePage({
       >
         <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
           <header className="mb-5">
-            <h1 className="font-display text-2xl text-ink">The Store</h1>
+            <h1 className="font-display text-2xl text-ink">The Archives</h1>
             <p className="text-sm text-ink-dim">
               Books and audiobooks bound by the community.
             </p>
           </header>
+
+          {recent.length > 0 && (
+            <section className="mb-8">
+              <h2 className="font-heading text-lg mb-3">Jump back in</h2>
+              <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
+                {recent.map((a) => (
+                  <Link
+                    key={`${a.kind}:${a.itemId}`}
+                    href={a.href}
+                    className="group rounded-xl border border-edge bg-overlay backdrop-blur p-2 hover:border-arcane/60 transition-colors"
+                  >
+                    <WorkCover
+                      work={{
+                        title: a.title,
+                        author: null,
+                        theme: a.theme,
+                        coverImageId: a.coverImageId,
+                      }}
+                      className="mb-2 group-hover:opacity-95"
+                    />
+                    <p className="text-xs font-heading truncate">{a.title}</p>
+                    <p className="text-[10px] text-ink-dim uppercase tracking-wider">
+                      {a.mode === "listen" ? "Keep listening" : "Keep reading"}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {feed && (
+            <div className="space-y-8 mb-10">
+              <WorkRow
+                dismissable
+                title="New from your follows"
+                subtitle="Fresh releases from scribes and series you follow."
+                works={feed.followedNew}
+              />
+              <WorkRow
+                dismissable
+                title="Friends recommend"
+                subtitle="Saved or loved by your friends."
+                works={feed.friendsRecommend}
+              />
+              {feed.tagRows.map((row) => (
+                <WorkRow
+                  dismissable
+                  key={row.tag}
+                  title={`Because you liked "${row.tag}"`}
+                  works={row.works}
+                  showAllHref={`/browse?tag=${encodeURIComponent(row.tag)}`}
+                />
+              ))}
+              <WorkRow
+                dismissable
+                title="Best reviewed"
+                subtitle="The community's highest-rated tomes."
+                works={feed.bestReviewed}
+                showAllHref="/browse?sort=top"
+              />
+              <WorkRow
+                dismissable
+                title="New & noteworthy"
+                subtitle="The latest additions to the archives."
+                works={feed.newAndNoteworthy}
+                showAllHref="/browse?sort=new"
+              />
+              <WorkRow
+                dismissable
+                title="Popular now"
+                subtitle="The most shelved and reviewed works."
+                works={feed.popular}
+                showAllHref="/browse?sort=popular"
+              />
+              <h2 className="font-heading text-lg !mb-[-0.5rem]">All Works</h2>
+            </div>
+          )}
 
           <StoreFilters
             q={q}

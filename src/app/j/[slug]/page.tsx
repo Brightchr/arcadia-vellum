@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { recordActivity } from "@/lib/activity";
+import { recordView } from "@/lib/analytics";
 import { canAccessJournal, isDiscoverable } from "@/lib/access";
 import { getJournalBySlug, getJournalContent } from "@/lib/journals";
 import { autoSyncIfStale } from "@/lib/google/sync";
@@ -59,9 +61,14 @@ export default async function ReaderPage({
   // Keep the owner's view fresh without blocking readers on Google errors.
   if (isOwner) await autoSyncIfStale(journal);
 
-  if (session) {
-    await recordActivity(session.user.id, "journal", journal.id, "read");
-  }
+  // Both writes land after the response is sent — never on the render path.
+  const viewerId = session?.user.id ?? null;
+  after(async () => {
+    if (viewerId) {
+      await recordActivity(viewerId, "journal", journal.id, "read");
+    }
+    await recordView(journal.id, journal.ownerId, viewerId);
+  });
 
   const content = await getJournalContent(journal.id);
   const theme = await resolveTheme(journal.theme);

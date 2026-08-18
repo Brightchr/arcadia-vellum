@@ -510,5 +510,16 @@ if (demoNotifs.rows[0].n < 5) {
 }
 
 console.log("notifications seeded");
+
+// 28 days of read counts so the Home charts have a story to tell.
+await client.query(`
+  INSERT INTO work_views (journal_id, day, views)
+  SELECT j.id, to_char(d::date, 'YYYY-MM-DD'), (1 + floor(random()*13))::int
+  FROM journals j
+  CROSS JOIN generate_series(current_date - 27, current_date, interval '1 day') d
+  WHERE j.visibility IN ('public','restricted') AND j.listed
+  ON CONFLICT DO NOTHING
+`);
+console.log("work views seeded");
 await client.end();
 console.log("Done — sign in as test@example.com or chris@example.com to see it all.");
