@@ -1,5 +1,33 @@
 # Changes — Security Hardening & Admin Observability Plan
 
+## Landed on dev/main — 2026-08-18 (round 2)
+
+From the full-codebase re-audit plus product changes:
+
+- **Security batch**: report-route ban now enforces the same guards as
+  /api/admin/ban; IP-ban rows no longer change ownership on collision;
+  expired suspensions unhide works immediately; `_next/image` moved inside
+  the origin lock; journal create/cover/audio-cover/content routes got size
+  prechecks + rate limits; baseline CSP + nosniff + referrer headers;
+  auth GET (OAuth callbacks) rate-limited and IP-ban-checked; SSRF guard
+  validates all resolved addresses and more private ranges; notification
+  fanout batched and detached.
+- **Performance batch**: listSaved N+1 (ran on every page render) batched;
+  catalog cache single-flight + invalidated on publish/takedown/ban;
+  tasteProfile and listReviews bounded; pagination cache keyed by theme;
+  stale-notification sweep; series reader loads volumes in parallel.
+- **Members-only archive**: no anonymous tomes, audio, store, or profiles.
+  Share links are the only signed-out door, and they follow the work's
+  visibility — a private work's links stop granting access.
+- **New landing page**: JetBrains-style dark marketing site (src/app/page.tsx
+  + landing.css) with pure-CSS animated feature mockups; signed-in visitors
+  redirect to /dashboard.
+
+Deliberately deferred (documented, with triggers): distributed rate limiter
+(second replica), real store pagination UI (catalog nearing 2000), image
+derivatives via sharp, font-loading diet, SSE/WebSockets for chat, DNS
+re-pinning for the SSRF fetch, per-user push-subscription caps.
+
 Working doc from the August 2026 scalability/security audit. Temporary — delete
 once the items land as real issues/commits.
 

@@ -1,223 +1,245 @@
-import { existsSync } from "fs";
-import path from "path";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
-import { AppShell } from "@/components/nav/AppShell";
-import { TomeAmbience } from "@/components/book/TomeAmbience";
-import {
-  BookOpenIcon,
-  HeadphonesIcon,
-  PenIcon,
-  CompassIcon,
-  UsersIcon,
-} from "@/components/icons";
+import "./landing.css";
 
 export const metadata: Metadata = {
   title: "Vellum — bind your adventures into living tomes",
   description:
-    "Write, listen, and share TTRPG journals as beautifully bound tomes and audiobooks. Discover community chronicles, follow your favorite scribes, and build your own arcane library.",
+    "Write, listen, and share TTRPG journals as beautifully bound tomes and audiobooks. A members-only archive with private-by-default sharing.",
 };
 
 /**
- * Feature cards show artwork when you drop an image into /public/landing —
- * e.g. write.png, listen.png, discover.png, share.png, showcase.png.
- * Missing images fall back to a themed placeholder, so add them any time.
+ * Public marketing page — the only thing a signed-out visitor sees besides
+ * login/signup and share-link teasers. JetBrains-style dark gradient site
+ * with animated CSS feature mockups (no binary assets to load).
  */
-function landingImage(name: string): string | null {
-  return existsSync(path.join(process.cwd(), "public", "landing", name))
-    ? `/landing/${name}`
-    : null;
-}
-
-const FEATURES = [
-  {
-    icon: <PenIcon className="h-5 w-5" />,
-    image: "write.png",
-    title: "Write & Bind",
-    body: "Compose in the built-in editor, link a Google Doc, or upload files — your words become an ancient tome with themed pages, covers, and chapter art.",
-  },
-  {
-    icon: <HeadphonesIcon className="h-5 w-5" />,
-    image: "listen.png",
-    title: "Audiobooks",
-    body: "Upload narration for a full audiobook experience: chapter art, playlists across volumes, repeat modes, and a player themed to your binding.",
-  },
-  {
-    icon: <CompassIcon className="h-5 w-5" />,
-    image: "discover.png",
-    title: "Discover",
-    body: "Browse the community's books and audiobooks — search by title, author, or tags, filter by review verdicts, and shelve the works you love.",
-  },
-  {
-    icon: <UsersIcon className="h-5 w-5" />,
-    image: "share.png",
-    title: "Share & Follow",
-    body: "Follow scribes, add friends, and share private tomes with revocable links. Your profile showcases your works, playlists, and shelves.",
-  },
-];
-
-const STEPS = [
-  {
-    step: "I",
-    title: "Bring your words or your voice",
-    body: "Write in the app, sync a Google Doc, upload .docx/.md files, or add narration audio for a pure audiobook.",
-  },
-  {
-    step: "II",
-    title: "Choose a binding",
-    body: "Five hand-crafted themes — from a witch's grimoire to a captain's log — style your pages, covers, and player.",
-  },
-  {
-    step: "III",
-    title: "Share the tome",
-    body: "Keep it private, hand out revocable share links, or publish to the archives where readers save, review, and follow your work.",
-  },
-];
-
 export default async function LandingPage() {
   const session = await getSession();
   if (session) redirect("/dashboard");
 
-  const showcase = landingImage("showcase.png");
-
   return (
-    <main className="app-theme-witch-grimoire arcane-bg min-h-screen">
-      <AppShell user={null}>
-        {/* Hero — witch-grimoire ambience drifting behind the pitch */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="theme-witch-grimoire tome-scene absolute inset-0 pointer-events-none"
-          >
-            <TomeAmbience />
-          </div>
-          <div className="relative max-w-5xl mx-auto px-6 pt-16 sm:pt-20 pb-16 text-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/mark.png"
-              alt=""
-              width={120}
-              height={120}
-              className="mx-auto mb-6 h-24 w-24 sm:h-30 sm:w-30 drop-shadow-[0_0_35px_rgba(157,123,216,0.45)]"
-            />
-            <h1 className="font-display text-4xl sm:text-6xl text-arcane-bright leading-tight">
-              Your adventures, bound into living tomes
-            </h1>
-            <p className="text-ink-dim text-lg max-w-2xl mx-auto mt-5">
-              Vellum turns campaign journals, session diaries, and epic
-              chronicles into beautifully bound books and audiobooks — then
-              gives them a realm of readers.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-9">
-              <Link href="/signup" className="btn-arcane !px-7 !py-3 !text-base">
-                Start Your Chronicle — Free
-              </Link>
-              <Link href="/browse" className="btn-ghost !px-7 !py-3 !text-base">
-                Browse the Archives
-              </Link>
+    <main className="ld-root">
+      {/* Top nav */}
+      <header className="ld-nav">
+        <span className="ld-logo">
+          Vellum
+          <span className="ld-logo-by">by Arcadia</span>
+        </span>
+        <nav className="ld-nav-links">
+          <Link href="/login" className="ld-btn ld-btn--ghost">
+            Sign In
+          </Link>
+          <Link href="/signup" className="ld-btn ld-btn--primary">
+            Join Free
+          </Link>
+        </nav>
+      </header>
+
+      {/* Hero */}
+      <section className="ld-hero">
+        <div className="ld-hero-glow" aria-hidden />
+        <h1 className="ld-hero-title">
+          Every chronicle.
+          <br />
+          <span className="ld-gradient-text">Beautifully bound.</span>
+        </h1>
+        <p className="ld-hero-sub">
+          Vellum turns campaign journals into page-flipping ancient tomes and
+          full audiobooks — kept in a members-only archive, shared only when
+          you say so.
+        </p>
+        <div className="ld-hero-ctas">
+          <Link href="/signup" className="ld-btn ld-btn--primary ld-btn--lg">
+            Start Your Chronicle — Free
+          </Link>
+          <Link href="/login" className="ld-btn ld-btn--ghost ld-btn--lg">
+            Return to Your Tome
+          </Link>
+        </div>
+
+        {/* Hero mockup: a tome mid-flip */}
+        <div className="ld-hero-mock" aria-hidden>
+          <div className="ld-tome">
+            <div className="ld-tome-page ld-tome-page--left">
+              <span className="ld-line w80" />
+              <span className="ld-line w95" />
+              <span className="ld-line w70" />
+              <span className="ld-line w90" />
+              <span className="ld-line w60" />
+              <span className="ld-line w85" />
+            </div>
+            <div className="ld-tome-flip" />
+            <div className="ld-tome-page ld-tome-page--right">
+              <span className="ld-line w90" />
+              <span className="ld-line w75" />
+              <span className="ld-line w95" />
+              <span className="ld-line w65" />
+              <span className="ld-line w80" />
+              <span className="ld-line w50" />
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Feature cards — drop art into /public/landing to fill the tops */}
-        <section className="max-w-6xl mx-auto px-6 pb-20">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f) => {
-              const img = landingImage(f.image);
-              return (
-                <div
-                  key={f.title}
-                  className="group rounded-2xl border border-edge bg-overlay backdrop-blur overflow-hidden hover:border-arcane/60 hover:-translate-y-1 transition-all duration-200 shadow-lg shadow-black/30"
-                >
-                  {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={img}
-                      alt=""
-                      className="aspect-video w-full object-cover border-b border-edge"
-                    />
-                  ) : (
-                    <div
-                      aria-hidden
-                      className="aspect-video w-full border-b border-edge bg-gradient-to-br from-arcane/25 via-void-raised to-ember/10 grid place-items-center text-arcane-bright/70 group-hover:text-arcane-bright transition-colors"
-                    >
-                      <span className="[&>svg]:h-9 [&>svg]:w-9">{f.icon}</span>
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <h2 className="font-heading text-lg mb-1.5 inline-flex items-center gap-2 text-arcane-bright">
-                      {f.icon}
-                      {f.title}
-                    </h2>
-                    <p className="text-sm text-ink-dim leading-relaxed">
-                      {f.body}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Optional wide showcase panel — appears when showcase.png exists */}
-        {showcase && (
-          <section className="max-w-5xl mx-auto px-6 pb-20">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={showcase}
-              alt="Vellum in action"
-              className="w-full rounded-2xl border border-edge shadow-2xl shadow-black/50"
-            />
-          </section>
-        )}
-
-        {/* How it works */}
-        <section className="max-w-5xl mx-auto px-6 pb-20">
-          <h2 className="font-display text-2xl sm:text-3xl text-arcane-bright text-center mb-10">
-            How the binding works
-          </h2>
-          <ol className="grid gap-5 sm:grid-cols-3">
-            {STEPS.map((s) => (
-              <li
-                key={s.step}
-                className="relative rounded-2xl border border-edge bg-overlay backdrop-blur p-6 text-center"
-              >
-                <p className="font-display text-4xl text-arcane/60 mb-3">
-                  {s.step}
-                </p>
-                <h3 className="font-heading text-base mb-2 text-ink">
-                  {s.title}
-                </h3>
-                <p className="text-sm text-ink-dim">{s.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* Closing CTA */}
-        <section className="border-t border-edge">
-          <div className="max-w-5xl mx-auto px-6 py-16 text-center">
-            <h2 className="font-display text-2xl sm:text-3xl text-arcane-bright mb-3">
-              The shelves are waiting.
-            </h2>
-            <p className="text-ink-dim mb-7">
-              Free to join. Your first tome takes about a minute to bind.
-            </p>
-            <Link href="/signup" className="btn-arcane !px-7 !py-3 !text-base">
-              Create Your Library
-            </Link>
-            <p className="text-xs text-ink-dim mt-10 inline-flex items-center gap-2 justify-center w-full">
-              <BookOpenIcon className="h-3.5 w-3.5" />
-              Vellum — write, listen, and share your chronicles.
-            </p>
-            <p className="text-[11px] text-ink-dim/70 mt-1">
-              © {new Date().getFullYear()} Arcadia
+      {/* For scribes */}
+      <section className="ld-section">
+        <p className="ld-kicker ld-kicker--violet">For scribes</p>
+        <h2 className="ld-h2">Write once. Bind forever.</h2>
+        <div className="ld-grid">
+          <div className="ld-card">
+            <div className="ld-card-mock" aria-hidden>
+              <div className="ld-editor">
+                <span className="ld-type-line" />
+                <span className="ld-type-line ld-type-line--d1" />
+                <span className="ld-type-line ld-type-line--d2" />
+              </div>
+            </div>
+            <h3>Write &amp; Bind</h3>
+            <p>
+              Compose in the built-in editor, sync a Google Doc, or upload
+              files. Your words become a tome with themed pages, covers, and
+              chapter art.
             </p>
           </div>
-        </section>
-      </AppShell>
+          <div className="ld-card">
+            <div className="ld-card-mock" aria-hidden>
+              <div className="ld-player">
+                <span className="ld-play">▶</span>
+                <span className="ld-eq">
+                  <i /><i /><i /><i /><i />
+                </span>
+                <span className="ld-progress" />
+              </div>
+            </div>
+            <h3>Narrate It</h3>
+            <p>
+              Upload narration for a full audiobook: chapter art, playlists
+              across volumes, and a player themed to your binding.
+            </p>
+          </div>
+          <div className="ld-card">
+            <div className="ld-card-mock" aria-hidden>
+              <div className="ld-themes">
+                <span className="ld-swatch s1" />
+                <span className="ld-swatch s2" />
+                <span className="ld-swatch s3" />
+                <span className="ld-swatch s4" />
+              </div>
+            </div>
+            <h3>Seven Bindings</h3>
+            <p>
+              From a witch&apos;s grimoire to a captain&apos;s log — hand-crafted
+              themes style your pages, covers, and player. Or build your own.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* For readers */}
+      <section className="ld-section">
+        <p className="ld-kicker ld-kicker--teal">For readers</p>
+        <h2 className="ld-h2">A living archive, shelved by taste.</h2>
+        <div className="ld-wide">
+          <div className="ld-wide-copy">
+            <p>
+              Browse the community&apos;s books and audiobooks, filtered by
+              genre, tags, and review verdicts. Shelve what you love, follow
+              scribes, and pick up where you left off on any device.
+            </p>
+            <ul className="ld-ticks">
+              <li>Review verdicts — from Mixed to Very Positive</li>
+              <li>Personal shelves, playlists, and reading history</li>
+              <li>Recommendations tuned to what you actually read</li>
+            </ul>
+          </div>
+          <div className="ld-shelf" aria-hidden>
+            <div className="ld-book b1"><span className="ld-badge">★ 4.8</span></div>
+            <div className="ld-book b2"><span className="ld-badge">★ 4.6</span></div>
+            <div className="ld-book b3"><span className="ld-badge">★ 4.9</span></div>
+          </div>
+        </div>
+      </section>
+
+      {/* For tables */}
+      <section className="ld-section">
+        <p className="ld-kicker ld-kicker--ember">For tables</p>
+        <h2 className="ld-h2">Your party, between sessions.</h2>
+        <div className="ld-wide ld-wide--reverse">
+          <div className="ld-chat" aria-hidden>
+            <div className="ld-msg m1">
+              <i className="ld-avatar a1" />
+              <span>Session recap is up — chapter twelve is bound.</span>
+            </div>
+            <div className="ld-msg m2">
+              <i className="ld-avatar a2" />
+              <span>The door heist chapter. Finally.</span>
+            </div>
+            <div className="ld-msg m3">
+              <i className="ld-avatar a3" />
+              <span>@everyone book club, Friday, the Hollow Lighthouse.</span>
+            </div>
+          </div>
+          <div className="ld-wide-copy">
+            <p>
+              Groups with channels, ranks, and chat keep the table together —
+              share works in-line, see who&apos;s reading what, and get a push
+              when someone @mentions you.
+            </p>
+            <ul className="ld-ticks">
+              <li>Discord-style groups with reading presence</li>
+              <li>Friends, follows, and release alerts</li>
+              <li>Device notifications for mentions and invites</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy band */}
+      <section className="ld-band">
+        <h2 className="ld-h2">Private by default. Shared on purpose.</h2>
+        <p>
+          The archive is members-only — nothing you bind faces the open
+          street. Hand out revocable share links when you want outside eyes,
+          and the link follows the work: set a tome private and the link goes
+          private with it.
+        </p>
+      </section>
+
+      {/* Stats */}
+      <section className="ld-stats">
+        <div>
+          <span className="ld-stat-n">~1 min</span>
+          <span className="ld-stat-l">to bind your first tome</span>
+        </div>
+        <div>
+          <span className="ld-stat-n">7</span>
+          <span className="ld-stat-l">hand-crafted bindings</span>
+        </div>
+        <div>
+          <span className="ld-stat-n">100 MB</span>
+          <span className="ld-stat-l">audio chapters, per track</span>
+        </div>
+        <div>
+          <span className="ld-stat-n">0</span>
+          <span className="ld-stat-l">ads, forever</span>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="ld-cta">
+        <h2 className="ld-h2">The shelves are waiting.</h2>
+        <p>Free to join. Your first tome takes about a minute to bind.</p>
+        <Link href="/signup" className="ld-btn ld-btn--primary ld-btn--lg">
+          Create Your Library
+        </Link>
+      </section>
+
+      <footer className="ld-footer">
+        <span>Vellum — write, listen, and share your chronicles.</span>
+        <span>© 2026 Arcadia</span>
+      </footer>
     </main>
   );
 }
