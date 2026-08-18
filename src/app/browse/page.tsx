@@ -125,8 +125,46 @@ export default async function BrowsePage({
             </p>
           </header>
 
+          <StoreFilters
+            q={q}
+            type={type}
+            tag={tag}
+            sentiment={sentiment}
+            sort={sort}
+            signedIn={!!session}
+            genres={GENRES}
+            extraTags={extraTags}
+          />
+
+          <p className="mb-3 text-xs text-ink-dim">{resultLabel}</p>
+
+          {works.length === 0 ? (
+            <div className="panel-arcane p-12 text-center">
+              <p className="font-heading text-xl mb-2">
+                {q || tag || sentiment
+                  ? "Nothing matched."
+                  : "The archives are empty."}
+              </p>
+              <p className="text-ink-dim">
+                {q || tag || sentiment
+                  ? "Try a different search or clear the filters."
+                  : "Public tomes will appear here as scribes share them."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {works.map((w) => (
+                <WorkCard
+                  key={`${w.kind}:${w.id}`}
+                  work={w}
+                  dismissable={!!session}
+                />
+              ))}
+            </div>
+          )}
+
           {recent.length > 0 && (
-            <section className="mb-8">
+            <section className="mt-12 mb-8">
               <h2 className="font-heading text-lg mb-3">Jump back in</h2>
               <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
                 {recent.map((a) => (
@@ -156,6 +194,7 @@ export default async function BrowsePage({
 
           {feed && (
             <div className="space-y-8 mb-10">
+              <h2 className="font-heading text-xl">Discover</h2>
               <WorkRow
                 dismissable
                 title="New from your follows"
@@ -198,45 +237,6 @@ export default async function BrowsePage({
                 works={feed.popular}
                 showAllHref="/browse?sort=popular"
               />
-              <h2 className="font-heading text-lg !mb-[-0.5rem]">All Works</h2>
-            </div>
-          )}
-
-          <StoreFilters
-            q={q}
-            type={type}
-            tag={tag}
-            sentiment={sentiment}
-            sort={sort}
-            signedIn={!!session}
-            genres={GENRES}
-            extraTags={extraTags}
-          />
-
-          <p className="mb-3 text-xs text-ink-dim">{resultLabel}</p>
-
-          {works.length === 0 ? (
-            <div className="panel-arcane p-12 text-center">
-              <p className="font-heading text-xl mb-2">
-                {q || tag || sentiment
-                  ? "Nothing matched."
-                  : "The archives are empty."}
-              </p>
-              <p className="text-ink-dim">
-                {q || tag || sentiment
-                  ? "Try a different search or clear the filters."
-                  : "Public tomes will appear here as scribes share them."}
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {works.map((w) => (
-                <WorkCard
-                  key={`${w.kind}:${w.id}`}
-                  work={w}
-                  dismissable={!!session}
-                />
-              ))}
             </div>
           )}
         </div>
