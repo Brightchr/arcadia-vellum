@@ -228,6 +228,33 @@
   color: var(--ld-dim); border-top: 1px solid var(--ld-edge);
 }
 
+/* Auth pages (login/signup) share the landing shell. The form itself keeps
+   its app classes; darkstar variables + these overrides give it the site's
+   card and gradient-CTA treatment. */
+.ld-auth { display: flex; flex-direction: column; min-height: 100vh; }
+.ld-auth-stage {
+  position: relative; flex: 1; display: flex; align-items: center;
+  justify-content: center; padding: 2rem 1rem 4rem;
+}
+.ld-auth-stage .ld-hero-glow { inset: -6rem -10% auto; height: 28rem; }
+.ld-auth .panel-arcane {
+  position: relative;
+  background: var(--ld-panel);
+  border: 1px solid var(--ld-edge);
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(124, 92, 255, 0.1);
+}
+.ld-auth .btn-arcane {
+  background: linear-gradient(100deg, var(--ld-violet), var(--ld-teal));
+  border: none; color: #fff; font-weight: 600;
+  box-shadow: 0 4px 24px rgba(124, 92, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ld-auth .btn-arcane:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 32px rgba(10, 179, 156, 0.45);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ld-root *, .ld-root *::before, .ld-root *::after { animation: none !important; }
 }
