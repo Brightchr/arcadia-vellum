@@ -55,12 +55,20 @@ export async function canAccessJournal(
   if (journal.bannedAt) return false;
   // A banned owner's works are hidden from everyone but the owner.
   if (await isUserBanned(journal.ownerId)) return false;
-  // Unlisted works need a share link — only listed public works are open.
-  if (journal.visibility === "public" && journal.listed) return true;
-  // A redeemed share link opens the work regardless of its visibility.
-  if (await shareGrantsJournal(journal)) return true;
-  if (journal.visibility === "public") return false;
+  // A redeemed share link is the ONLY door for signed-out visitors — and it
+  // closes the moment the owner sets the work private (the link follows the
+  // work's visibility).
+  if (
+    journal.visibility !== "private" &&
+    (await shareGrantsJournal(journal))
+  ) {
+    return true;
+  }
+  // Everything else requires an account: no anonymous tomes or audio.
   if (viewerId === null) return false;
+  // Signed-in: listed public works are open; unlisted stays link-only.
+  if (journal.visibility === "public" && journal.listed) return true;
+  if (journal.visibility === "public") return false;
   switch (journal.visibility) {
     case "friends":
       return areFriends(viewerId, journal.ownerId);
@@ -105,15 +113,17 @@ export async function accessibleJournalIds(
     }
     if (j.bannedAt) continue;
     if (banned.has(j.ownerId)) continue;
+    // Share links follow the work's visibility: private = no link access.
+    if (j.visibility !== "private" && sharedTo(j)) {
+      ok.add(j.id);
+      continue;
+    }
+    // No anonymous access outside share links.
+    if (viewerId === null) continue;
     if (j.visibility === "public" && j.listed) {
       ok.add(j.id);
       continue;
     }
-    if (sharedTo(j)) {
-      ok.add(j.id);
-      continue;
-    }
-    if (viewerId === null) continue;
     if (j.visibility === "friends") {
       if (!friendCache.has(j.ownerId)) {
         friendCache.set(j.ownerId, await areFriends(viewerId, j.ownerId));

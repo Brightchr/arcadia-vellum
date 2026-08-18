@@ -22,18 +22,18 @@ export async function GET(
 
   const journal = await getJournalById(track.journalId);
   if (!journal) return jsonError("Not found", 404);
+  // No anonymous audio: the fast path applies to signed-in listeners only;
+  // signed-out requests fall through to the full check (share links only).
+  const session = await sessionFromRequest(request);
   const openToAll =
     journal.visibility === "public" && journal.listed && !journal.bannedAt;
-  if (!openToAll || (await isUserBanned(journal.ownerId))) {
-    const session = await sessionFromRequest(request);
+  if (!session || !openToAll || (await isUserBanned(journal.ownerId))) {
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);
     }
   }
 
-  const cacheControl = openToAll
-    ? "public, max-age=3600"
-    : "private, max-age=300";
+  const cacheControl = "private, max-age=300";
   if (track.storageKey || !track.data) {
     return mediaResponse(track, cacheControl);
   }

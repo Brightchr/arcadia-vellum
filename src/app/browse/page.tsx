@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { shellData } from "@/lib/nav";
 import {
   GENRES,
@@ -34,6 +35,8 @@ export default async function BrowsePage({
   }>;
 }) {
   const { session, navUser, pins, unread } = await shellData();
+  // The store is members-only — the archives don't face the open street.
+  if (!session) redirect("/login");
   const params = await searchParams;
   const q = (params.q ?? "").trim();
   const type =

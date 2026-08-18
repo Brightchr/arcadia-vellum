@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
 import {
@@ -66,6 +66,8 @@ export default async function ProfilePage({
   if (!profile || !profile.username) notFound();
 
   const { session, navUser, pins, unread } = await shellData();
+  // Profiles are members-only.
+  if (!session) redirect("/login");
   const viewerId = session?.user.id ?? null;
   const isSelf = viewerId === profile.id;
   const visible = await canViewProfile(profile, viewerId);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { isUserBanned } from "@/lib/profile";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
@@ -61,6 +61,9 @@ export default async function SeriesHomePage({
     session?.user.id ?? null,
     allVolumes
   );
+  // Signed-out visitors only reach a series through a share link that
+  // grants at least one volume; otherwise, sign in first.
+  if (!session && accessible.size === 0) redirect("/login");
   // Unlisted volumes stay invisible unless a share link (or ownership)
   // grants access; listed gated volumes still show as locked teasers.
   const volumes = allVolumes.filter(

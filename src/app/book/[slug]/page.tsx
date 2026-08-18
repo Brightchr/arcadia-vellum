@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { shellData } from "@/lib/nav";
 import { getJournalBySlug } from "@/lib/journals";
@@ -55,6 +55,9 @@ export default async function BookHomePage({
     if (!session || !(await isAdmin(session.user.id))) notFound();
   }
   const canAccess = await canAccessJournal(session?.user.id ?? null, journal);
+  // Signed-out visitors only ever see share-granted works — every other
+  // page of the archive is behind sign-in.
+  if (!session && !canAccess) redirect("/login");
   // Everything except private has a homepage: discoverable works show their
   // teaser to all, friends-only works show a "friends can open this" teaser.
   // Unlisted works are invisible without a share link (canAccess covers it).

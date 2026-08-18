@@ -23,20 +23,14 @@ export async function GET(
   const journal = await getJournalById(image.journalId);
   if (!journal) return jsonError("Not found", 404);
 
-  // Cover images double as browse/teaser art, so anything discoverable can
-  // serve its images; friends/private works — and taken-down works — keep
-  // the full access check (owner and admins only for banned).
-  if (journal.bannedAt || !isDiscoverable(journal.visibility)) {
-    const session = await sessionFromRequest(request);
+  // Cover images double as browse/teaser art for SIGNED-IN readers; without
+  // a session, only a share grant serves anything (no anonymous media).
+  const session = await sessionFromRequest(request);
+  if (!session || journal.bannedAt || !isDiscoverable(journal.visibility)) {
     if (!(await canAccessJournal(session?.user.id ?? null, journal))) {
       return jsonError("Not found", 404);
     }
   }
 
-  return mediaResponse(
-    image,
-    journal.visibility === "public"
-      ? "public, max-age=3600"
-      : "private, max-age=300"
-  );
+  return mediaResponse(image, "private, max-age=300");
 }
