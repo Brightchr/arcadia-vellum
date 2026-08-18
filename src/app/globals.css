@@ -95,8 +95,6 @@ body {
   color: var(--ink);
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(157, 123, 216, 0.28), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(216, 160, 60, 0.18), transparent 70%),
     radial-gradient(circle at 15% 20%, rgba(157, 123, 216, 0.08), transparent 40%),
     radial-gradient(circle at 85% 75%, rgba(216, 160, 60, 0.05), transparent 45%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
@@ -112,25 +110,23 @@ body {
 --------------------------------------------------------------------------- */
 
 .app-theme-witch-grimoire {
-  --void: #0f141c;
-  --void-raised: #1c2630;
-  --void-border: #3e5c60;
-  --ink: #eef4f4;
-  --ink-dim: #a9c0c1;
-  --arcane: #83b9ba;
-  --arcane-bright: #b7e2e3;
-  --ember: #a973c4;
-  --app-display-font: var(--font-fell);
+  --void: #0b0a0f;
+  --void-raised: #16151c;
+  --void-border: #34313f;
+  --ink: #e7e7ef;
+  --ink-dim: #9b98a9;
+  --arcane: #a9afc1;
+  --arcane-bright: #d6dbe7;
+  --ember: #8d6cb8;
+  --app-display-font: var(--font-unifraktur);
 }
 
 .app-theme-witch-grimoire.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(124, 62, 142, 0.48), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(74, 130, 126, 0.4), transparent 70%),
-    radial-gradient(circle at 12% 15%, rgba(104, 52, 118, 0.34), transparent 44%),
-    radial-gradient(circle at 88% 80%, rgba(74, 120, 117, 0.3), transparent 47%),
-    radial-gradient(ellipse at 50% 110%, rgba(131, 185, 186, 0.16), transparent 52%);
+    radial-gradient(circle at 12% 15%, rgba(112, 100, 138, 0.22), transparent 44%),
+    radial-gradient(circle at 88% 80%, rgba(160, 166, 184, 0.1), transparent 47%),
+    radial-gradient(ellipse at 50% 110%, rgba(140, 108, 184, 0.1), transparent 52%);
 }
 
 .app-theme-ancient-tome {
@@ -148,8 +144,6 @@ body {
 .app-theme-ancient-tome.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(216, 160, 60, 0.34), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(176, 81, 47, 0.28), transparent 70%),
     radial-gradient(circle at 15% 12%, rgba(216, 160, 60, 0.14), transparent 42%),
     radial-gradient(circle at 85% 85%, rgba(176, 81, 47, 0.12), transparent 45%),
     radial-gradient(ellipse at 50% -10%, rgba(255, 220, 150, 0.06), transparent 50%);
@@ -170,8 +164,6 @@ body {
 .app-theme-elven-chronicle.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(127, 185, 143, 0.34), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(216, 198, 106, 0.24), transparent 70%),
     radial-gradient(circle at 10% 20%, rgba(127, 185, 143, 0.13), transparent 42%),
     radial-gradient(circle at 90% 75%, rgba(216, 198, 106, 0.09), transparent 42%),
     radial-gradient(ellipse at 50% -10%, rgba(200, 240, 210, 0.05), transparent 55%);
@@ -192,8 +184,6 @@ body {
 .app-theme-captains-log.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(79, 163, 184, 0.36), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(216, 170, 92, 0.26), transparent 70%),
     radial-gradient(circle at 14% 16%, rgba(79, 163, 184, 0.15), transparent 42%),
     radial-gradient(circle at 86% 82%, rgba(216, 170, 92, 0.11), transparent 45%),
     radial-gradient(ellipse at 50% 115%, rgba(40, 90, 120, 0.2), transparent 55%);
@@ -214,8 +204,6 @@ body {
 .app-theme-arcane-codex.arcane-bg {
   background-color: var(--void);
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(110, 130, 220, 0.38), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(224, 190, 106, 0.28), transparent 70%),
     radial-gradient(circle at 18% 12%, rgba(224, 190, 106, 0.12), transparent 40%),
     radial-gradient(circle at 84% 78%, rgba(142, 160, 216, 0.13), transparent 45%),
     radial-gradient(circle at 60% 30%, rgba(255, 255, 255, 0.04) 0 1px, transparent 2px),
@@ -263,9 +251,7 @@ body {
 
 .app-theme-midnight.arcane-bg {
   background-color: var(--void);
-  background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(10, 179, 156, 0.22), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(90, 130, 255, 0.15), transparent 70%);
+  background-image: none;
 }
 
 .app-theme-darkstar {
@@ -292,9 +278,7 @@ body {
 
 .app-theme-darkstar.arcane-bg {
   background-color: var(--void);
-  background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(124, 92, 255, 0.3), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(10, 179, 156, 0.22), transparent 70%);
+  background-image: none;
 }
 
 .app-theme-daylight {
@@ -319,9 +303,78 @@ body {
 
 .app-theme-daylight.arcane-bg {
   background-color: var(--void);
+  background-image: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Theme glows — a viewport-fixed backdrop layer so the light follows the
+   reader while scrolling (works on iOS, unlike background-attachment: fixed,
+   and never repaints on scroll). Three sources per theme: two from above,
+   one rising from below. isolation creates the stacking context that keeps
+   the z-index:-1 layer above the page background but under all content.
+--------------------------------------------------------------------------- */
+
+.arcane-bg {
+  isolation: isolate;
+}
+
+.arcane-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
-    radial-gradient(42rem 26rem at 12% -4%, rgba(10, 179, 156, 0.15), transparent 70%),
-    radial-gradient(38rem 24rem at 88% -6%, rgba(124, 92, 255, 0.12), transparent 70%);
+    radial-gradient(90rem 32rem at 50% -8%, rgba(157, 123, 216, 0.34), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(216, 160, 60, 0.22), transparent 72%);
+}
+
+.app-theme-witch-grimoire.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(122, 104, 158, 0.4), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(168, 174, 193, 0.18), transparent 72%);
+}
+
+.app-theme-ancient-tome.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(216, 160, 60, 0.4), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(176, 81, 47, 0.32), transparent 72%);
+}
+
+.app-theme-elven-chronicle.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(127, 185, 143, 0.4), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(216, 198, 106, 0.28), transparent 72%);
+}
+
+.app-theme-captains-log.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(79, 163, 184, 0.42), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(216, 170, 92, 0.3), transparent 72%);
+}
+
+.app-theme-arcane-codex.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(110, 130, 220, 0.45), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(224, 190, 106, 0.32), transparent 72%);
+}
+
+.app-theme-midnight.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(10, 179, 156, 0.26), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(90, 130, 255, 0.2), transparent 72%);
+}
+
+.app-theme-darkstar.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(124, 92, 255, 0.42), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(10, 179, 156, 0.24), transparent 72%);
+}
+
+.app-theme-daylight.arcane-bg::before {
+  background-image:
+    radial-gradient(90rem 32rem at 50% -8%, rgba(10, 179, 156, 0.2), transparent 72%),
+    radial-gradient(90rem 34rem at 50% 108%, rgba(124, 92, 255, 0.16), transparent 72%);
 }
 
 .font-heading {
