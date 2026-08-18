@@ -43,6 +43,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip static assets; everything else (pages + API) gets checked.
-  matcher: ["/((?!_next/static|_next/image|icons/|mark.png|sw.js).*)"],
+  // Skip genuinely static assets only. `_next/image` stays INSIDE the lock —
+  // it's a live CPU-heavy optimizer endpoint, not a static file.
+  matcher: ["/((?!_next/static|icons/|mark.png|sw.js).*)"],
 };

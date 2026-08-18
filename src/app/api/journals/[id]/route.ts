@@ -164,18 +164,26 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     (updated?.visibility === "public" || updated?.visibility === "restricted") &&
     updated?.listed;
   if (!wasDiscoverable && isDiscoverableNow) {
-    if (updated.seriesId) {
-      await notifyMany(await seriesFollowerIds(updated.seriesId), "new_volume", {
-        actorId: session.user.id,
-        kind: "series",
-        itemId: updated.seriesId,
-      });
-    }
-    await notifyMany(await followerIds(session.user.id), "new_work", {
-      actorId: session.user.id,
-      kind: updated.seriesId ? "series" : "journal",
-      itemId: updated.seriesId ?? updated.id,
-    });
+    // Detached — publishing shouldn't block on notifying every follower.
+    const actorId = session.user.id;
+    void (async () => {
+      try {
+        if (updated.seriesId) {
+          await notifyMany(await seriesFollowerIds(updated.seriesId), "new_volume", {
+            actorId,
+            kind: "series",
+            itemId: updated.seriesId,
+          });
+        }
+        await notifyMany(await followerIds(actorId), "new_work", {
+          actorId,
+          kind: updated.seriesId ? "series" : "journal",
+          itemId: updated.seriesId ?? updated.id,
+        });
+      } catch (error) {
+        console.error("[publish] follower fanout failed:", error);
+      }
+    })();
   }
 
   // Tidy up a series the journal just left.

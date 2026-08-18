@@ -81,8 +81,23 @@ export async function notifyMany(
     itemId?: string;
   } = {}
 ) {
-  for (const id of new Set(userIds)) {
-    await notify(id, type, opts);
+  const targets = [...new Set(userIds)].filter((id) => id !== opts.actorId);
+  if (targets.length === 0) return;
+  // One insert for the whole fanout — publish/ban events can have hundreds
+  // of recipients, and a row-per-await loop held the request open for all
+  // of them.
+  await db.insert(notifications).values(
+    targets.map((userId) => ({
+      id: newId(),
+      userId,
+      type,
+      actorId: opts.actorId ?? null,
+      kind: opts.kind ?? null,
+      itemId: opts.itemId ?? null,
+    }))
+  );
+  for (const userId of targets) {
+    void pushForNotification(userId, type, opts);
   }
 }
 

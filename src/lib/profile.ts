@@ -1,6 +1,17 @@
 import { db } from "@/db";
 import { user, follows, friendships } from "@/db/schema";
-import { and, eq, ilike, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  eq,
+  gt,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { isTextSafe } from "@/lib/safety";
 
 export type PublicUser = typeof user.$inferSelect;
@@ -53,10 +64,14 @@ export async function getUserById(id: string) {
 
 export async function isUserBanned(userId: string): Promise<boolean> {
   const rows = await db
-    .select({ banned: user.banned })
+    .select({ banned: user.banned, bannedUntil: user.bannedUntil })
     .from(user)
     .where(eq(user.id, userId));
-  return rows[0]?.banned ?? false;
+  const row = rows[0];
+  if (!row?.banned) return false;
+  // An expired suspension no longer hides anything — the flag itself clears
+  // on the user's next sign-in attempt (getActiveBan).
+  return !row.bannedUntil || row.bannedUntil.getTime() > Date.now();
 }
 
 /** Banned owners among the given user ids (batch check for listings). */
@@ -65,7 +80,13 @@ export async function bannedUserIds(ids: string[]): Promise<Set<string>> {
   const rows = await db
     .select({ id: user.id })
     .from(user)
-    .where(and(inArray(user.id, ids), eq(user.banned, true)));
+    .where(
+      and(
+        inArray(user.id, ids),
+        eq(user.banned, true),
+        or(isNull(user.bannedUntil), gt(user.bannedUntil, new Date()))
+      )
+    );
   return new Set(rows.map((r) => r.id));
 }
 

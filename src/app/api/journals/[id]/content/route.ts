@@ -1,4 +1,5 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
+import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 import { getOwnedJournal } from "@/lib/journals";
 import { saveWrittenContent } from "@/lib/content/ingest";
 
@@ -11,8 +12,20 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Each save can trigger up to 50 outbound image fetches (localizeImages) —
+  // without a limit this route is a server-side fetch amplifier.
+  const limited = rateLimit(request, "content-save", {
+    limit: 30,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  const userLimited = rateLimitUser(session.user.id, "content-save", {
+    limit: 60,
+    windowMs: 60 * 60_000,
+  });
+  if (userLimited) return userLimited;
   const { id } = await params;
   const journal = await getOwnedJournal(id, session.user.id);
   if (!journal) return jsonError("Journal not found", 404);

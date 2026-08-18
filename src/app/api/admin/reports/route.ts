@@ -1,6 +1,8 @@
 import { sessionFromRequest, jsonError } from "@/lib/api";
 import { isAdmin, logAdminAction, setUserBanned } from "@/lib/admin";
 import { resolveReport } from "@/lib/reports";
+import { getUserById } from "@/lib/profile";
+import { banReasonLabel } from "@/lib/ban-reasons";
 
 export const runtime = "nodejs";
 
@@ -10,8 +12,10 @@ export const runtime = "nodejs";
  */
 export async function PATCH(request: Request) {
   const session = await sessionFromRequest(request);
-  if (!session) return jsonError("Not signed in", 401);
-  if (!(await isAdmin(session.user.id))) return jsonError("Admins only", 403);
+  // Opaque 404 like the other admin routes — don't advertise the endpoint.
+  if (!session || !(await isAdmin(session.user.id))) {
+    return jsonError("Not found", 404);
+  }
 
   const body = (await request.json().catch(() => null)) as {
     id?: unknown;
@@ -35,8 +39,19 @@ export async function PATCH(request: Request) {
     `report ${id}`
   );
   if (outcome === "upheld" && body?.ban === true) {
-    await setUserBanned(resolved.userId, true);
-    await logAdminAction(session.user.id, "ban", resolved.userId, `report ${id}`);
+    // Same guards as /api/admin/ban — this path must not become a bypass.
+    const target = await getUserById(resolved.userId);
+    if (!target || target.role === "admin" || target.id === session.user.id) {
+      return jsonError("This account can't be banned", 400);
+    }
+    const reason = "guidelines";
+    await setUserBanned(target.id, true, { reason });
+    await logAdminAction(
+      session.user.id,
+      "ban",
+      target.id,
+      `report ${id} — ${banReasonLabel(reason)}, permanent`
+    );
   }
   return Response.json({ ok: true });
 }

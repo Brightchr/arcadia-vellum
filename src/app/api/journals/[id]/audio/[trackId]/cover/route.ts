@@ -1,13 +1,16 @@
 import { db } from "@/db";
 import { journalAudio } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
+import { rateLimit } from "@/lib/rate-limit";
 import { getOwnedJournal } from "@/lib/journals";
 import { getTrack } from "@/lib/audio";
 import { storeImage } from "@/lib/content/images";
 import { removeJournalImages } from "@/lib/media";
 
 export const runtime = "nodejs";
+
+const MAX_COVER_BYTES = 5 * 1024 * 1024;
 
 async function ownedTrack(request: Request, id: string, trackId: string) {
   const session = await sessionFromRequest(request);
@@ -30,6 +33,13 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string; trackId: string }> }
 ) {
+  const limited = rateLimit(request, "cover-upload", {
+    limit: 20,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
+  const tooLarge = bodyTooLarge(request, MAX_COVER_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
   const { id, trackId } = await params;
   const { track, error } = await ownedTrack(request, id, trackId);
   if (!track) return error;

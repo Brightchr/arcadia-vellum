@@ -127,8 +127,11 @@ async function fetchRemoteImage(src: string): Promise<Buffer | null> {
     return null;
   }
   try {
-    const { address } = await lookup(url.hostname);
-    if (isPrivateIp(address)) return null;
+    // Validate EVERY address (A and AAAA): Node's happy-eyeballs connect may
+    // pick a different family than a single lookup returns.
+    const addresses = await lookup(url.hostname, { all: true });
+    if (addresses.length === 0) return null;
+    if (addresses.some((a) => isPrivateIp(a.address))) return null;
   } catch {
     return null;
   }
@@ -159,7 +162,19 @@ async function fetchRemoteImage(src: string): Promise<Buffer | null> {
 
 /** Loopback, link-local, RFC-1918, CGNAT, and their IPv6 equivalents. */
 function isPrivateIp(ip: string): boolean {
-  const v4 = ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+  const lower = ip.toLowerCase();
+  // IPv4-mapped IPv6 in hex form (::ffff:7f00:1) — normalize to dotted quad.
+  const hexMapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(lower);
+  const v4 = hexMapped
+    ? [
+        parseInt(hexMapped[1], 16) >> 8,
+        parseInt(hexMapped[1], 16) & 0xff,
+        parseInt(hexMapped[2], 16) >> 8,
+        parseInt(hexMapped[2], 16) & 0xff,
+      ].join(".")
+    : lower.startsWith("::ffff:")
+      ? lower.slice(7)
+      : ip;
   if (isIP(v4) === 4) {
     const [a, b] = v4.split(".").map(Number);
     if (a === 0 || a === 10 || a === 127) return true;
@@ -167,11 +182,14 @@ function isPrivateIp(ip: string): boolean {
     if (a === 169 && b === 254) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
     if (a === 192 && b === 168) return true;
+    if (a === 192 && b === 0) return true; // 192.0.0.0/24 protocol assignments
+    if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking
+    if (a >= 224) return true; // multicast + reserved + broadcast
     return false;
   }
-  const lower = ip.toLowerCase();
   if (lower === "::" || lower === "::1") return true;
   if (/^f[cd]/.test(lower)) return true; // fc00::/7 unique local
   if (/^fe[89ab]/.test(lower)) return true; // fe80::/10 link local
+  if (lower.startsWith("64:ff9b:")) return true; // NAT64 back into IPv4
   return false;
 }

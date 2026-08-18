@@ -193,11 +193,13 @@ export async function setUserBanned(
     .select({ userId: savedItems.userId })
     .from(savedItems)
     .where(or(...conds));
-  await notifyMany(
+  // Detached: a popular author's ban shouldn't hold the admin request open
+  // while hundreds of savers get notified.
+  void notifyMany(
     savers.map((s) => s.userId).filter((id) => id !== targetId),
     "user_banned",
     { actorId: targetId }
-  );
+  ).catch((error) => console.error("[ban] saver fanout failed:", error));
 }
 
 /**

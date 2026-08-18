@@ -103,6 +103,9 @@ export async function banKnownIpsForUser(
     .map((r) => r.ip?.trim())
     .filter((ip): ip is string => Boolean(ip) && ip !== "unknown");
   if (ips.length === 0) return 0;
+  // On an IP already banned for ANOTHER account, keep that row's ownership —
+  // reassigning it would make unbanning this user silently lift the other
+  // user's network ban. Only the expiry widens (permanent wins).
   await db
     .insert(ipBans)
     .values(
@@ -117,7 +120,13 @@ export async function banKnownIpsForUser(
     )
     .onConflictDoUpdate({
       target: ipBans.ip,
-      set: { reason, targetUserId, createdBy: adminId, expiresAt },
+      set: {
+        expiresAt:
+          expiresAt === null
+            ? sql`null`
+            : sql`case when ${ipBans.expiresAt} is null then null
+                  else greatest(${ipBans.expiresAt}, ${expiresAt.toISOString()}::timestamp) end`,
+      },
     });
   return ips.length;
 }

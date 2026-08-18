@@ -6,7 +6,27 @@ import { jsonError } from "@/lib/api";
 
 const handlers = toNextJsHandler(auth);
 
-export const GET = handlers.GET;
+/**
+ * GET covers OAuth callbacks (which complete a sign-in) and session reads —
+ * rate-limited, and callbacks honor IP bans like the POST sign-in path.
+ */
+export async function GET(request: Request) {
+  const limited = rateLimit(request, "auth-get", {
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
+  if (
+    new URL(request.url).pathname.includes("/callback") &&
+    (await isIpBanned(clientIp(request)))
+  ) {
+    return jsonError(
+      "Sign-in isn't available from this network. Contact support if you believe this is a mistake.",
+      403
+    );
+  }
+  return handlers.GET(request);
+}
 
 /**
  * Auth mutations are the #1 brute-force target, so they get the tightest

@@ -1,4 +1,5 @@
-import { sessionFromRequest, jsonError } from "@/lib/api";
+import { sessionFromRequest, jsonError, bodyTooLarge } from "@/lib/api";
+import { rateLimit, rateLimitUser } from "@/lib/rate-limit";
 import { createJournal, deleteJournal } from "@/lib/journals";
 import { ingestUpload } from "@/lib/content/ingest";
 import { isThemeId } from "@/lib/themes";
@@ -21,8 +22,20 @@ const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
  *    is saved via PUT /api/journals/[id]/content
  */
 export async function POST(request: Request) {
+  const limited = rateLimit(request, "journal-create", {
+    limit: 10,
+    windowMs: 10 * 60_000,
+  });
+  if (limited) return limited;
   const session = await sessionFromRequest(request);
   if (!session) return jsonError("Not signed in", 401);
+  const userLimited = rateLimitUser(session.user.id, "journal-create", {
+    limit: 30,
+    windowMs: 60 * 60_000,
+  });
+  if (userLimited) return userLimited;
+  const tooLarge = bodyTooLarge(request, MAX_UPLOAD_BYTES + 64 * 1024);
+  if (tooLarge) return tooLarge;
 
   const form = await request.formData();
   const title = String(form.get("title") ?? "").trim();
