@@ -122,39 +122,64 @@ export async function listNotifications(
     .orderBy(desc(notifications.createdAt))
     .limit(limit);
 
-  const out: NotificationView[] = [];
+  // Resolve referenced works/groups in one query per kind — this runs on
+  // the 60s social poll, so a per-row lookup here was the app's worst N+1.
+  const journalIds = new Set<string>();
+  const seriesIds = new Set<string>();
+  const groupIds = new Set<string>();
   for (const r of rows) {
+    if (!r.itemId) continue;
+    if (r.kind === "journal") journalIds.add(r.itemId);
+    else if (r.kind === "series") seriesIds.add(r.itemId);
+    else if (r.kind === "group") groupIds.add(r.itemId);
+  }
+  const [journalRefs, seriesRefs, groupRefs] = await Promise.all([
+    journalIds.size > 0
+      ? db
+          .select({ id: journals.id, title: journals.title, slug: journals.slug })
+          .from(journals)
+          .where(inArray(journals.id, [...journalIds]))
+      : Promise.resolve([]),
+    seriesIds.size > 0
+      ? db
+          .select({ id: series.id, name: series.name, slug: series.slug })
+          .from(series)
+          .where(inArray(series.id, [...seriesIds]))
+      : Promise.resolve([]),
+    groupIds.size > 0
+      ? db
+          .select({ id: groups.id, name: groups.name })
+          .from(groups)
+          .where(inArray(groups.id, [...groupIds]))
+      : Promise.resolve([]),
+  ]);
+  const jRef = new Map(journalRefs.map((j) => [j.id, j]));
+  const sRef = new Map(seriesRefs.map((s) => [s.id, s]));
+  const gRef = new Map(groupRefs.map((g) => [g.id, g]));
+
+  return rows.map((r) => {
     let itemTitle: string | null = null;
     let itemHref: string | null = null;
     if (r.kind === "journal" && r.itemId) {
-      const j = await db
-        .select({ title: journals.title, slug: journals.slug })
-        .from(journals)
-        .where(eq(journals.id, r.itemId));
-      if (j[0]) {
-        itemTitle = j[0].title;
-        itemHref = `/book/${j[0].slug}`;
+      const j = jRef.get(r.itemId);
+      if (j) {
+        itemTitle = j.title;
+        itemHref = `/book/${j.slug}`;
       }
     } else if (r.kind === "series" && r.itemId) {
-      const s = await db
-        .select({ name: series.name, slug: series.slug })
-        .from(series)
-        .where(eq(series.id, r.itemId));
-      if (s[0]) {
-        itemTitle = s[0].name;
-        itemHref = `/series/${s[0].slug}`;
+      const s = sRef.get(r.itemId);
+      if (s) {
+        itemTitle = s.name;
+        itemHref = `/series/${s.slug}`;
       }
     } else if (r.kind === "group" && r.itemId) {
-      const g = await db
-        .select({ name: groups.name })
-        .from(groups)
-        .where(eq(groups.id, r.itemId));
-      if (g[0]) {
-        itemTitle = g[0].name;
+      const g = gRef.get(r.itemId);
+      if (g) {
+        itemTitle = g.name;
         itemHref = `/groups/${r.itemId}`;
       }
     }
-    out.push({
+    return {
       id: r.id,
       type: r.type,
       read: r.read,
@@ -164,9 +189,8 @@ export async function listNotifications(
       actorAvatarId: r.actorAvatarId,
       itemTitle,
       itemHref,
-    });
-  }
-  return out;
+    };
+  });
 }
 
 export async function unreadCount(

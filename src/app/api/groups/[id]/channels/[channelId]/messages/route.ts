@@ -57,8 +57,12 @@ export async function GET(
   const after =
     new URL(request.url).searchParams.get("after") ?? undefined;
   const messages = await listMessages(g.channelId, { after });
-  // Fetching a channel's messages means the member is looking at it.
-  await markChannelRead(g.session.user.id, g.channelId);
+  // Fetching a channel's messages means the member is looking at it — but a
+  // no-op poll (after=X, nothing new) skips the write: at a 5s cadence the
+  // upsert-per-poll was the app's biggest source of write churn.
+  if (!after || messages.length > 0) {
+    await markChannelRead(g.session.user.id, g.channelId);
+  }
   return Response.json(
     { messages },
     { headers: { "Cache-Control": "no-store" } }
@@ -115,14 +119,23 @@ export async function POST(
   const message = await postMessage(g.channelId, g.session.user.id, text, flag);
 
   // @mentions alert members (in-app + device push); group mutes suppress.
-  const mentioned = await mentionTargets(id, text);
-  for (const targetId of mentioned) {
-    await notify(targetId, "mention", {
-      actorId: g.session.user.id,
-      kind: "group",
-      itemId: id,
-    });
-  }
+  // Detached: fanout (inserts + pushes, up to 10 recipients) must not add
+  // latency to the send itself.
+  const actorId = g.session.user.id;
+  void (async () => {
+    try {
+      const mentioned = await mentionTargets(id, text);
+      for (const targetId of mentioned) {
+        await notify(targetId, "mention", {
+          actorId,
+          kind: "group",
+          itemId: id,
+        });
+      }
+    } catch (error) {
+      console.error("[mentions] fanout failed:", error);
+    }
+  })();
 
   return Response.json({ message });
 }

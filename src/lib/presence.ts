@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { journals, readingActivity, series, user } from "@/db/schema";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { listFriends, type RelatedUser } from "@/lib/social";
 
 /** A heartbeat within this window counts as "online" (beacon fires every 60s). */
@@ -40,17 +40,23 @@ async function currentActivity(
   const map = new Map<string, { label: string; href: string }>();
   if (userIds.length === 0) return map;
   const cutoff = new Date(Date.now() - ACTIVITY_WINDOW_MS);
+  // Filter in SQL — reading history grows forever (it feeds recommendations),
+  // but only the activity window matters here.
   const rows = await db
     .select()
     .from(readingActivity)
-    .where(inArray(readingActivity.userId, userIds))
+    .where(
+      and(
+        inArray(readingActivity.userId, userIds),
+        gt(readingActivity.updatedAt, cutoff)
+      )
+    )
     .orderBy(desc(readingActivity.updatedAt));
 
   const journalIds = new Set<string>();
   const seriesIds = new Set<string>();
   const firstRow = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
-    if (r.updatedAt < cutoff) continue;
     if (firstRow.has(r.userId)) continue;
     firstRow.set(r.userId, r);
     if (r.kind === "journal") journalIds.add(r.itemId);
