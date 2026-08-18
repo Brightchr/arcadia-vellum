@@ -10,73 +10,81 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Theme: Witch's Grimoire — serpent-black binding, royal purple and deep
-   teal inks on ashen laid paper  (#080409 / #492153 / #1a2527 / #355654 / #6e9fa0)
+   Theme: Witch's Grimoire — black tooled leather bound in a pewter frame,
+   runes pressed into the hide; bone parchment and blackletter within
+   (#0b0a0f / #c3c8d4 / #3c2d4a / #d6cdb8)
 --------------------------------------------------------------------------- */
 .theme-witch-grimoire {
-  --tome-page-bg-color: #d0ccc0;
+  --tome-page-bg-color: #d6cdb8;
   --tome-page-bg:
     var(--tome-noise),
     var(--tome-fibers),
-    repeating-linear-gradient(
-      0deg,
-      rgba(38, 56, 56, 0.03) 0 1px,
-      transparent 1px 24px
-    ),
-    radial-gradient(ellipse at 12% 6%, rgba(42, 62, 62, 0.26), transparent 38%),
-    radial-gradient(ellipse at 92% 12%, rgba(40, 58, 58, 0.2), transparent 34%),
-    radial-gradient(circle at 84% 94%, rgba(38, 54, 54, 0.28), transparent 30%),
-    radial-gradient(circle at 6% 88%, rgba(38, 54, 54, 0.22), transparent 32%),
-    radial-gradient(circle at 38% 97%, rgba(50, 34, 58, 0.14), transparent 22%),
-    radial-gradient(ellipse at 55% 45%, rgba(252, 250, 240, 0.22), transparent 62%),
-    linear-gradient(160deg, #d8d4c8 0%, #ccc8bb 50%, #aeab9e 100%);
-  --tome-ink: #1a2527;
-  --tome-accent: #492153;
-  --tome-accent-2: #355654;
-  --tome-heading-font: var(--font-fell), serif;
-  --tome-body-font: var(--font-caveat), cursive;
-  --tome-body-size: 1.35rem;
-  --tome-body-line: 1.45;
+    radial-gradient(ellipse at 50% 40%, rgba(255, 250, 236, 0.3), transparent 62%),
+    radial-gradient(circle at 5% 95%, rgba(58, 48, 40, 0.2), transparent 30%),
+    radial-gradient(circle at 95% 93%, rgba(58, 48, 40, 0.17), transparent 28%),
+    radial-gradient(circle at 50% -6%, rgba(58, 48, 40, 0.12), transparent 32%),
+    linear-gradient(160deg, #ded5c0 0%, #d2c9b2 55%, #bfb59d 100%);
+  --tome-ink: #241f2b;
+  --tome-accent: #3c2d4a;
+  --tome-accent-2: #6d6f7e;
+  --tome-heading-font: var(--font-unifraktur), serif;
+  --tome-body-font: var(--font-fell), serif;
+  --tome-body-size: 1.08rem;
+  --tome-body-line: 1.55;
   --tome-cover-bg:
     var(--tome-noise),
-    radial-gradient(ellipse at 42% 24%, rgba(104, 52, 118, 0.55), transparent 58%),
-    radial-gradient(ellipse at 68% 82%, rgba(70, 112, 110, 0.42), transparent 55%),
-    radial-gradient(ellipse at 20% 90%, rgba(126, 180, 181, 0.14), transparent 42%),
-    linear-gradient(150deg, #232739 0%, #171628 55%, #110c1a 100%);
-  --tome-cover-ink: #a5cdce;
-  --tome-cover-border: rgba(126, 180, 181, 0.55);
-  --tome-cover-font: var(--font-fell), serif;
-  --tome-img-filter: sepia(0.15) saturate(0.65) contrast(1);
-  --tome-vignette: rgba(18, 30, 32, 0.5);
+    radial-gradient(circle at 22% 28%, rgba(220, 224, 236, 0.05) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 62%, rgba(220, 224, 236, 0.04) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 86%, rgba(220, 224, 236, 0.035) 0 1px, transparent 1.8px),
+    radial-gradient(ellipse at 50% 16%, rgba(112, 100, 138, 0.18), transparent 55%),
+    radial-gradient(ellipse at 50% 105%, rgba(0, 0, 0, 0.6), transparent 65%),
+    linear-gradient(150deg, #17161d 0%, #0e0d13 55%, #070609 100%);
+  --tome-cover-ink: #c3c8d4;
+  --tome-cover-border: rgba(195, 200, 212, 0.6);
+  --tome-cover-font: var(--font-unifraktur), serif;
+  --tome-img-filter: grayscale(0.35) saturate(0.7) contrast(1.05);
+  --tome-vignette: rgba(8, 8, 12, 0.55);
   --tome-ornament: "ᛉ";
-  --tome-cover-ornament: "ᚹ ᛉ ᚹ";
+  --tome-cover-ornament: "ᛟ ⛤ ᛟ";
 }
 
-/* Serpent-scale texture over the binding (cover + endpapers) */
+/* Pebbled-leather grain over the binding (cover + endpapers) — the old
+   serpent scales recut in pewter at low contrast, reading as tooled hide. */
 .theme-witch-grimoire .tome-cover,
 .theme-witch-grimoire .tome-endpaper {
   background-image:
     radial-gradient(
       circle farthest-side at 50% 135%,
-      rgba(126, 180, 181, 0.1) 62%,
-      rgba(0, 0, 0, 0.32) 66%,
+      rgba(200, 205, 218, 0.05) 62%,
+      rgba(0, 0, 0, 0.4) 66%,
       transparent 70%
     ),
     radial-gradient(
       circle farthest-side at 50% 135%,
-      rgba(104, 52, 118, 0.14) 62%,
-      rgba(0, 0, 0, 0.32) 66%,
+      rgba(96, 88, 118, 0.09) 62%,
+      rgba(0, 0, 0, 0.4) 66%,
       transparent 70%
     ),
     var(--tome-cover-bg);
   background-size:
-    34px 26px,
-    34px 26px,
-    auto, auto, auto, auto, auto;
+    26px 20px,
+    26px 20px,
+    auto, auto, auto, auto, auto, auto, auto;
   background-position:
     0 0,
-    17px 13px,
-    0 0, 0 0, 0 0, 0 0;
+    13px 10px,
+    0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+}
+
+/* Double pewter frame — a heavy outer band with a hairline echo, like the
+   cast metalwork on the reference binding. */
+.theme-witch-grimoire .tome-cover::before {
+  border-width: 3px;
+  box-shadow:
+    0 0 0 3px rgba(8, 8, 12, 0.9),
+    0 0 0 4px rgba(195, 200, 212, 0.3),
+    inset 0 0 0 2px rgba(8, 8, 12, 0.7),
+    inset 0 0 0 3px rgba(195, 200, 212, 0.22);
 }
 
 /* Rune inscriptions along the grimoire's cover and page corners */
@@ -237,17 +245,16 @@
    starlight ink on night pages  (#05060c / #7c5cff / #0ab39c / #cfd6ea)
 --------------------------------------------------------------------------- */
 .theme-darkstar {
-  --tome-page-bg-color: #0d101d;
+  /* Pages read as matte slate paper — the nebula lives on the cover, not
+     the sheets. Noise + fiber layers kill the gloss. */
+  --tome-page-bg-color: #16181f;
   --tome-page-bg:
     var(--tome-noise),
-    radial-gradient(circle at 14% 18%, rgba(157, 133, 255, 0.1) 0 1.4px, transparent 2.2px),
-    radial-gradient(circle at 78% 9%, rgba(214, 222, 255, 0.12) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 88% 68%, rgba(61, 196, 176, 0.09) 0 1.3px, transparent 2px),
-    radial-gradient(circle at 30% 84%, rgba(214, 222, 255, 0.08) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 56% 38%, rgba(157, 133, 255, 0.07) 0 1px, transparent 1.6px),
-    radial-gradient(ellipse at 68% 22%, rgba(124, 92, 255, 0.14), transparent 58%),
-    radial-gradient(ellipse at 22% 78%, rgba(10, 179, 156, 0.1), transparent 55%),
-    linear-gradient(160deg, #11152a 0%, #0c101f 55%, #080a14 100%);
+    var(--tome-fibers),
+    radial-gradient(ellipse at 55% 42%, rgba(255, 255, 255, 0.04), transparent 62%),
+    radial-gradient(circle at 82% 12%, rgba(214, 222, 255, 0.05) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 22% 80%, rgba(214, 222, 255, 0.04) 0 1px, transparent 1.5px),
+    linear-gradient(165deg, #1a1d25 0%, #15171e 55%, #101219 100%);
   --tome-ink: #cfd6ea;
   --tome-accent: #9d85ff;
   --tome-accent-2: #3dc4b0;
