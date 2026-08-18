@@ -5,6 +5,16 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+
+  // Last-resort visibility: detached work (push fanout, cleanup) that dies
+  // without a catch shows up in the Railway logs instead of vanishing.
+  process.on("unhandledRejection", (reason) => {
+    console.error("[unhandledRejection]", reason);
+  });
+  process.on("uncaughtException", (error) => {
+    console.error("[uncaughtException]", error);
+  });
+
   if (!process.env.DATABASE_URL) return;
 
   scheduleCleanup();
