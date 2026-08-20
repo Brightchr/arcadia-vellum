@@ -5,9 +5,9 @@ import { getSession } from "@/lib/auth";
 import "./landing.css";
 
 export const metadata: Metadata = {
-  title: "Vellum — bind your adventures into living tomes",
+  title: "Vellum | Bind your adventures into books",
   description:
-    "Write, listen, and share TTRPG journals as beautifully bound tomes and audiobooks. A members-only archive with private-by-default sharing.",
+    "Turn your TTRPG campaign journals into beautiful books and audiobooks, then share them with your table or keep them just for you.",
 };
 
 /**
@@ -41,21 +41,21 @@ export default async function LandingPage() {
       <section className="ld-hero">
         <div className="ld-hero-glow" aria-hidden />
         <h1 className="ld-hero-title">
-          Every chronicle.
+          Your adventures,
           <br />
-          <span className="ld-gradient-text">Beautifully bound.</span>
+          <span className="ld-gradient-text">beautifully bound.</span>
         </h1>
         <p className="ld-hero-sub">
-          Vellum turns campaign journals into page-flipping ancient tomes and
-          full audiobooks — kept in a members-only archive, shared only when
-          you say so.
+          Vellum turns your campaign journals into page-flipping books and
+          audiobooks. Everything lives in a private library for members, and
+          you choose exactly who else gets a link.
         </p>
         <div className="ld-hero-ctas">
           <Link href="/signup" className="ld-btn ld-btn--primary ld-btn--lg">
-            Start Your Chronicle — Free
+            Create Your Free Library
           </Link>
           <Link href="/login" className="ld-btn ld-btn--ghost ld-btn--lg">
-            Return to Your Tome
+            Sign In
           </Link>
         </div>
 
@@ -85,8 +85,8 @@ export default async function LandingPage() {
 
       {/* For scribes */}
       <section className="ld-section">
-        <p className="ld-kicker ld-kicker--violet">For scribes</p>
-        <h2 className="ld-h2">Write once. Bind forever.</h2>
+        <p className="ld-kicker ld-kicker--violet">For writers</p>
+        <h2 className="ld-h2">Write it once. Keep it forever.</h2>
         <div className="ld-grid">
           <div className="ld-card">
             <div className="ld-card-mock" aria-hidden>
@@ -98,9 +98,9 @@ export default async function LandingPage() {
             </div>
             <h3>Write &amp; Bind</h3>
             <p>
-              Compose in the built-in editor, sync a Google Doc, or upload
-              files. Your words become a tome with themed pages, covers, and
-              chapter art.
+              Write in the built-in editor, link a Google Doc, or upload a
+              file. Vellum lays your words onto themed pages with covers and
+              chapter art, like a real book.
             </p>
           </div>
           <div className="ld-card">
@@ -115,8 +115,9 @@ export default async function LandingPage() {
             </div>
             <h3>Narrate It</h3>
             <p>
-              Upload narration for a full audiobook: chapter art, playlists
-              across volumes, and a player themed to your binding.
+              Upload your own narration and any journal becomes an audiobook,
+              with chapter art, playlists, and a player styled to match your
+              book.
             </p>
           </div>
           <div className="ld-card">
@@ -130,8 +131,9 @@ export default async function LandingPage() {
             </div>
             <h3>Eight Bindings</h3>
             <p>
-              From a witch&apos;s grimoire to the Darkstar nebula — hand-crafted
-              themes style your pages, covers, and player. Or build your own.
+              Pick from eight hand-made book styles, from a witch&apos;s
+              grimoire to the Darkstar night sky. Or build a style of your
+              own.
             </p>
           </div>
         </div>
@@ -140,18 +142,18 @@ export default async function LandingPage() {
       {/* For readers */}
       <section className="ld-section">
         <p className="ld-kicker ld-kicker--teal">For readers</p>
-        <h2 className="ld-h2">A living archive, shelved by taste.</h2>
+        <h2 className="ld-h2">Find your next favorite story.</h2>
         <div className="ld-wide">
           <div className="ld-wide-copy">
             <p>
-              Browse the community&apos;s books and audiobooks, filtered by
-              genre, tags, and review verdicts. Shelve what you love, follow
-              scribes, and pick up where you left off on any device.
+              Browse books and audiobooks written by other players. Filter by
+              genre, tags, and review scores, save the ones you love, and pick
+              up right where you left off on any device.
             </p>
             <ul className="ld-ticks">
-              <li>Review verdicts — from Mixed to Very Positive</li>
+              <li>Review scores from Mixed to Very Positive</li>
               <li>Personal shelves, playlists, and reading history</li>
-              <li>Recommendations tuned to what you actually read</li>
+              <li>Recommendations based on what you actually read</li>
             </ul>
           </div>
           <div className="ld-shelf" aria-hidden>
@@ -164,13 +166,13 @@ export default async function LandingPage() {
 
       {/* For tables */}
       <section className="ld-section">
-        <p className="ld-kicker ld-kicker--ember">For tables</p>
-        <h2 className="ld-h2">Your party, between sessions.</h2>
+        <p className="ld-kicker ld-kicker--ember">For your table</p>
+        <h2 className="ld-h2">Keep the party together between sessions.</h2>
         <div className="ld-wide ld-wide--reverse">
           <div className="ld-chat" aria-hidden>
             <div className="ld-msg m1">
               <i className="ld-avatar a1" />
-              <span>Session recap is up — chapter twelve is bound.</span>
+              <span>Session recap is up, chapter twelve is bound.</span>
             </div>
             <div className="ld-msg m2">
               <i className="ld-avatar a2" />
@@ -183,14 +185,15 @@ export default async function LandingPage() {
           </div>
           <div className="ld-wide-copy">
             <p>
-              Groups with channels, ranks, and chat keep the table together —
-              share works in-line, see who&apos;s reading what, and get a push
-              when someone @mentions you.
+              Every table gets its own group with channels, chat, and member
+              ranks. Share your books right in the conversation, see what your
+              friends are reading, and get a notification when someone
+              mentions you.
             </p>
             <ul className="ld-ticks">
-              <li>Discord-style groups with reading presence</li>
-              <li>Friends, follows, and release alerts</li>
-              <li>Device notifications for mentions and invites</li>
+              <li>Groups with channels and chat, like Discord</li>
+              <li>Friends, follows, and new release alerts</li>
+              <li>Notifications on your devices for mentions and invites</li>
             </ul>
           </div>
         </div>
@@ -198,46 +201,46 @@ export default async function LandingPage() {
 
       {/* Privacy band */}
       <section className="ld-band">
-        <h2 className="ld-h2">Private by default. Shared on purpose.</h2>
+        <h2 className="ld-h2">Your writing stays private.</h2>
         <p>
-          The archive is members-only — nothing you bind faces the open
-          street. Hand out revocable share links when you want outside eyes,
-          and the link follows the work: set a tome private and the link goes
-          private with it.
+          Only members can see the library, and nothing you make is shared
+          unless you choose to share it. Want to show a friend who has no
+          account? Send them a private link. If you make the book private
+          again, the link stops working too.
         </p>
       </section>
 
       {/* Stats */}
       <section className="ld-stats">
         <div>
-          <span className="ld-stat-n">~1 min</span>
-          <span className="ld-stat-l">to bind your first tome</span>
+          <span className="ld-stat-n">1 min</span>
+          <span className="ld-stat-l">to bind your first book</span>
         </div>
         <div>
           <span className="ld-stat-n">8</span>
-          <span className="ld-stat-l">hand-crafted bindings</span>
+          <span className="ld-stat-l">hand-made book styles</span>
         </div>
         <div>
           <span className="ld-stat-n">100 MB</span>
-          <span className="ld-stat-l">audio chapters, per track</span>
+          <span className="ld-stat-l">per audio chapter</span>
         </div>
         <div>
           <span className="ld-stat-n">0</span>
-          <span className="ld-stat-l">ads, forever</span>
+          <span className="ld-stat-l">ads, ever</span>
         </div>
       </section>
 
       {/* Final CTA */}
       <section className="ld-cta">
-        <h2 className="ld-h2">The shelves are waiting.</h2>
-        <p>Free to join. Your first tome takes about a minute to bind.</p>
+        <h2 className="ld-h2">Ready to bind your first book?</h2>
+        <p>It&apos;s free, and it takes about a minute.</p>
         <Link href="/signup" className="ld-btn ld-btn--primary ld-btn--lg">
           Create Your Library
         </Link>
       </section>
 
       <footer className="ld-footer">
-        <span>Vellum — write, listen, and share your chronicles.</span>
+        <span>Vellum. Write, listen, and share your stories.</span>
         <span>© 2026 Arcadia</span>
       </footer>
     </main>
